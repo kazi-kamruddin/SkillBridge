@@ -1,0 +1,43 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+*.dll
+*.pdb
+*.exe
+*.cache
+*.dbmdl
+
+# NuGet
+*.nupkg
+packages/
+*.snupkg
+
+# Visual Studio Code
+.vscode/
+
+# Rider
+.idea/
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# Publish output
+*.Publish.xml
+*.deploy.cmd
+*.deploy-readme.txt
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Others
+*.log
+*.vsix
