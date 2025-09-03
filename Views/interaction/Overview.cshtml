@@ -1,0 +1,73 @@
+﻿<div class="container my-5">
+    <h1 class="fw-bold text-center text-primary mb-5">Your Interactions</h1>
+    <p class="text-center mb-4 text-muted">
+        Here are the people you're currently engaging with.
+        Click on a card to view their detailed sessions.
+    </p>
+
+    <div class="row g-4 justify-content-center">
+
+        <!-- Card 1: Tahrima -->
+        <div class="col-12 col-md-4">
+            <div class="card interaction-card shadow-lg rounded-4 border-0 h-100"
+                 onclick="location.href='@Url.Action("Tahrima", "Interaction")'">
+                <div class="card-body text-center p-4">
+                    <img src="https://cdn-icons-png.flaticon.com/512/194/194938.png"
+                         alt="Tahrima" class="img-fluid rounded-circle mb-3"
+                         style="width:100px; height:100px;">
+                    <h4 class="fw-bold">Tahrima</h4>
+                    <p class="text-muted">You're exchanging skills: <b>Public Speaking ↔ React</b></p>
+                    <span class="badge bg-warning text-dark">Both</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: Adolf -->
+        <div class="col-12 col-md-4">
+            <div class="card interaction-card shadow-lg rounded-4 border-0 h-100"
+                 onclick="location.href='@Url.Action("Adolf", "Interaction")'">
+                <div class="card-body text-center p-4">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2922/2922510.png"
+                         alt="Adolf" class="img-fluid rounded-circle mb-3"
+                         style="width:100px; height:100px;">
+                    <h4 class="fw-bold">Adolf</h4>
+                    <p class="text-muted">You're exchanging skills: <b>Art ↔ React</b></p>
+                    <span class="badge bg-warning text-dark">Both</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Aupee -->
+        <div class="col-12 col-md-4">
+            <div class="card interaction-card shadow-lg rounded-4 border-0 h-100"
+                 onclick="location.href='@Url.Action("Aupee", "Interaction")'">
+                <div class="card-body text-center p-4">
+                    <img src="https://cdn-icons-png.flaticon.com/512/2922/2922565.png"
+                         alt="Aupee" class="img-fluid rounded-circle mb-3"
+                         style="width:100px; height:100px;">
+                    <h4 class="fw-bold">Aupee</h4>
+                    <p class="text-muted">You're exchanging skills: <b>Acting ↔ React</b></p>
+                    <span class="badge bg-warning text-dark">Both</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    .interaction-card {
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+        .interaction-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0px 12px 30px rgba(0, 0, 0, 0.3);
+        }
+
+    .badge {
+        font-size: 14px;
+        padding: 8px 14px;
+    }
+</style>

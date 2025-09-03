@@ -1,7 +1,245 @@
-﻿
-@{
+﻿@{
     ViewBag.Title = "Explore";
+
+    var bestMatches = new List<dynamic>
+    {
+        new { Id=1, Name="Oscar Piastri", Location="Joypurhat", Rating=9.5, Avatar="~/Content/assests/avatar2.jpg", Offers=new[]{ "C++", "MATLAB", "AutoCAD"}, Seeks=new[]{ "Python" } },
+        new { Id=2, Name="Chloe Kelly", Location="Moulvibazar", Rating=7.6, Avatar="~/Content/assests/avatar1.jpg", Offers=new[]{ "C++", "AutoCAD"}, Seeks=new[]{ "Python" } },
+        new { Id=3, Name="Fernando Alonso", Location="Bagerhat", Rating=9.0, Avatar="~/Content/assests/avatar3.png", Offers=new[]{ "MATLAB", "AutoCAD"}, Seeks=new[]{ "Python" } },
+        new { Id=4, Name="Carlos Sainz", Location="Moulvibazar", Rating=5.5, Avatar="~/Content/assests/avatar2.jpg", Offers=new[]{ "MATLAB", "C++"}, Seeks=new[]{ "Python" } }
+    };
+
+    bestMatches = bestMatches.OrderByDescending(p => p.Rating).ToList();
+
+
+    var partialMatches = new List<dynamic>
+    {
+        new { Id=5, Name="Alex Albon", Location="Moulvibazar", Rating=6.5, Avatar="~/Content/assests/avatar2.jpg", Offers=new[]{ "C++", "MATLAB" } },
+        new { Id=6, Name="Kimi Antonelli", Location="Bagerhat", Rating=7.4, Avatar="~/Content/assests/avatar3.png", Offers=new[]{ "MATLAB" } },
+        new { Id=7, Name="Charles Leclerc", Location="Joypurhat", Rating=8.3, Avatar="~/Content/assests/avatar2.jpg", Offers=new[]{ "MATLAB", "AutoCAD" } },
+        new { Id=8, Name="Franco Colapinto", Location="Moulvibazar", Rating=5.5, Avatar="~/Content/assests/avatar3.png", Offers=new[]{ "C++" } },
+        new { Id=9, Name="Alessia Russo", Location="Bagerhat", Rating=6.7, Avatar="~/Content/assests/avatar1.jpg", Offers=new[]{ "C++" } },
+        new { Id=10, Name="Victoria Pelova", Location="Joypurhat", Rating=3.6, Avatar="~/Content/assests/avatar1.jpg", Offers=new[]{ "MATLAB" } },
+    };
+
+    partialMatches = partialMatches.OrderByDescending(p => p.Rating).ToList();
+
+    <!-- user shikhte chae c++, matlab. nije pare python. -->
 }
 
-<h2>Explore</h2>
+<div class="container mt-5 pt-4">
+    <!-- filters -->
+    <div class="row mb-5 justify-content-end">
+        <div class="col-md-3">
+            <select id="skillFilter" class="form-select">
+                <option value="">Select Skill</option>
+                <option>C++</option>
+                <option>MATLAB</option>
+                <option>AutoCAD</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select id="phaseFilter" class="form-select">
+                <option value="">Select Phase</option>
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select id="locationFilter" class="form-select">
+                <option value="">Select Location</option>
+                <option>Bagerhat</option>
+                <option>Joypurhat</option>
+                <option>Moulvibazar</option>
+            </select>
+        </div>
+    </div>
 
+
+    <!-- best -->
+    <br />
+    <h3 class="match-heading">Best Matches</h3>
+    <br />
+    <div class="row row-cols-1 row-cols-md-3 g-4 mb-5" id="bestMatches">
+        @foreach (var person in bestMatches)
+        {
+            var ratingClass = person.Rating > 8 ? "bg-primary" : person.Rating > 6 ? "bg-success" : "bg-danger";
+            <div class="col person-card" data-offers="@string.Join(",", person.Offers)" data-location="@person.Location">
+                <a href="@Url.Action("Index","Profile", new { id = person.Id })" class="card-link">
+                    <div class="card shadow-sm h-100 hover-card">
+                        <div class="card-body">
+                            <div class="row align-items-center mb-3">
+                                <div class="col-3 text-center">
+                                    <img src="@Url.Content(person.Avatar)" class="rounded-circle" width="70" height="70" />
+                                </div>
+                                <div class="col-6">
+                                    <h5 class="mb-0">@person.Name</h5>
+                                    <small class="text-muted">@person.Location</small>
+                                </div>
+                                <div class="col-3 text-end">
+                                    <span class="badge @ratingClass rating-badge">@person.Rating</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col border-end">
+                                    <h6>Offers</h6>
+                                    @foreach (var skill in person.Offers)
+                                    {
+                                        <span class="badge bg-dark me-1 skill-badge">@skill</span>
+                                    }
+                                </div>
+                                <div class="col">
+                                    <h6>Seeks</h6>
+                                    @foreach (var skill in person.Seeks)
+                                    {
+                                        <span class="badge bg-dark me-1 skill-badge">@skill</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+
+
+    <!-- partial -->
+    <br /><br /><br />
+    <h3 class="match-heading">Partial Matches</h3>
+    <br />
+    <div class="row row-cols-1 row-cols-md-4 g-4" id="partialMatches">
+        @foreach (var person in partialMatches)
+        {
+            var ratingClass = person.Rating > 8 ? "bg-primary" : person.Rating > 6 ? "bg-success" : "bg-danger";
+            <div class="col person-card" data-offers="@string.Join(",", person.Offers)" data-location="@person.Location">
+                <a href="@Url.Action("Index","Profile", new { id = person.Id })" class="card-link">
+                    <div class="card shadow-sm h-100 hover-card">
+                        <div class="card-body">
+                            <div class="row align-items-center mb-3">
+                                <div class="col-3 text-center">
+                                    <img src="@Url.Content(person.Avatar)" class="rounded-circle" width="60" height="60" />
+                                </div>
+                                <div class="col-6">
+                                    <h5 class="mb-0">@person.Name</h5>
+                                    <small class="text-muted">@person.Location</small>
+                                </div>
+                                <div class="col-3 text-end">
+                                    <span class="badge @ratingClass rating-badge">@person.Rating</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h6>Offers</h6>
+                                @foreach (var skill in person.Offers)
+                                {
+                                    <span class="badge bg-dark me-1 skill-badge">@skill</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+    <br /><br /><br />
+</div>
+
+
+@section scripts {
+    <style>
+        .match-heading {
+            font-weight: 700;
+            font-size: 1.75rem;
+            color: #626569;
+            margin-bottom: 1rem;
+            position: relative;
+            display: block;
+            padding-bottom: 5px;
+        }
+
+        .match-heading::after {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 3px;
+            background-color: #626569;
+            position: absolute;
+            left: 0;
+            bottom: 0;
+        }
+
+
+        .hover-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+            border: 0.5px solid #000;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.7);
+        }
+
+        .hover-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+            cursor: pointer;
+            border: 2px solid #000;
+        }
+
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        h5 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .hover-card:hover h5 {
+            color: #0d6efd;
+        }
+
+        .rating-badge {
+            font-size: 1rem;
+            padding: 0.5em 0.7em;
+        }
+
+        .badge.skill-badge {
+            font-size: 0.85rem;
+            transition: background-color 0.3s, color 0.3s;
+            cursor: pointer;
+            background-color: #494a4a; 
+        }
+
+            .badge.skill-badge:hover {
+                background-color: #494a4a; 
+                color: #fff;
+            }
+    </style>
+
+    <script>
+        function applyFilters() {
+            var selectedSkill = document.getElementById("skillFilter").value;
+            var selectedLocation = document.getElementById("locationFilter").value;
+
+            document.querySelectorAll(".person-card").forEach(function (card) {
+                var offers = card.getAttribute("data-offers").split(",");
+                var location = card.getAttribute("data-location");
+
+                var skillMatch = (selectedSkill === "" || offers.includes(selectedSkill));
+                var locationMatch = (selectedLocation === "" || location === selectedLocation);
+
+                if (skillMatch && locationMatch) {
+                    card.style.display = "";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        }
+
+        document.getElementById("skillFilter").addEventListener("change", applyFilters);
+        document.getElementById("locationFilter").addEventListener("change", applyFilters);
+    </script>
+}

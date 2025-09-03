@@ -1,0 +1,107 @@
+@{
+    ViewBag.Title = ViewBag.SkillName + " Community Posts";
+
+    // Fake posts for different communities
+    var postsByCommunity = new Dictionary<string, List<dynamic>>(StringComparer.OrdinalIgnoreCase)
+{
+        {
+            "Chess", new List<dynamic>
+    {
+                new { Title = "Queen’s Gambit Declined Analysis", Author = "Magnus Carlsen", Date = DateTime.Now.AddDays(-1).ToString("MMMM dd, yyyy"), Content = "A deep dive into this classical opening and why it remains popular even today." },
+                new { Title = "Endgame Strategies", Author = "Hikaru Nakamura", Date = DateTime.Now.AddDays(-7).ToString("MMMM dd, yyyy"), Content = "Practical tips to improve your king and pawn endgames." }
+            }
+        },
+        {
+            "C++", new List<dynamic>
+    {
+                new { Title = "Mastering Pointers in C++", Author = "Oscar Piastri", Date = DateTime.Now.AddDays(-2).ToString("MMMM dd, yyyy"), Content = "Pointers are tricky but powerful. Here are some insights into pointer arithmetic and memory management." },
+                new { Title = "STL Tips and Tricks", Author = "Chloe Kelly", Date = DateTime.Now.AddDays(-5).ToString("MMMM dd, yyyy"), Content = "Using STL efficiently can save a ton of time. Let's discuss vector vs list, and when to use unordered_map." }
+            }
+        }
+    };
+
+    // Pick current community posts
+    var posts = postsByCommunity.ContainsKey(ViewBag.SkillName)
+        ? postsByCommunity[ViewBag.SkillName]
+        : new List<dynamic>();
+}
+
+<div class="container mt-5">
+    <h2 class="match-heading">@ViewBag.SkillName Community</h2>
+
+    @if (posts.Count == 0)
+    {
+        <div class="alert alert-warning">No posts yet in this community.</div>
+    }
+    else
+    {
+        foreach (var post in posts)
+        {
+            <div class="post-card mb-4 p-3 mx-auto">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h3 class="post-title">@post.Title</h3>
+                        <p class="post-author">by <em>@post.Author</em></p>
+                    </div>
+                    <span class="post-date">@post.Date</span>
+                </div>
+                <p class="post-content">@post.Content</p>
+            </div>
+        }
+    }
+</div>
+
+@section scripts {
+    <style>
+        .match-heading {
+            font-weight: 700;
+            font-size: 1.75rem;
+            color: #222;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #444;
+            padding-bottom: 5px;
+        }
+
+        .post-card {
+            border: 2px solid #222;
+            border-radius: 8px;
+            background-color: #fff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 70%;          /* 70% width */
+        }
+
+        .post-card:hover {
+            transform: scale(1.01);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+        }
+
+        .post-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .post-author {
+            font-size: 0.9rem;
+            color: #555;
+            margin: 0;
+        }
+
+        .post-date {
+            background: #eee;
+            border: 1px solid #aaa;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .post-content {
+            font-size: 0.95rem;
+            color: #333;
+            margin-top: 10px;
+        }
+
+    </style>
+}
