@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Mvc;
+﻿using System.Web.Mvc;
 
 namespace SkillSwap.Controllers
 {
@@ -11,6 +7,18 @@ namespace SkillSwap.Controllers
         // GET: Communities
         public ActionResult Index()
         {
+            return View();
+        }
+
+        // GET: Communities/{id}
+        public ActionResult Skill(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+            {
+                return RedirectToAction("Index");
+            }
+
+            ViewBag.SkillName = id;
             return View();
         }
     }

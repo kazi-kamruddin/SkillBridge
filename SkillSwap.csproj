@@ -124,6 +124,7 @@
     <Compile Include="Controllers\CommunitiesController.cs" />
     <Compile Include="Controllers\ExploreController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\InteractionsController.cs" />
     <Compile Include="Controllers\MessagesController.cs" />
     <Compile Include="Controllers\ProfileController.cs" />
     <Compile Include="Global.asax.cs">
@@ -132,6 +133,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\assests\avatar1.jpg" />
+    <Content Include="Content\assests\avatar2.jpg" />
+    <Content Include="Content\assests\avatar3.png" />
     <Content Include="Content\bootstrap-grid.css" />
     <Content Include="Content\bootstrap-grid.min.css" />
     <Content Include="Content\bootstrap-grid.rtl.css" />
@@ -157,6 +161,7 @@
     <Content Include="Scripts\bootstrap.esm.min.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include=".gitignore" />
     <None Include="Scripts\jquery-3.7.0.intellisense.js" />
     <Content Include="Scripts\jquery-3.7.0.js" />
     <Content Include="Scripts\jquery-3.7.0.min.js" />
@@ -188,6 +193,8 @@
     <Content Include="Views\Communities\index.cshtml" />
     <Content Include="Views\Messages\index.cshtml" />
     <Content Include="Views\Profile\index.cshtml" />
+    <Content Include="Views\Interactions\index.cshtml" />
+    <Content Include="Views\Communities\Skill.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -1,23 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Mvc;
+﻿using System.Web.Mvc;
 using System.Web.Routing;
 
-namespace SkillSwap
+public class RouteConfig
 {
-    public class RouteConfig
+    public static void RegisterRoutes(RouteCollection routes)
     {
-        public static void RegisterRoutes(RouteCollection routes)
-        {
-            routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
+        routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
 
-            routes.MapRoute(
-                name: "Default",
-                url: "{controller}/{action}/{id}",
-                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
-            );
-        }
+        // Route for Communities Index page
+        routes.MapRoute(
+            name: "CommunitiesIndex",
+            url: "Communities",
+            defaults: new { controller = "Communities", action = "Index" }
+        );
+
+        // Route for individual skill community
+        routes.MapRoute(
+            name: "CommunitySkill",
+            url: "Communities/{id}",
+            defaults: new { controller = "Communities", action = "Skill" }
+        );
+
+        // Default fallback route
+        routes.MapRoute(
+            name: "Default",
+            url: "{controller}/{action}/{id}",
+            defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
+        );
     }
 }
