@@ -1,17 +1,15 @@
 @{
     ViewBag.Title = "Communities";
 
-    // Skills I know
     var skillsKnown = new List<dynamic>
-{
+    {
         new { Id = 1, Name = "C++", Url = Url.Action("Skill", "Communities", new { id = "CPP" }) },
         new { Id = 2, Name = "Chess", Url = Url.Action("Skill", "Communities", new { id = "Chess" }) },
         new { Id = 3, Name = "Java", Url = Url.Action("Skill", "Communities", new { id = "Java" }) }
     };
 
-    // Skills I want to learn
     var skillsToLearn = new List<dynamic>
-{
+    {
         new { Id = 4, Name = "Go", Url = Url.Action("Skill", "Communities", new { id = "Go" }) },
         new { Id = 5, Name = "Rust", Url = Url.Action("Skill", "Communities", new { id = "Rust" }) },
         new { Id = 6, Name = "TypeScript", Url = Url.Action("Skill", "Communities", new { id = "TypeScript" }) }
@@ -19,7 +17,6 @@
 }
 
 <div class="container mt-5 pt-4">
-    <!-- Skills Known -->
     <h3 class="match-heading">Skills I Know</h3>
     <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
         @foreach (var skill in skillsKnown)
@@ -36,7 +33,7 @@
         }
     </div>
 
-    <!-- Skills to Learn -->
+
     <h3 class="match-heading">Skills I Want to Learn</h3>
     <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
         @foreach (var skill in skillsToLearn)
