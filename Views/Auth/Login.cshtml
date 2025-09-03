@@ -1,7 +1,51 @@
-
 @{
     ViewBag.Title = "Login";
 }
 
-<h2>Login</h2>
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow d-flex flex-row overflow-hidden" style="max-width: 850px; border-radius: 12px; width: 100%;">
 
+        <!-- Left Side (Login Form) -->
+        <div class="p-5 flex-fill" style="background-color: #fff;">
+            <h2 class="mb-4">Sign In</h2>
+
+            @using (Html.BeginForm("Login", "Auth", FormMethod.Post))
+            {
+                <!-- Email -->
+                <div class="form-group mb-3">
+                    <label for="Email">Email</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-envelope"></i>
+                        </span>
+                        @Html.TextBox("Email", null, new { @class = "form-control", placeholder = "Enter your email", type = "email" })
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group mb-4">
+                    <label for="Password">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-lock"></i>
+                        </span>
+                        @Html.Password("Password", null, new { @class = "form-control", placeholder = "Enter your password" })
+                    </div>
+                </div>
+
+                <!-- Sign In button -->
+                <button type="submit" class="btn text-white w-100" style="background: linear-gradient(to right, #ff416c, #ff4b2b); font-weight: bold; border-radius: 6px;">
+                    Sign In
+                </button>
+            }
+        </div>
+
+        <!-- Right Side (Welcome Message) -->
+        <div class="d-flex flex-column justify-content-center align-items-center text-white flex-fill p-5"
+             style="background: linear-gradient(to right, #ff416c, #ff4b2b);">
+            <h3 class="mb-3">Welcome to login</h3>
+            <p>Don't have an account?</p>
+            @Html.ActionLink("Sign Up", "SignUp", "Auth", null, new { @class = "btn btn-light" })
+        </div>
+    </div>
+</div>

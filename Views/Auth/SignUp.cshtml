@@ -1,7 +1,48 @@
-
 @{
-    ViewBag.Title = "SignUp";
+    ViewBag.Title = "Sign Up";
 }
 
-<h2>SignUp</h2>
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow p-4" style="width: 400px; border-radius: 12px;">
+        <h2 class="text-center mb-4">Sign Up</h2>
+
+        @using (Html.BeginForm("SignUp", "Auth", FormMethod.Post))
+        {
+            <div class="form-group mb-3">
+                <label for="Name">Name:</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-person"></i>
+                    </span>
+                    @Html.TextBox("Name", null, new { @class = "form-control", placeholder = "Enter your name" })
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="Email">Email:</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-envelope"></i>
+                    </span>
+                    @Html.TextBox("Email", null, new { @class = "form-control", placeholder = "Enter your email", type = "email" })
+                </div>
+            </div>
+
+            <div class="form-group mb-4">
+                <label for="Password">Password:</label>
+                <div class="input-group">
+                    <span class="input-group-text">
+                        <i class="bi bi-lock"></i>
+                    </span>
+                    @Html.Password("Password", null, new { @class = "form-control", placeholder = "Enter your password" })
+                </div>
+            </div>
+
+            <button type="submit" class="btn text-white w-100" style="background: linear-gradient(to right, #ff416c, #ff4b2b); border-radius: 25px; font-weight: bold;">
+                SIGN UP
+            </button>
+        }
+    </div>
+</div>
+
 
