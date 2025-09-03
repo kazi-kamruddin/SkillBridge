@@ -1,26 +1,64 @@
 @{
     ViewBag.Title = ViewBag.SkillName + " Community Posts";
 
-    // Fake posts for different communities
     var postsByCommunity = new Dictionary<string, List<dynamic>>(StringComparer.OrdinalIgnoreCase)
 {
         {
             "Chess", new List<dynamic>
     {
                 new { Title = "Queen’s Gambit Declined Analysis", Author = "Magnus Carlsen", Date = DateTime.Now.AddDays(-1).ToString("MMMM dd, yyyy"), Content = "A deep dive into this classical opening and why it remains popular even today." },
-                new { Title = "Endgame Strategies", Author = "Hikaru Nakamura", Date = DateTime.Now.AddDays(-7).ToString("MMMM dd, yyyy"), Content = "Practical tips to improve your king and pawn endgames." }
+                new { Title = "Endgame Strategies", Author = "Hikaru Nakamura", Date = DateTime.Now.AddDays(-7).ToString("MMMM dd, yyyy"), Content = "Practical tips to improve your king and pawn endgames." },
+                new { Title = "Tactics for Intermediate Players", Author = "Fabiano Caruana", Date = DateTime.Now.AddDays(-10).ToString("MMMM dd, yyyy"), Content = "Learn to spot forks, pins, and skewers in your games." },
+                new { Title = "Opening Repertoire Ideas", Author = "Ian Nepomniachtchi", Date = DateTime.Now.AddDays(-15).ToString("MMMM dd, yyyy"), Content = "Recommended openings to build a solid repertoire." }
             }
         },
         {
-            "C++", new List<dynamic>
+            "CPP", new List<dynamic>
     {
                 new { Title = "Mastering Pointers in C++", Author = "Oscar Piastri", Date = DateTime.Now.AddDays(-2).ToString("MMMM dd, yyyy"), Content = "Pointers are tricky but powerful. Here are some insights into pointer arithmetic and memory management." },
-                new { Title = "STL Tips and Tricks", Author = "Chloe Kelly", Date = DateTime.Now.AddDays(-5).ToString("MMMM dd, yyyy"), Content = "Using STL efficiently can save a ton of time. Let's discuss vector vs list, and when to use unordered_map." }
+                new { Title = "STL Tips and Tricks", Author = "Chloe Kelly", Date = DateTime.Now.AddDays(-5).ToString("MMMM dd, yyyy"), Content = "Using STL efficiently can save a ton of time. Let's discuss vector vs list, and when to use unordered_map." },
+                new { Title = "C++ Lambda Expressions", Author = "Lando Norris", Date = DateTime.Now.AddDays(-8).ToString("MMMM dd, yyyy"), Content = "A guide to understanding and using lambdas effectively." },
+                new { Title = "Memory Management Best Practices", Author = "Carlos Sainz", Date = DateTime.Now.AddDays(-12).ToString("MMMM dd, yyyy"), Content = "Smart pointers, RAII, and tips for avoiding memory leaks." }
+            }
+        },
+        {
+            "Java", new List<dynamic>
+    {
+                new { Title = "Java Streams in Depth", Author = "James Gosling", Date = DateTime.Now.AddDays(-1).ToString("MMMM dd, yyyy"), Content = "A guide to using streams efficiently in Java 8 and above." },
+                new { Title = "Concurrency Best Practices", Author = "Joshua Bloch", Date = DateTime.Now.AddDays(-3).ToString("MMMM dd, yyyy"), Content = "Managing threads safely and efficiently in Java applications." },
+                new { Title = "Java Collections Framework Tips", Author = "Brian Goetz", Date = DateTime.Now.AddDays(-6).ToString("MMMM dd, yyyy"), Content = "Learn how to pick the right collection type for your problem." },
+                new { Title = "Effective Java Practices", Author = "Neal Gafter", Date = DateTime.Now.AddDays(-9).ToString("MMMM dd, yyyy"), Content = "Best practices to write clean and maintainable Java code." }
+            }
+        },
+        {
+            "Go", new List<dynamic>
+    {
+                new { Title = "Getting Started with Go Routines", Author = "Rob Pike", Date = DateTime.Now.AddDays(-1).ToString("MMMM dd, yyyy"), Content = "Learn how to use goroutines for concurrent programming in Go." },
+                new { Title = "Go Channels Explained", Author = "Ken Thompson", Date = DateTime.Now.AddDays(-4).ToString("MMMM dd, yyyy"), Content = "A guide to using channels for safe communication between goroutines." },
+                new { Title = "Structs and Interfaces in Go", Author = "Russ Cox", Date = DateTime.Now.AddDays(-7).ToString("MMMM dd, yyyy"), Content = "Understanding Go’s type system to build robust applications." },
+                new { Title = "Error Handling Patterns", Author = "Francesc Campoy", Date = DateTime.Now.AddDays(-10).ToString("MMMM dd, yyyy"), Content = "Effective ways to handle errors in Go projects." }
+            }
+        },
+        {
+            "Rust", new List<dynamic>
+    {
+                new { Title = "Ownership and Borrowing in Rust", Author = "Graydon Hoare", Date = DateTime.Now.AddDays(-2).ToString("MMMM dd, yyyy"), Content = "Learn how Rust manages memory safely through ownership rules." },
+                new { Title = "Rust Lifetimes Explained", Author = "Steve Klabnik", Date = DateTime.Now.AddDays(-5).ToString("MMMM dd, yyyy"), Content = "A practical guide to using lifetimes effectively in your code." },
+                new { Title = "Error Handling in Rust", Author = "Carol Nichols", Date = DateTime.Now.AddDays(-8).ToString("MMMM dd, yyyy"), Content = "Master the Result and Option types for robust error handling." },
+                new { Title = "Concurrency in Rust", Author = "Nicholas Matsakis", Date = DateTime.Now.AddDays(-11).ToString("MMMM dd, yyyy"), Content = "Safe concurrency patterns using threads and async." }
+            }
+        },
+        {
+            "TypeScript", new List<dynamic>
+    {
+                new { Title = "TypeScript Generics Deep Dive", Author = "Anders Hejlsberg", Date = DateTime.Now.AddDays(-1).ToString("MMMM dd, yyyy"), Content = "Using generics to write flexible and type-safe code." },
+                new { Title = "Advanced TypeScript Types", Author = "Ryan Cavanaugh", Date = DateTime.Now.AddDays(-3).ToString("MMMM dd, yyyy"), Content = "A guide to intersection, union, and mapped types." },
+                new { Title = "TypeScript Decorators", Author = "Basarat Ali", Date = DateTime.Now.AddDays(-6).ToString("MMMM dd, yyyy"), Content = "How to use decorators for class and method enhancements." },
+                new { Title = "TypeScript Project Structure", Author = "Dan Vanderkam", Date = DateTime.Now.AddDays(-9).ToString("MMMM dd, yyyy"), Content = "Organizing large TypeScript projects for maintainability." }
             }
         }
     };
 
-    // Pick current community posts
     var posts = postsByCommunity.ContainsKey(ViewBag.SkillName)
         ? postsByCommunity[ViewBag.SkillName]
         : new List<dynamic>();
@@ -50,9 +88,26 @@
         }
     }
 </div>
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
 
 @section scripts {
     <style>
+        body {
+            background: url('@Url.Content("~/Content/assests/cmBg.jpg")') no-repeat center center fixed;
+            background-size: cover;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
         .match-heading {
             font-weight: 700;
             font-size: 1.75rem;
@@ -67,13 +122,13 @@
             border-radius: 8px;
             background-color: #fff;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            width: 70%;          /* 70% width */
+            width: 70%;
         }
 
-        .post-card:hover {
-            transform: scale(1.01);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-        }
+            .post-card:hover {
+                transform: scale(1.01);
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+            }
 
         .post-title {
             font-size: 1.25rem;
@@ -102,6 +157,5 @@
             color: #333;
             margin-top: 10px;
         }
-
     </style>
 }

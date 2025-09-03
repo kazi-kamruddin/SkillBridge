@@ -2,14 +2,14 @@
     ViewBag.Title = "Communities";
 
     var skillsKnown = new List<dynamic>
-    {
+{
         new { Id = 1, Name = "C++", Url = Url.Action("Skill", "Communities", new { id = "CPP" }) },
         new { Id = 2, Name = "Chess", Url = Url.Action("Skill", "Communities", new { id = "Chess" }) },
         new { Id = 3, Name = "Java", Url = Url.Action("Skill", "Communities", new { id = "Java" }) }
     };
 
     var skillsToLearn = new List<dynamic>
-    {
+{
         new { Id = 4, Name = "Go", Url = Url.Action("Skill", "Communities", new { id = "Go" }) },
         new { Id = 5, Name = "Rust", Url = Url.Action("Skill", "Communities", new { id = "Rust" }) },
         new { Id = 6, Name = "TypeScript", Url = Url.Action("Skill", "Communities", new { id = "TypeScript" }) }
@@ -17,7 +17,7 @@
 }
 
 <div class="container mt-5 pt-4">
-    <h3 class="match-heading">Skills I Know</h3>
+    <h3 class="match-heading">Communities of your skills</h3>
     <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
         @foreach (var skill in skillsKnown)
         {
@@ -33,8 +33,7 @@
         }
     </div>
 
-
-    <h3 class="match-heading">Skills I Want to Learn</h3>
+    <h3 class="match-heading">Communities of skills you seek to learn</h3>
     <div class="row row-cols-1 row-cols-md-3 g-4 mb-5">
         @foreach (var skill in skillsToLearn)
         {
@@ -51,56 +50,80 @@
     </div>
 </div>
 
-@section scripts {
-    <style>
-        body {
-            background: url("~/Content/assets/background.jpg") no-repeat center center fixed;
-            background-size: cover;
-        }
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
+<br />
 
-        .match-heading {
-            font-weight: 700;
-            font-size: 1.75rem;
-            color: #626569;
-            margin-bottom: 1rem;
-            position: relative;
-            display: block;
-            padding-bottom: 5px;
-        }
+<style>
+    body {
+        background: url('@Url.Content("~/Content/assests/cmBg.jpg")') no-repeat center center fixed;
+        background-size: cover;
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+    }
 
-            .match-heading::after {
-                content: "";
-                display: block;
-                width: 100%;
-                height: 3px;
-                background-color: #626569;
-                position: absolute;
-                left: 0;
-                bottom: 0;
-            }
+    .match-heading {
+        font-weight: 700;
+        font-size: 1.75rem;
+        color: #000; 
+        margin-bottom: 1rem;
+        position: relative;
+        display: block;
+        padding-bottom: 5px;
+    }
 
-        .skill-card {
-            background-color: #3e3e3e;
-            color: #fff;
-            border-radius: 12px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            cursor: pointer;
-        }
+    .match-heading::after {
+        content: "";
+        display: block;
+        width: 100%;
+        height: 3px;
+        background-color: #000; 
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        transition: background-color 0.3s ease;
+    }
 
-            .skill-card:hover {
-                transform: scale(1.05);
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
-                background-color: #505050;
-            }
+    .skill-card {
+        background-color: #6c6c6c; 
+        font-size: 2rem;
+        font-weight: 500;
+        color: #fff; 
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
 
-        .card-link {
-            text-decoration: none;
-            color: inherit;
-        }
+    .skill-card:hover {
+        background-color: #fff; 
+        color: #6c6c6c;
+        transform: scale(1.05);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }
 
-        h5 {
-            font-size: 1.2rem;
-            font-weight: 600;
-        }
-    </style>
-}
+    .skill-card:hover h5 {
+        color: #6c6c6c; 
+    }
+
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    h5 {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+
+    .container {
+        background-color: transparent;
+    }
+</style>
