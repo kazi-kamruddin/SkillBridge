@@ -1,7 +1,87 @@
-
 @{
     ViewBag.Title = "Profile";
+
+    // Editable variables
+    var name = "John Doe";
+    var bio = "Full Stack Developer passionate about building web apps and exploring AI/ML.";
+    var email = "johndoe@example.com";
+    var location = "New York, USA";
+    var avatarPath = Url.Content("~/Content/images/avatar.jpg");
+
+    // Skills (skill name + percentage)
+    var skills = new Dictionary<string, int>
+{
+        { "Python", 80 },
+        { "C++", 50 },
+        { "AI/ML", 70 }
+    };
+
+    // Skills to learn
+    var seekingSkills = new List<string>
+    {
+        "AutoCad",
+        "Blockchain",
+        "Rubics Cube",
+        "DaVinci Resolve"
+    };
 }
 
-<h2>Profile</h2>
+<div class="container text-center mt-5">
+    <!-- Edit Profile Button -->
+    <div class="d-flex justify-content-end mb-3">
+        <a href="@Url.Action("Edit", "Profile")" class="btn btn-success">Edit Profile</a>
+    </div>
 
+    <!-- Avatar -->
+    <div class="mb-3">
+        <img src="@avatarPath" class="rounded-circle border border-3 border-danger"
+             alt="Avatar" width="120" height="120">
+    </div>
+
+    <!-- Name -->
+    <h3>@name</h3>
+
+    <!-- Bio, Email, Location -->
+    <p class="text-muted">@bio</p>
+    <p><i class="bi bi-envelope"></i> @email</p>
+    <p><i class="bi bi-geo-alt"></i> @location</p>
+
+    <hr />
+
+    <!-- Skills Section -->
+    <h4 class="mt-4 mb-3">Skills</h4>
+    <div class="card shadow p-4 mx-auto" style="max-width: 600px;">
+        @foreach (var skill in skills)
+        {
+            <div class="mb-3 text-start">
+                <label><strong>@skill.Key</strong></label>
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar bg-danger" role="progressbar" style="width: @skill.Value%;"
+                         aria-valuenow="@skill.Value" aria-valuemin="0" aria-valuemax="100">
+                        @skill.Value%
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Seeking to Learn Section -->
+    <h4 class="mt-5 mb-3">Seeking to Learn</h4>
+    <div class="d-flex flex-wrap justify-content-center gap-3">
+        @foreach (var seek in seekingSkills)
+        {
+            <div class="card" style="background-color:#004953; color:white; min-width:120px; max-width:200px;">
+                <div class="card-body p-2 text-center">
+                    <span>@seek</span>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div style="height: 45px;"></div>
+
+    <!-- Logout Button -->
+    <div class="mt-5">
+        <a href="@Url.Action("Logout", "Auth")" class="btn btn-danger px-5">Logout</a>
+    </div>
+</div>
