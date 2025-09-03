@@ -1,0 +1,123 @@
+﻿@{
+    ViewBag.Title = "Interaction";
+}
+
+<div class="container my-5">
+
+    <h1 class="fw-bold text-center mb-5 text-primary">Your Skill Journey</h1>
+
+    <!-- ================= SKILL LEARNING SECTION ================= -->
+    <h2 class="section-header text-center text-success mb-4">📘 Skills You're Learning</h2>
+    <div class="card shadow-lg rounded-4 p-4 mb-5">
+        <h4 class="fw-bold mb-4 text-dark">Acting</h4>
+        <div class="row g-3">
+            @for (int i = 1; i <= 12; i++)
+            {
+                if (i <= 5)
+                {
+                    <!-- Completed Levels -->
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <div class="level-card bg-success text-white text-center rounded-3 shadow-sm">
+                            <h6>Level @i</h6>
+                            <p class="mb-0">✅ Completed</p>
+                        </div>
+                    </div>
+                }
+                else if (i == 6)
+                {
+                    <!-- Upcoming Level -->
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <div class="level-card bg-info text-dark text-center rounded-3 shadow-sm">
+                            <h6>Level @i</h6>
+                            <p class="mb-0">⏳ Tomorrow</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <!-- Locked Levels -->
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <div class="level-card bg-secondary text-white text-center rounded-3 shadow-sm locked">
+                            <h6>Level @i</h6>
+                            <p class="mb-0">🔒 Locked</p>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- ================= SKILL TEACHING SECTION ================= -->
+    <h2 class="section-header text-center text-warning mb-4">🎓 Skills You're Teaching</h2>
+    <div class="card shadow-lg rounded-4 p-4 mb-5">
+        <h4 class="fw-bold mb-4 text-dark">Python Teaching Sessions</h4>
+        <div class="row g-3">
+            @for (int i = 1; i <= 12; i++)
+            {
+                if (i <= 5)
+                {
+                    <!-- Teaching Completed -->
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <div class="level-card bg-success text-white text-center rounded-3 shadow-sm">
+                            <h6>Level @i</h6>
+                            <p class="mb-0">✅ Done</p>
+                        </div>
+                    </div>
+                }
+                else if (i == 6)
+                {
+                    <!-- Next Teaching Session -->
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <div class="level-card bg-info text-dark text-center rounded-3 shadow-sm">
+                            <h6>Level @i</h6>
+                            <p class="mb-0">⏳ Tomorrow</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <!-- Locked Teaching Levels -->
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <div class="level-card bg-secondary text-white text-center rounded-3 shadow-sm locked">
+                            <h6>Level @i</h6>
+                            <p class="mb-0">🔒 Locked</p>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+
+</div>
+
+<!-- Custom Styles -->
+<style>
+    .section-header {
+        font-size: 2rem;
+        font-weight: bold;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #ddd;
+        margin-bottom: 25px;
+    }
+
+    .level-card, .finished-card {
+        padding: 20px;
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+
+        .level-card:hover, .finished-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+        }
+
+    .locked {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    h3, h4, h5 {
+        font-weight: bold;
+    }
+</style>
