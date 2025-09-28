@@ -169,6 +169,7 @@
     <Compile Include="Controllers\ExploreController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\InteractionsController.cs" />
+    <Compile Include="Controllers\MessagesController.cs" />
     <Compile Include="Controllers\NotificationsController.cs" />
     <Compile Include="Controllers\ProfileController.cs" />
     <Compile Include="Global.asax.cs">
@@ -229,6 +230,7 @@
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\InteractionDetailsViewModel.cs" />
     <Compile Include="Models\InteractionModels.cs" />
+    <Compile Include="Models\MessagesViewModels.cs" />
     <Compile Include="Models\Messaging.cs" />
     <Compile Include="Models\ProfileModels.cs" />
     <Compile Include="Models\PublicProfileViewModel.cs" />
@@ -340,6 +342,9 @@
     <Content Include="Views\Communities\PostDetails.cshtml" />
     <Content Include="Views\Communities\Landing.cshtml" />
     <Content Include="Views\Communities\CreatePost.cshtml" />
+    <Content Include="Views\Messages\Index.cshtml" />
+    <Content Include="Views\Messages\Chat.cshtml" />
+    <Content Include="Views\Messages\NoConversations.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -1,0 +1,24 @@
+@model IEnumerable<SkillBridge.Models.Conversation>
+@using Microsoft.AspNet.Identity
+
+@{
+    ViewBag.Title = "Messages";
+    var currentUserId = User.Identity.GetUserId();
+}
+
+<h2>Your Conversations</h2>
+
+<ul class="list-group">
+    @foreach (var convo in Model)
+    {
+        var otherUserId = convo.User1Id == currentUserId ? convo.User2Id : convo.User1Id;
+        <li class="list-group-item">
+            <a href="@Url.Action("Chat", "Messages", new { id = convo.Id })">
+                Conversation with @otherUserId
+            </a>
+            <span class="text-muted pull-right">
+                @convo.LastMessageAt?.ToString("g")
+            </span>
+        </li>
+    }
+</ul>

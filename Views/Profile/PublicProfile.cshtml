@@ -7,7 +7,6 @@
 
 <main class="container text-center mt-5" aria-labelledby="title">
 
-    <!-- Profile Picture -->
     <div class="mb-3 text-center">
         <img src="@Model.ProfileImageUrl"
              alt="@Model.FullName"
@@ -15,12 +14,19 @@
              style="width:150px; height:150px; object-fit:cover; border:2px solid #ccc;" />
     </div>
 
-    <!-- Name -->
     <h3 id="title">@Model.FullName’s Profile</h3>
-
-    <!-- Bio, Profession, Location -->
     <p class="text-muted">@Model.Profession | @Model.Location</p>
     <p>@Model.Bio</p>
+
+    @if (User.Identity.IsAuthenticated && Model.UserId != User.Identity.GetUserId())
+    {
+        <div class="mt-3 mb-4">
+            <a class="btn btn-success"
+               href="@Url.Action("Knock", "Messages", new { targetUserId = Model.UserId })">
+                <i class="fas fa-hand-point-right"></i> Knock
+            </a>
+        </div>
+    }
 
     <hr />
 
@@ -50,31 +56,29 @@
         <ul id="skillsToTeachList" class="list-unstyled mb-0">
             @foreach (var skill in Model.SkillsToTeach)
             {
-                // preserve original fetching / fields; determine progress values safely
                 var showButton = skill.RequestStatus != "Hidden";
-                var buttonClass = "btn btn-success"; // default green
+                var buttonClass = "btn btn-success"; 
                 var buttonText = "Request";
                 var isDisabled = false;
 
                 if (skill.RequestStatus == "Pending")
                 {
                     buttonText = "Request Sent";
-                    buttonClass = "btn btn-warning"; // orange
+                    buttonClass = "btn btn-warning"; 
                     isDisabled = true;
                 }
                 else if (skill.RequestStatus == "Declined")
                 {
                     buttonText = "Request Again";
-                    buttonClass = "btn btn-danger"; // red
+                    buttonClass = "btn btn-danger"; 
                 }
 
-                // determine known/total via reflection if properties exist, fallback safely
                 var knownProp = skill.GetType().GetProperty("KnownUpToStage");
                 var stageProp = skill.GetType().GetProperty("Stage");
                 var totalProp = skill.GetType().GetProperty("TotalStages");
 
                 int known = 0;
-                int total = 10; // fallback total if not provided
+                int total = 10; 
 
                 if (knownProp != null)
                 {
@@ -94,7 +98,6 @@
                 <li class="mb-4 text-start">
                     <label><strong>@skill.SkillName</strong> (Stage: @((stageProp != null) ? stageProp.GetValue(skill) : (knownProp != null ? knownProp.GetValue(skill) : skill.Stage)))</label>
 
-                    <!-- Progress bar (copied from index design) -->
                     <div class="progress mt-2" style="height:25px;">
                         <div class="progress-bar bg-danger" role="progressbar"
                              style="width:@(percent)%;"
@@ -104,7 +107,6 @@
                         </div>
                     </div>
 
-                    <!-- Centered request button under the progress bar -->
                     @if (showButton)
                     {
                         <div class="text-center mt-3">

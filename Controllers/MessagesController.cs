@@ -16,20 +16,28 @@ namespace SkillBridge.Controllers
 
         // GET: /Messages
         // List all conversations for current user
+        [Authorize]
         public async Task<ActionResult> Index()
         {
             var userId = User.Identity.GetUserId();
 
-            var conversations = await db.Conversations
+            var firstConversation = await db.Conversations
                 .Where(c => c.User1Id == userId || c.User2Id == userId)
                 .OrderByDescending(c => c.LastMessageAt)
-                .ToListAsync();
+                .FirstOrDefaultAsync();
 
-            return View(conversations);
+            if (firstConversation != null)
+            {
+                return RedirectToAction("Chat", new { id = firstConversation.Id });
+            }
+
+            ViewBag.Message = "You don’t have any conversations yet. Go to Explore and Knock someone!";
+            return View("NoConversations");
         }
 
+
         // GET: /Messages/Chat/5
-        // Show one conversation (with decrypted messages)
+        // Show one conversation (with decrypted messages + sidebar lists)
         public async Task<ActionResult> Chat(int id)
         {
             var userId = User.Identity.GetUserId();
@@ -41,10 +49,9 @@ namespace SkillBridge.Controllers
 
             if (conversation == null) return HttpNotFound();
 
-            // Decrypt all messages for display
             var decryptedMessages = conversation.Messages
                 .OrderBy(m => m.CreatedAt)
-                .Select(m => new
+                .Select(m => new ChatMessageViewModel
                 {
                     FromUserId = m.FromUserId,
                     ToUserId = m.ToUserId,
@@ -56,10 +63,35 @@ namespace SkillBridge.Controllers
 
             ViewBag.Messages = decryptedMessages;
             ViewBag.ConversationId = id;
-            ViewBag.OtherUserId = conversation.User1Id == userId ? conversation.User2Id : conversation.User1Id;
+            ViewBag.OtherUserId = conversation.User1Id == userId
+                ? conversation.User2Id
+                : conversation.User1Id;
+
+            var allConversations = await db.Conversations
+                .Where(c => c.User1Id == userId || c.User2Id == userId)
+                .OrderByDescending(c => c.LastMessageAt)
+                .ToListAsync();
+            ViewBag.AllConversations = allConversations;
+
+            var partnerId = conversation.User1Id == userId ? conversation.User2Id : conversation.User1Id;
+            var profileInfo = await db.UserInformations.FirstOrDefaultAsync(u => u.UserId == partnerId);
+
+            var partnerVm = new ChatPartnerViewModel
+            {
+                FullName = profileInfo?.FullName ?? "Unknown",
+                Profession = profileInfo?.Profession ?? "",
+                Location = profileInfo?.Location ?? "",
+                Bio = profileInfo?.Bio ?? "",
+                ProfileImageUrl = ProfileImageHelper.GetRandomProfileImage()
+            };
+
+            ViewBag.OtherUserProfile = partnerVm;
 
             return View(conversation);
         }
+
+
+
 
         // POST: /Messages/Send
         [HttpPost]
@@ -76,7 +108,6 @@ namespace SkillBridge.Controllers
 
             var otherUserId = (conversation.User1Id == userId) ? conversation.User2Id : conversation.User1Id;
 
-            // Encrypt message before saving
             var encrypted = MessageEncryptionService.Encrypt(messageText);
 
             var msg = new Message
@@ -97,5 +128,39 @@ namespace SkillBridge.Controllers
 
             return RedirectToAction("Chat", new { id = conversationId });
         }
+
+
+
+
+        [Authorize]
+        public async Task<ActionResult> Knock(string targetUserId)
+        {
+            var currentUserId = User.Identity.GetUserId();
+
+            if (targetUserId == currentUserId)
+                return RedirectToAction("Index"); 
+
+            var conversation = await db.Conversations
+                .FirstOrDefaultAsync(c =>
+                    (c.User1Id == currentUserId && c.User2Id == targetUserId) ||
+                    (c.User1Id == targetUserId && c.User2Id == currentUserId));
+
+            if (conversation == null)
+            {
+                conversation = new Conversation
+                {
+                    User1Id = currentUserId,
+                    User2Id = targetUserId,
+                    CreatedAt = DateTime.Now,
+                    LastMessageAt = DateTime.Now
+                };
+
+                db.Conversations.Add(conversation);
+                await db.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Chat", new { id = conversation.Id });
+        }
+
     }
 }
