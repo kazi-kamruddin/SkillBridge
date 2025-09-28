@@ -37,7 +37,8 @@ namespace SkillBridge.Models
         public DbSet<Community> Communities { get; set; }
         public DbSet<CommunityPost> CommunityPosts { get; set; }
         public DbSet<CommunityComment> CommunityComments { get; set; }
-
+        public DbSet<Conversation> Conversations { get; set; }
+        public DbSet<Message> Messages { get; set; }
 
 
 
@@ -98,6 +99,27 @@ namespace SkillBridge.Models
                 .WithMany()
                 .HasForeignKey(r => r.SkillId)
                 .WillCascadeOnDelete(false);
+            modelBuilder.Entity<Conversation>()
+                .HasRequired(c => c.User1).WithMany()
+                .HasForeignKey(c => c.User1Id).WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<Conversation>()
+                .HasRequired(c => c.User2).WithMany()
+                .HasForeignKey(c => c.User2Id).WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<Message>()
+                .HasRequired(m => m.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(m => m.ConversationId)
+                .WillCascadeOnDelete(true);
+
+            modelBuilder.Entity<Message>()
+                .HasRequired(m => m.FromUser).WithMany()
+                .HasForeignKey(m => m.FromUserId).WillCascadeOnDelete(false);
+
+            modelBuilder.Entity<Message>()
+                .HasRequired(m => m.ToUser).WithMany()
+                .HasForeignKey(m => m.ToUserId).WillCascadeOnDelete(false);
         }
 
 
