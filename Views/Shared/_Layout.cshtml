@@ -411,6 +411,12 @@
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">@Html.ActionLink("Explore", "Index", "Explore", new { area = "" }, new { @class = "nav-link" })</li>
                     <li class="nav-item">@Html.ActionLink("Interactions", "Index", "Interactions", new { area = "" }, new { @class = "nav-link" })</li>
+
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item">@Html.ActionLink("Messages", "Index", "Messages", new { area = "" }, new { @class = "nav-link" })</li>
+                    }
+
                     <li class="nav-item">@Html.ActionLink("Communities", "Index", "Communities", new { area = "" }, new { @class = "nav-link" })</li>
                     <li class="nav-item">@Html.ActionLink("About", "About", "Home", new { area = "" }, new { @class = "nav-link" })</li>
                     <li class="nav-item">@Html.ActionLink("Contact", "Contact", "Home", new { area = "" }, new { @class = "nav-link" })</li>
@@ -498,10 +504,13 @@
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+
+    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="~/signalr/hubs"></script>
+
     @RenderSection("scripts", required: false)
 
     <script>
-        // Notification badge updater
         $(function () {
             function updateNotifBadge() {
                 if ('@User.Identity.IsAuthenticated' === 'True') {
@@ -509,7 +518,6 @@
                         var badge = $("#notifBadge");
                         if (data.unreadCount > 0) {
                             badge.text(data.unreadCount).show();
-                            // Add pulse animation for new notifications
                             badge.addClass('pulse');
                             setTimeout(() => badge.removeClass('pulse'), 500);
                         } else {
@@ -521,19 +529,16 @@
                 }
             }
 
-            // Initial call and set interval
             updateNotifBadge();
-            setInterval(updateNotifBadge, 1000); // Check every 30 seconds
+            setInterval(updateNotifBadge, 1000);
         });
 
-        // Dark/Light mode toggle
         $(function () {
             const body = $("body");
             const toggleBtn = $("#themeToggle");
             const icon = toggleBtn.find("i");
             const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-            // Initialize theme
             function initTheme() {
                 const savedTheme = localStorage.getItem("theme");
 
@@ -558,7 +563,6 @@
                 toggleBtn.attr("title", "Switch to Dark Mode");
             }
 
-            // Toggle theme on button click
             toggleBtn.on("click", function () {
                 if (body.attr("data-theme") === "dark") {
                     enableLightMode();
@@ -567,10 +571,8 @@
                 }
             });
 
-            // Initialize theme on page load
             initTheme();
 
-            // Listen for system theme changes
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
                 if (!localStorage.getItem("theme")) {
                     if (e.matches) {
@@ -582,7 +584,6 @@
             });
         });
 
-        // Add active class to current page in navigation
         $(document).ready(function() {
             const currentUrl = window.location.pathname;
             $('.navbar-nav .nav-link').each(function() {
