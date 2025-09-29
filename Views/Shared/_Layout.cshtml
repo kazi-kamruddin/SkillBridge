@@ -504,6 +504,10 @@
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+
+    <script src="~/Scripts/jquery.signalR-2.4.3.min.js"></script>
+    <script src="~/signalr/hubs"></script>
+
     @RenderSection("scripts", required: false)
 
     <script>
@@ -526,7 +530,7 @@
             }
 
             updateNotifBadge();
-            setInterval(updateNotifBadge, 1000); 
+            setInterval(updateNotifBadge, 1000);
         });
 
         $(function () {

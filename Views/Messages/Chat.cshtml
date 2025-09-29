@@ -39,45 +39,46 @@
 
         <!-- Middle column: chat history -->
         <div class="col-md-6 d-flex flex-column" style="height:80vh;">
-            <div class="flex-grow-1 border p-2 mb-2" style="overflow-y:auto;">
+            <div id="messagePane" class="flex-grow-1 border p-2 mb-2" style="overflow-y:auto;">
                 <h5>Chat with @otherUserProfile?.FullName</h5>
                 <hr />
-                @if (messages != null && messages.Any())
-                {
-                    foreach (var m in messages)
+                <div id="messageList">
+                    @if (messages != null && messages.Any())
                     {
-                        if (m.IsMine)
+                        foreach (var m in messages)
                         {
-                            <div class="text-end mb-2">
-                                <span class="badge bg-primary">@m.Text</span>
-                                <br />
-                                <small class="text-muted">@m.CreatedAt</small>
-                            </div>
-                        }
-                        else
-                        {
-                            <div class="text-start mb-2">
-                                <span class="badge bg-secondary">@m.Text</span>
-                                <br />
-                                <small class="text-muted">@m.CreatedAt</small>
-                            </div>
+                            if (m.IsMine)
+                            {
+                                <div class="text-end mb-2">
+                                    <span class="badge bg-primary">@m.Text</span>
+                                    <br />
+                                    <small class="text-muted">@m.CreatedAt</small>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-start mb-2">
+                                    <span class="badge bg-secondary">@m.Text</span>
+                                    <br />
+                                    <small class="text-muted">@m.CreatedAt</small>
+                                </div>
+                            }
                         }
                     }
-                }
-                else
-                {
-                    <p class="text-muted">No messages yet. Say hi ??</p>
-                }
+                    else
+                    {
+                        <p class="text-muted">No messages yet. Say hi ??</p>
+                    }
+                </div>
             </div>
 
-            @using (Html.BeginForm("Send", "Messages", FormMethod.Post, new { @class = "d-flex" }))
-            {
+            <form id="sendMessageForm" class="d-flex" method="post" action="@Url.Action("Send", "Messages")">
                 @Html.AntiForgeryToken()
                 @Html.Hidden("conversationId", (string)conversationId)
 
-                <input type="text" name="messageText" class="form-control me-2" placeholder="Type your message..." required />
+                <input type="text" id="messageText" name="messageText" class="form-control me-2" placeholder="Type your message..." required />
                 <button type="submit" class="btn btn-primary">Send</button>
-            }
+            </form>
         </div>
 
         <!-- Right column: profile info -->
@@ -101,3 +102,52 @@
         </div>
     </div>
 </div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var conversationId = '@Model.Id';
+            var groupName = 'convo-' + conversationId;
+            var chat = $.connection.chatHub;
+
+            chat.client.receiveMessage = function (msg) {
+                if (String(msg.conversationId) !== String(conversationId)) return;
+
+                var mine = msg.fromUserId === '@User.Identity.GetUserId()';
+                var css = mine ? 'text-end' : 'text-start';
+                var badge = mine ? 'bg-primary' : 'bg-secondary';
+
+                var html = `
+                    <div class="${css} mb-2">
+                        <span class="badge ${badge}">${msg.text}</span><br/>
+                        <small class="text-muted">${new Date(msg.sentAt).toLocaleString()}</small>
+                    </div>`;
+
+                $("#messageList").append(html);
+
+                var pane = $("#messagePane");
+                pane.scrollTop(pane.prop("scrollHeight"));
+            };
+
+            $.connection.hub.start().done(function () {
+                chat.server.joinConversation(groupName);
+                console.log("Joined SignalR group:", groupName);
+            });
+
+            $("#sendMessageForm").submit(function (e) {
+                e.preventDefault();
+
+                var $form = $(this);
+                var data = $form.serialize();
+
+                $.post($form.attr("action"), data)
+                    .done(function () {
+                        $("#messageText").val("").focus();
+                    })
+                    .fail(function () {
+                        alert("Failed to send message.");
+                    });
+            });
+        });
+    </script>
+}

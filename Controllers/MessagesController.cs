@@ -126,8 +126,21 @@ namespace SkillBridge.Controllers
             conversation.LastMessageAt = DateTime.Now;
             await db.SaveChangesAsync();
 
-            return RedirectToAction("Chat", new { id = conversationId });
+            var hubContext = Microsoft.AspNet.SignalR.GlobalHost.ConnectionManager.GetHubContext<SkillBridge.Hubs.ChatHub>();
+            var groupName = $"convo-{conversation.Id}";
+
+            hubContext.Clients.Group(groupName).receiveMessage(new
+            {
+                conversationId = conversation.Id,
+                fromUserId = msg.FromUserId,
+                toUserId = msg.ToUserId,
+                text = messageText,         
+                sentAt = msg.CreatedAt.ToString("o")
+            });
+
+            return new HttpStatusCodeResult(200); 
         }
+
 
 
 
