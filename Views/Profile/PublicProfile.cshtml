@@ -141,7 +141,8 @@
 
 @section Scripts {
     <script src="~/bundles/jquery"></script>
-    <script>
+    @Html.AntiForgeryToken()
+<script>
         $(document).ready(function () {
             $(".requestSkillBtn").click(function () {
                 var $btn = $(this);
@@ -153,7 +154,7 @@
                 $.ajax({
                     url: '@Url.Action("SendSkillRequest", "Profile")',
                     type: 'POST',
-                    data: { userSkillId: userSkillId, profileId: profileId },
+                    data: { userSkillId: userSkillId, profileId: profileId, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
                     success: function (res) {
                         if (res.success) {
                             $btn.text("Request Sent");

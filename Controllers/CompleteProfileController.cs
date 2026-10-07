@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNet.Identity;
 using SkillBridge.Models;
 using System.Data.Entity;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 
@@ -61,7 +62,7 @@ namespace SkillBridge.Controllers
 
             if (model.SkillsToLearn != null && model.SkillsToLearn.Any())
             {
-                var validSkillIds = db.Skills.Select(s => s.Id).ToHashSet();
+                var validSkillIds = new HashSet<int>(db.Skills.Select(s => s.Id));
                 foreach (var skillId in model.SkillsToLearn.Distinct())
                 {
                     if (validSkillIds.Contains(skillId))
@@ -79,7 +80,7 @@ namespace SkillBridge.Controllers
 
             if (model.SkillsIKnow != null && model.SkillsIKnow.Any())
             {
-                var validSkillIds = db.Skills.Select(s => s.Id).ToHashSet();
+                var validSkillIds = new HashSet<int>(db.Skills.Select(s => s.Id));
                 foreach (var skillKnown in model.SkillsIKnow)
                 {
                     if (skillKnown.SkillId > 0 && validSkillIds.Contains(skillKnown.SkillId))

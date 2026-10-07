@@ -104,6 +104,7 @@ sessions
 }
 
 <div class="container mt-4">
+    @Html.AntiForgeryToken()
     <h2 class="mb-4">Interaction Stages</h2>
 
     <div class="skill-blocks">
@@ -139,7 +140,8 @@ sessions
                 var skillId = button.data("skill");
 
                 $.post("@Url.Action("MarkStageDone", "Interactions")",
-                    { stageNumber: stageNumber, skillId: skillId, interactionId: @Model.InteractionId },
+                    { stageNumber: stageNumber, skillId: skillId, interactionId: @Model.InteractionId,
+                      __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
                     function (response) {
                         if (response.success) {
                             var stageDiv = button.closest(".stage");
@@ -161,7 +163,8 @@ sessions
             function attachEndInteractionClick() {
                 $("#end-interaction-btn").click(function () {
                     $.post("@Url.Action("EndInteraction", "Interactions")",
-                        { id: @Model.InteractionId },
+                        { id: @Model.InteractionId,
+                          __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
                         function (response) {
                             alert("Interaction completed!");
                             window.location.href = "@Url.Action("Index", "Interactions")";

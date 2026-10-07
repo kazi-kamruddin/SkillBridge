@@ -311,6 +311,7 @@ namespace SkillBridge.Controllers
         /////////////////////////////////////////////////////////////////////////////
         // POST: /Profile/SendSkillRequest
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public JsonResult SendSkillRequest(int userSkillId, string profileId)
         {
             var currentUserId = User.Identity.GetUserId();
@@ -321,11 +322,15 @@ namespace SkillBridge.Controllers
                 .Include("Skill")
                 .FirstOrDefault(us => us.Id == userSkillId && us.UserId == profileId);
 
-            if (userSkill == null)
+            if (userSkill == null || userSkill.Status != "Teaching")
                 return Json(new { success = false, message = "Skill not found for this user." });
 
             if (userSkill.UserId == currentUserId)
                 return Json(new { success = false, message = "You cannot request your own skill." });
+
+            if (!db.UserSkills.Any(us => us.UserId == currentUserId &&
+                us.SkillId == userSkill.SkillId && us.Status == "Learning"))
+                return Json(new { success = false, message = "Add this skill to your learning list first." });
 
             var existingRequest = db.SkillRequests
                 .FirstOrDefault(r => r.SkillId == userSkill.SkillId &&
@@ -354,7 +359,7 @@ namespace SkillBridge.Controllers
                 UserId = userSkill.UserId,
                 Type = "SkillRequest",
                 ReferenceId = request.Id,
-                Message = $"<a href='{Url.Action("PublicProfile", "Profile", new { id = requester.Id })}'>{requester.UserName}</a> requested your skill: <b>{userSkill.Skill.Name}</b>",
+                Message = $"{requester.UserName} requested your skill: {userSkill.Skill.Name}",
                 IsRead = false,
                 CreatedAt = DateTime.Now
             };

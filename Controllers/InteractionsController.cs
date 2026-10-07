@@ -57,7 +57,8 @@ namespace SkillBridge.Controllers
                 .Include(i => i.Sessions.Select(s => s.Skill))
                 .Include(i => i.SkillFromRequester.SkillStages)
                 .Include(i => i.SkillFromTeacher.SkillStages)
-                .FirstOrDefault(i => i.Id == id);
+                .FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
+                    (i.User1Id == User.Identity.GetUserId() || i.User2Id == User.Identity.GetUserId()));
 
             if (interaction == null) return HttpNotFound();
 
@@ -76,6 +77,7 @@ namespace SkillBridge.Controllers
         ////////////////////////////////////////////////////////////////////////////
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult MarkStageDone(int stageNumber, int interactionId, int skillId)
         {
             var userId = User.Identity.GetUserId();
@@ -88,12 +90,25 @@ namespace SkillBridge.Controllers
 
             if (session == null) return HttpNotFound();
 
+            if (session.Interaction.Status != "Ongoing" ||
+                (session.Interaction.User1Id != userId && session.Interaction.User2Id != userId))
+                return new HttpStatusCodeResult(403);
+
+            if (db.InteractionSessions.Any(s => s.InteractionId == interactionId &&
+                s.SkillId == skillId && s.StageNumber < stageNumber &&
+                (!s.User1Confirmed || !s.User2Confirmed)))
+                return new HttpStatusCodeResult(409);
+
+            if ((session.Interaction.User1Id == userId && session.User1Confirmed) ||
+                (session.Interaction.User2Id == userId && session.User2Confirmed))
+                return Json(new { success = true, status = session.Status });
+
             if (session.Interaction.User1Id == userId)
                 session.User1Confirmed = true;
             else if (session.Interaction.User2Id == userId)
                 session.User2Confirmed = true;
 
-            if (session.User1Confirmed && session.User2Confirmed)
+            if (session.User1Confirmed && session.User2Confirmed && session.Status != "Confirmed")
             {
                 session.Status = "Confirmed";
 
@@ -125,13 +140,25 @@ namespace SkillBridge.Controllers
         ////////////////////////////////////////////////////////////////////////////
         // End Interaction
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult EndInteraction(int id)
         {
             var interaction = db.Interactions
                 .Include(i => i.Sessions)
+                .Include(i => i.User1)
+                .Include(i => i.User2)
+                .Include(i => i.SkillFromRequester)
+                .Include(i => i.SkillFromTeacher)
                 .FirstOrDefault(i => i.Id == id);
 
             if (interaction == null) return HttpNotFound();
+            var userId = User.Identity.GetUserId();
+            if (interaction.User1Id != userId && interaction.User2Id != userId)
+                return new HttpStatusCodeResult(403);
+            if (interaction.Status != "Ongoing" || !interaction.Sessions.Any() ||
+                interaction.Sessions.Any(s => !s.User1Confirmed || !s.User2Confirmed))
+                return new HttpStatusCodeResult(409);
 
             UpdateUserSkill(interaction.User1Id, interaction.SkillFromRequesterId, interaction);
             UpdateUserSkill(interaction.User2Id, interaction.SkillFromTeacherId, interaction);
@@ -183,7 +210,8 @@ namespace SkillBridge.Controllers
                 .Include(i => i.SkillFromTeacher)
                 .Include(i => i.User1)
                 .Include(i => i.User2)
-                .FirstOrDefault(i => i.Id == interactionId && i.Status == "Completed");
+                .FirstOrDefault(i => i.Id == interactionId && i.Status == "Completed" &&
+                    (i.User1Id == userId || i.User2Id == userId));
 
             if (interaction == null) return HttpNotFound();
 
@@ -232,6 +260,12 @@ namespace SkillBridge.Controllers
             var interaction = db.Interactions.Find(model.InteractionId);
             if (interaction == null)
                 return Json(new { success = false, errors = new[] { "Interaction not found." } });
+
+            if (interaction.Status != "Completed" ||
+                (interaction.User1Id != currentUserId && interaction.User2Id != currentUserId))
+                return new HttpStatusCodeResult(403);
+            if (db.Ratings.Any(r => r.InteractionId == model.InteractionId && r.FromUserId == currentUserId))
+                return Json(new { success = false, errors = new[] { "You already rated this interaction." } });
 
             var recipientId = interaction.User1Id == currentUserId ? interaction.User2Id : interaction.User1Id;
 

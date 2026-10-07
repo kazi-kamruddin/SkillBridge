@@ -1,5 +1,6 @@
 @model SkillBridge.Models.UpdateProfileViewModel
 @using Newtonsoft.Json;
+@using System.Collections.Generic;
 @{
     ViewBag.Title = "Update Profile";
 
@@ -12,8 +13,8 @@
 
     var skillStagesDataJson = JsonConvert.SerializeObject(skillStagesDict);
 
-    var knownSkillIds = Model.SkillsIKnow.Select(s => s.SkillId).ToHashSet();
-    var toLearnSkillIds = Model.SkillsToLearn.ToHashSet();
+    var knownSkillIds = new HashSet<int>(Model.SkillsIKnow.Select(s => s.SkillId));
+    var toLearnSkillIds = new HashSet<int>(Model.SkillsToLearn);
 }
 
 @section Styles {

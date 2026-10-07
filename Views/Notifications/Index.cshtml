@@ -201,6 +201,7 @@
     </style>
 </head>
 <body>
+    @Html.AntiForgeryToken()
     <div class="notification-container">
         @if (!Model.Any())
         {
@@ -230,7 +231,7 @@
                 {
                     <div class="notification-item d-flex justify-content-between align-items-start @(n.IsRead ? "" : "unread")" data-id="@n.Id">
                         <div class="notification-content">
-                            <div class="notification-message">@Html.Raw(n.Message)</div>
+                            <div class="notification-message">@n.Message</div>
                             <div class="notification-time">
                                 <i class="far fa-clock"></i>@n.CreatedAt.ToLocalTime().ToString("g")
                             </div>
@@ -287,10 +288,11 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         $(document).ready(function () {
+            var verificationToken = $('input[name="__RequestVerificationToken"]').val();
             $(document).on("click", ".mark-read", function () {
                 var btn = $(this);
                 var id = btn.data("id");
-                $.post("/Notifications/MarkAsRead/" + id, function (res) {
+                $.post("/Notifications/MarkAsRead/" + id, { __RequestVerificationToken: verificationToken }, function (res) {
                     if (res.success) {
                         var item = btn.closest(".notification-item");
                         item.removeClass("unread");
@@ -304,7 +306,7 @@
             $(document).on("click", ".decline-btn", function () {
                 var btn = $(this);
                 var id = btn.data("id");
-                $.post("/Notifications/DeclineSkillRequest", { notificationId: id }, function (res) {
+                $.post("/Notifications/DeclineSkillRequest", { notificationId: id, __RequestVerificationToken: verificationToken }, function (res) {
                     if (res.success) {
                         btn.closest(".notification-item").fadeOut(300, function () {
                             $(this).remove();
@@ -327,7 +329,7 @@
                         dropdown.append('<option value="">No skills available</option>');
                     } else {
                         $.each(res.skills, function (i, skill) {
-                            dropdown.append('<option value="' + skill.SkillId + '">' + skill.Name + '</option>');
+                            dropdown.append($('<option>').val(skill.SkillId).text(skill.Name));
                         });
                     }
                     container.removeClass("d-none");
@@ -346,7 +348,7 @@
                     return;
                 }
 
-                $.post("/Notifications/InitializeInteraction", { notificationId: id, skillId: selectedSkillId }, function (res) {
+                $.post("/Notifications/InitializeInteraction", { notificationId: id, skillId: selectedSkillId, __RequestVerificationToken: verificationToken }, function (res) {
                     if (res.success) {
                         btn.closest(".notification-item").fadeOut(300, function () {
                             $(this).remove();
@@ -362,7 +364,7 @@
             $("#markAllReadBtn").click(function () {
                 if (!confirm("Mark all notifications as read?")) return;
 
-                $.post("/Notifications/MarkAllAsRead", function (res) {
+                $.post("/Notifications/MarkAllAsRead", { __RequestVerificationToken: verificationToken }, function (res) {
                     if (res.success) {
                         $(".notification-item.unread").removeClass("unread");
                         $(".notification-actions").html('');

@@ -229,7 +229,7 @@ $(function () {
 
                 if (messages.length === 0) messages = ["An error occurred."];
 
-                $("#rating-result").html("<span class='text-danger'>" + messages.join("<br>") + "</span>");
+                $("#rating-result").text(messages.join("; "));
             },
             error: function () {
                 $("#rating-result").html("<span class='text-danger'>Network/server error.</span>");
