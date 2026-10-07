@@ -16,9 +16,10 @@ The frontend and backend are one web application. Supabase Auth and the Supabase
 1. On Windows, install Visual Studio with the ASP.NET and web development workload and the .NET Framework 4.7.2 targeting pack.
 2. Restore the NuGet packages in `SkillBridge.sln` and build the solution.
 3. Create a new Supabase project. In its SQL Editor, run `database/postgres/001_initial.sql` and then `database/postgres/002_seed.sql`. These scripts create the app tables in the private `skillbridge` schema. Do not expose that schema in Supabase API settings.
-4. Set the `SKILLBRIDGE_DB_CONNECTION` environment variable for the web app process. Use the connection details from Supabase's **Connect** panel, not a connection string committed to Git. A persistent server can use the direct connection if it supports IPv6; otherwise use the session pooler on port 5432. Use `SSL Mode=Require` at minimum. Example shape: `Host=<pooler-host>;Port=5432;Database=postgres;Username=postgres.<project-ref>;Password=<password>;SSL Mode=Require`.
-5. Set `SKILLBRIDGE_MESSAGE_KEY` to a stable, random 32-byte key encoded as Base64. Keep it secret and backed up; changing it makes existing messages unreadable.
-6. Start the MVC application with IIS Express or IIS.
+4. Set the `SKILLBRIDGE_DB_CONNECTION` environment variable for the web app process. Use the connection details from Supabase's **Connect** panel, not a connection string committed to Git. A persistent server can use the direct connection if it supports IPv6; otherwise use the session pooler on port 5432. Use `SSL Mode=Require` and do not set `Trust Server Certificate`. Example shape: `Host=<pooler-host>;Port=5432;Database=postgres;Username=postgres.<project-ref>;Password=<password>;SSL Mode=Require`.
+5. Download the server CA certificate from Supabase's Database Settings and keep it outside the repository. Set `SKILLBRIDGE_DB_CA_CERT` to its absolute path. Npgsql 4.1 does not support a `Root Certificate` connection string option, so the application's connection factory validates the server hostname and certificate chain against this CA. On Windows with .NET Framework, a DER-encoded `.cer` file is suitable.
+6. Set `SKILLBRIDGE_MESSAGE_KEY` to a stable, random 32-byte key encoded as Base64. Keep it secret and backed up; changing it makes existing messages unreadable.
+7. Start the MVC application with IIS Express or IIS.
 
 ## Browser smoke checks
 
