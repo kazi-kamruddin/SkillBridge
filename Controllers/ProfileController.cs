@@ -104,6 +104,8 @@ namespace SkillBridge.Controllers
             var userId = User.Identity.GetUserId();
             var user = await UserManager.FindByIdAsync(userId);
             var userInfo = db.UserInformations.FirstOrDefault(u => u.UserId == userId);
+            if (userInfo == null)
+                return RedirectToAction("Index", "CompleteProfile");
             var userSkills = db.UserSkills.Where(us => us.UserId == userId).ToList();
 
             var skillCategories = db.SkillCategories
@@ -138,14 +140,33 @@ namespace SkillBridge.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult UpdateProfile(UpdateProfileViewModel model)
         {
+            var userId = User.Identity.GetUserId();
+            var userInfo = db.UserInformations.FirstOrDefault(u => u.UserId == userId);
+            if (userInfo == null)
+                return RedirectToAction("Index", "CompleteProfile");
+
+            var learningIds = model.SkillsToLearn ?? new List<int>();
+            var teachingSkills = model.SkillsIKnow ?? new List<UpdateProfileViewModel.UserKnownSkill>();
+            var validSkillIds = new HashSet<int>(db.Skills.Select(s => s.Id).ToList());
+            var maxStageBySkill = db.SkillStages.ToList()
+                .GroupBy(s => s.SkillId)
+                .ToDictionary(g => g.Key, g => g.Max(s => s.StageNumber));
+            if (!learningIds.Any() || !teachingSkills.Any())
+                ModelState.AddModelError("", "Choose at least one skill to learn and one skill to teach.");
+            if (learningIds.Any(id => !validSkillIds.Contains(id)) ||
+                teachingSkills.Any(s => !validSkillIds.Contains(s.SkillId) ||
+                    !maxStageBySkill.ContainsKey(s.SkillId) ||
+                    s.KnownUpToStage < 1 || s.KnownUpToStage > maxStageBySkill[s.SkillId]))
+                ModelState.AddModelError("", "Choose valid skills and stages.");
+            if (teachingSkills.Select(s => s.SkillId).Distinct().Count() != teachingSkills.Count ||
+                teachingSkills.Any(s => learningIds.Contains(s.SkillId)))
+                ModelState.AddModelError("", "A skill cannot appear twice or be both taught and learned.");
+
             if (!ModelState.IsValid)
             {
                 model.AllSkillCategories = db.SkillCategories.Include("Skills.SkillStages").ToList();
                 return View(model);
             }
-
-            var userId = User.Identity.GetUserId();
-            var userInfo = db.UserInformations.FirstOrDefault(u => u.UserId == userId);
 
             userInfo.FullName = model.FullName;
             userInfo.Bio = model.Bio;
@@ -154,11 +175,12 @@ namespace SkillBridge.Controllers
             userInfo.Age = model.Age;
 
             var existingSkills = db.UserSkills.Where(us => us.UserId == userId).ToList();
-            db.UserSkills.RemoveRange(existingSkills);
-
-            if (model.SkillsToLearn != null)
+            using (var transaction = db.Database.BeginTransaction())
             {
-                foreach (var skillId in model.SkillsToLearn.Distinct())
+                db.UserSkills.RemoveRange(existingSkills);
+                db.SaveChanges();
+
+                foreach (var skillId in learningIds.Distinct())
                 {
                     db.UserSkills.Add(new UserSkill
                     {
@@ -168,11 +190,7 @@ namespace SkillBridge.Controllers
                         KnownUpToStage = 0
                     });
                 }
-            }
-
-            if (model.SkillsIKnow != null)
-            {
-                foreach (var sk in model.SkillsIKnow)
+                foreach (var sk in teachingSkills)
                 {
                     db.UserSkills.Add(new UserSkill
                     {
@@ -182,9 +200,10 @@ namespace SkillBridge.Controllers
                         KnownUpToStage = sk.KnownUpToStage
                     });
                 }
-            }
 
-            db.SaveChanges();
+                db.SaveChanges();
+                transaction.Commit();
+            }
             return RedirectToAction("Index");
         }
 

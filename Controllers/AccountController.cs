@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System.Web;
+using System;
+using System.Diagnostics;
 using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
@@ -59,7 +61,7 @@ namespace SkillBridge.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: false);
+            var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: true);
 
             switch (result)
             {
@@ -152,13 +154,44 @@ namespace SkillBridge.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            var user = await UserManager.FindByNameAsync(model.Email);
-            if (user == null || !(await UserManager.IsEmailConfirmedAsync(user.Id)))
+            Uri publicUrl;
+            if (!EmailService.IsConfigured || !TryGetPublicUrl(out publicUrl))
             {
-                return View("ForgotPasswordConfirmation");
+                ModelState.AddModelError("", "Password reset is unavailable right now. Please contact support.");
+                return View(model);
+            }
+
+            var user = await UserManager.FindByEmailAsync(model.Email);
+            if (user != null)
+            {
+                try
+                {
+                    var code = await UserManager.GeneratePasswordResetTokenAsync(user.Id);
+                    var callback = new Uri(publicUrl, Url.Action("ResetPassword", "Account", new { code }));
+                    await UserManager.SendEmailAsync(user.Id, "Reset your SkillBridge password",
+                        "To reset your SkillBridge password, open this link within one hour:\n\n" + callback +
+                        "\n\nIf you did not request this, you can ignore this email.");
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceError("Password reset email could not be sent: {0}", ex);
+                }
             }
 
             return View("ForgotPasswordConfirmation");
+        }
+
+        private static bool TryGetPublicUrl(out Uri publicUrl)
+        {
+            var configured = Environment.GetEnvironmentVariable("SKILLBRIDGE_PUBLIC_URL");
+            if (!Uri.TryCreate(configured, UriKind.Absolute, out publicUrl) ||
+                (publicUrl.Scheme != Uri.UriSchemeHttps &&
+                 !(publicUrl.Scheme == Uri.UriSchemeHttp && publicUrl.IsLoopback)) ||
+                !string.IsNullOrEmpty(publicUrl.UserInfo) ||
+                !string.IsNullOrEmpty(publicUrl.Query) ||
+                !string.IsNullOrEmpty(publicUrl.Fragment))
+                return false;
+            return true;
         }
 
 
@@ -170,7 +203,9 @@ namespace SkillBridge.Controllers
         [AllowAnonymous]
         public ActionResult ResetPassword(string code)
         {
-            return code == null ? View("Error") : View();
+            return string.IsNullOrWhiteSpace(code)
+                ? View("Error")
+                : View(new ResetPasswordViewModel { Code = code });
         }
 
 
@@ -186,7 +221,7 @@ namespace SkillBridge.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            var user = await UserManager.FindByNameAsync(model.Email);
+            var user = await UserManager.FindByEmailAsync(model.Email);
             if (user == null) return RedirectToAction("ResetPasswordConfirmation");
 
             var result = await UserManager.ResetPasswordAsync(user.Id, model.Code, model.Password);

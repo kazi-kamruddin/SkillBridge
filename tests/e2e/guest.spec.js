@@ -19,3 +19,11 @@ test('guest is redirected to login from protected pages', async ({ page }) => {
     await expect(page).toHaveURL(/\/Account\/Login/i);
   }
 });
+
+test('public help pages provide working destinations', async ({ page }) => {
+  await page.goto('/Home/Contact');
+  await expect(page.getByRole('heading', { name: 'Contact SkillBridge' })).toBeVisible();
+  await page.getByRole('link', { name: 'Request a reset link' }).click();
+  await expect(page.getByRole('heading', { name: /Forgot your password/i })).toBeVisible();
+  await expect(page.locator('input[name="__RequestVerificationToken"]')).toHaveCount(1);
+});

@@ -42,11 +42,18 @@ namespace SkillBridge.Models
     public class UpdateProfileViewModel
     {
         // Personal info
+        [Required]
+        [StringLength(100)]
         public string FullName { get; set; }
         public string Email { get; set; }
+        [Required]
+        [StringLength(500)]
         public string Bio { get; set; }
+        [Required]
         public string Profession { get; set; }
+        [Required]
         public string Location { get; set; }
+        [Range(1, 150)]
         public int Age { get; set; }
 
         // Skills

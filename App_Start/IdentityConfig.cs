@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Net;
+using System.Net.Mail;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Identity;
@@ -10,13 +12,65 @@ using SkillBridge.Models;
 
 namespace SkillBridge
 {
-    // Email service (used for password reset links)
+    // SMTP settings are supplied by the host, never stored in Web.config.
     public class EmailService : IIdentityMessageService
     {
-        public Task SendAsync(IdentityMessage message)
+        public static bool IsConfigured
         {
-            // TODO: Plug in real email service (e.g., SMTP) to send reset links
-            return Task.FromResult(0);
+            get
+            {
+                var host = Environment.GetEnvironmentVariable("SKILLBRIDGE_SMTP_HOST");
+                var from = Environment.GetEnvironmentVariable("SKILLBRIDGE_SMTP_FROM");
+                var username = Environment.GetEnvironmentVariable("SKILLBRIDGE_SMTP_USERNAME");
+                var password = Environment.GetEnvironmentVariable("SKILLBRIDGE_SMTP_PASSWORD");
+                var ssl = Environment.GetEnvironmentVariable("SKILLBRIDGE_SMTP_SSL");
+                int port;
+                if (string.IsNullOrWhiteSpace(host) ||
+                    !int.TryParse(Environment.GetEnvironmentVariable("SKILLBRIDGE_SMTP_PORT"), out port) ||
+                    port < 1 || port > 65535 ||
+                    (!string.IsNullOrWhiteSpace(username) && string.IsNullOrWhiteSpace(password)) ||
+                    (string.Equals(ssl, "false", StringComparison.OrdinalIgnoreCase) &&
+                     !string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) && host != "127.0.0.1"))
+                    return false;
+                try { return !string.IsNullOrWhiteSpace(from) && new MailAddress(from) != null; }
+                catch (FormatException) { return false; }
+            }
+        }
+
+        public async Task SendAsync(IdentityMessage message)
+        {
+            if (!IsConfigured)
+                throw new InvalidOperationException("SMTP is not configured.");
+
+            var host = Environment.GetEnvironmentVariable("SKILLBRIDGE_SMTP_HOST");
+            var from = Environment.GetEnvironmentVariable("SKILLBRIDGE_SMTP_FROM");
+            var username = Environment.GetEnvironmentVariable("SKILLBRIDGE_SMTP_USERNAME");
+            var password = Environment.GetEnvironmentVariable("SKILLBRIDGE_SMTP_PASSWORD");
+            var portText = Environment.GetEnvironmentVariable("SKILLBRIDGE_SMTP_PORT");
+            var sslText = Environment.GetEnvironmentVariable("SKILLBRIDGE_SMTP_SSL");
+            int port;
+            if (!int.TryParse(portText, out port) || port < 1 || port > 65535)
+                throw new InvalidOperationException("SKILLBRIDGE_SMTP_PORT must be a valid TCP port.");
+
+            var useSsl = !string.Equals(sslText, "false", StringComparison.OrdinalIgnoreCase);
+            if (!useSsl && !string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) && host != "127.0.0.1")
+                throw new InvalidOperationException("SMTP encryption may only be disabled for a local test server.");
+
+            using (var mail = new MailMessage(new MailAddress(from), new MailAddress(message.Destination)))
+            using (var client = new SmtpClient(host, port))
+            {
+                mail.Subject = message.Subject;
+                mail.Body = message.Body;
+                mail.IsBodyHtml = false;
+                client.EnableSsl = useSsl;
+                client.DeliveryMethod = SmtpDeliveryMethod.Network;
+                client.UseDefaultCredentials = false;
+                if (!string.IsNullOrWhiteSpace(username))
+                {
+                    client.Credentials = new NetworkCredential(username, password);
+                }
+                await client.SendMailAsync(mail);
+            }
         }
     }
 
@@ -59,8 +113,11 @@ namespace SkillBridge
             var dataProtectionProvider = options.DataProtectionProvider;
             if (dataProtectionProvider != null)
             {
-                manager.UserTokenProvider =
-                    new DataProtectorTokenProvider<ApplicationUser>(dataProtectionProvider.Create("ASP.NET Identity"));
+                manager.UserTokenProvider = new DataProtectorTokenProvider<ApplicationUser>(
+                    dataProtectionProvider.Create("ASP.NET Identity"))
+                {
+                    TokenLifespan = TimeSpan.FromHours(1)
+                };
             }
 
             return manager;

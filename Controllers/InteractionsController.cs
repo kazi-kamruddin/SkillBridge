@@ -53,19 +53,20 @@ namespace SkillBridge.Controllers
 
         public ActionResult Sessions(int id)
         {
+            var userId = User.Identity.GetUserId();
             var interaction = db.Interactions
                 .Include(i => i.Sessions.Select(s => s.Skill))
                 .Include(i => i.SkillFromRequester.SkillStages)
                 .Include(i => i.SkillFromTeacher.SkillStages)
                 .FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
-                    (i.User1Id == User.Identity.GetUserId() || i.User2Id == User.Identity.GetUserId()));
+                    (i.User1Id == userId || i.User2Id == userId));
 
             if (interaction == null) return HttpNotFound();
 
             var model = new InteractionSessionsViewModel
             {
                 InteractionId = interaction.Id,
-                UserId = User.Identity.GetUserId(),
+                UserId = userId,
                 SkillBlocks = BuildSkillBlocks(interaction)
             };
 

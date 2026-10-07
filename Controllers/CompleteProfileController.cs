@@ -18,6 +18,10 @@ namespace SkillBridge.Controllers
 
         public ActionResult Index()
         {
+            var userId = User.Identity.GetUserId();
+            if (db.UserInformations.Any(ui => ui.UserId == userId))
+                return RedirectToAction("Index", "Profile");
+
             var skillData = db.SkillCategories
                 .Include("Skills.SkillStages") 
                 .ToList();
@@ -39,6 +43,28 @@ namespace SkillBridge.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Index(CompleteProfileViewModel model)
         {
+            var userId = User.Identity.GetUserId();
+            if (db.UserInformations.Any(ui => ui.UserId == userId))
+                return RedirectToAction("Index", "Profile");
+
+            var learningIds = model.SkillsToLearn ?? new List<int>();
+            var teachingSkills = model.SkillsIKnow ?? new List<CompleteProfileViewModel.UserKnownSkill>();
+            var validSkillIds = new HashSet<int>(db.Skills.Select(s => s.Id).ToList());
+            var maxStageBySkill = db.SkillStages.ToList()
+                .GroupBy(s => s.SkillId)
+                .ToDictionary(g => g.Key, g => g.Max(s => s.StageNumber));
+
+            if (!learningIds.Any() || !teachingSkills.Any())
+                ModelState.AddModelError("", "Choose at least one skill to learn and one skill to teach.");
+            if (learningIds.Any(id => !validSkillIds.Contains(id)) ||
+                teachingSkills.Any(s => !validSkillIds.Contains(s.SkillId) ||
+                    !maxStageBySkill.ContainsKey(s.SkillId) ||
+                    s.KnownUpToStage < 1 || s.KnownUpToStage > maxStageBySkill[s.SkillId]))
+                ModelState.AddModelError("", "Choose valid skills and stages.");
+            if (teachingSkills.Select(s => s.SkillId).Distinct().Count() != teachingSkills.Count ||
+                teachingSkills.Any(s => learningIds.Contains(s.SkillId)))
+                ModelState.AddModelError("", "A skill cannot appear twice or be both taught and learned.");
+
             if (!ModelState.IsValid)
             {
                 model.AllSkillCategories = db.SkillCategories
@@ -46,8 +72,6 @@ namespace SkillBridge.Controllers
                     .ToList();
                 return View(model);
             }
-
-            var userId = User.Identity.GetUserId();
 
             var userInfo = new UserInformation
             {
@@ -62,7 +86,6 @@ namespace SkillBridge.Controllers
 
             if (model.SkillsToLearn != null && model.SkillsToLearn.Any())
             {
-                var validSkillIds = new HashSet<int>(db.Skills.Select(s => s.Id));
                 foreach (var skillId in model.SkillsToLearn.Distinct())
                 {
                     if (validSkillIds.Contains(skillId))
@@ -80,7 +103,6 @@ namespace SkillBridge.Controllers
 
             if (model.SkillsIKnow != null && model.SkillsIKnow.Any())
             {
-                var validSkillIds = new HashSet<int>(db.Skills.Select(s => s.Id));
                 foreach (var skillKnown in model.SkillsIKnow)
                 {
                     if (skillKnown.SkillId > 0 && validSkillIds.Contains(skillKnown.SkillId))

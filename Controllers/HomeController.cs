@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNet.Identity;
 using SkillBridge.Helpers;
+using System;
 using SkillBridge.Models;
 using System.Data.Entity;
 using System.Linq;
@@ -102,7 +103,7 @@ namespace SkillBridge.Controllers
         ////////////////////////////////////////////////////////////////////////////
         public ActionResult Contact()
         {
-            ViewBag.Message = "Your contact page.";
+            ViewBag.SupportEmail = Environment.GetEnvironmentVariable("SKILLBRIDGE_SUPPORT_EMAIL");
             return View();
         }
     }
