@@ -466,10 +466,12 @@
 
                                     <!-- Knock button -->
                                     <div class="mt-3 text-center">
-                                        <a class="btn btn-sm btn-success"
-                                           href="@Url.Action("Knock", "Messages", new { targetUserId = person.UserId })">
-                                            Knock
-                                        </a>
+                                        @using (Html.BeginForm("Knock", "Messages", FormMethod.Post))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            @Html.Hidden("targetUserId", person.UserId)
+                                            <button type="submit" class="btn btn-sm btn-success">Knock</button>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -536,10 +538,12 @@
 
                                     <!-- Knock button -->
                                     <div class="mt-3 text-center">
-                                        <a class="btn btn-sm btn-success"
-                                           href="@Url.Action("Knock", "Messages", new { targetUserId = person.UserId })">
-                                            Knock
-                                        </a>
+                                        @using (Html.BeginForm("Knock", "Messages", FormMethod.Post))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            @Html.Hidden("targetUserId", person.UserId)
+                                            <button type="submit" class="btn btn-sm btn-success">Knock</button>
+                                        }
                                     </div>
                                 </div>
                             </div>

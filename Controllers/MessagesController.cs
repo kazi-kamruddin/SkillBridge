@@ -98,6 +98,9 @@ namespace SkillBridge.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Send(int conversationId, string messageText)
         {
+            if (string.IsNullOrWhiteSpace(messageText) || messageText.Length > 4000)
+                return new HttpStatusCodeResult(400, "Message must be 1 to 4000 characters long.");
+
             var userId = User.Identity.GetUserId();
 
             var conversation = await db.Conversations
@@ -145,10 +148,15 @@ namespace SkillBridge.Controllers
 
 
 
-        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<ActionResult> Knock(string targetUserId)
         {
             var currentUserId = User.Identity.GetUserId();
+
+            if (string.IsNullOrWhiteSpace(targetUserId) ||
+                !await db.Users.AnyAsync(u => u.Id == targetUserId))
+                return HttpNotFound();
 
             if (targetUserId == currentUserId)
                 return RedirectToAction("Index"); 

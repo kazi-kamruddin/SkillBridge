@@ -350,22 +350,26 @@ namespace SkillBridge.Controllers
                 CreatedAt = DateTime.Now
             };
 
-            db.SkillRequests.Add(request);
-            db.SaveChanges();
-
-            var requester = UserManager.FindById(currentUserId);
-            var notification = new Notification
+            using (var transaction = db.Database.BeginTransaction())
             {
-                UserId = userSkill.UserId,
-                Type = "SkillRequest",
-                ReferenceId = request.Id,
-                Message = $"{requester.UserName} requested your skill: {userSkill.Skill.Name}",
-                IsRead = false,
-                CreatedAt = DateTime.Now
-            };
+                db.SkillRequests.Add(request);
+                db.SaveChanges();
 
-            db.Notifications.Add(notification);
-            db.SaveChanges();
+                var requester = UserManager.FindById(currentUserId);
+                var notification = new Notification
+                {
+                    UserId = userSkill.UserId,
+                    Type = "SkillRequest",
+                    ReferenceId = request.Id,
+                    Message = $"{requester.UserName} requested your skill: {userSkill.Skill.Name}",
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
+                };
+
+                db.Notifications.Add(notification);
+                db.SaveChanges();
+                transaction.Commit();
+            }
 
             return Json(new { success = true });
         }

@@ -20,6 +20,10 @@ The frontend and backend are one web application. Supabase Auth and the Supabase
 5. Set `SKILLBRIDGE_MESSAGE_KEY` to a stable, random 32-byte key encoded as Base64. Keep it secret and backed up; changing it makes existing messages unreadable.
 6. Start the MVC application with IIS Express or IIS.
 
+## Browser smoke checks
+
+Install Node.js, run `npm ci`, then `npx playwright install chromium`. With the site running, set `SKILLBRIDGE_BASE_URL` to its URL (or use the IIS Express default `https://localhost:44364`) and run `npm run test:e2e`. The current checks cover guest pages and redirects; a live database and test accounts are needed for member flows.
+
 The database scripts are for a **new, empty** PostgreSQL database. Existing SQL Server data needs a separate data migration; the historical SQL Server migrations in `Migrations/` are retained for reference and are excluded from the PostgreSQL build. Schema changes after this baseline should be added as numbered PostgreSQL SQL scripts and reviewed before running. The app does not modify its schema at startup.
 
 ## Current development limits

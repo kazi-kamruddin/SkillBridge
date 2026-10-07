@@ -40,6 +40,7 @@ namespace SkillBridge.Controllers
         public JsonResult GetNotifications()
         {
             var userId = User.Identity.GetUserId();
+            var unreadCount = _context.Notifications.Count(n => n.UserId == userId && !n.IsRead);
 
             var notificationsFromDb = _context.Notifications
                 .Where(n => n.UserId == userId)
@@ -56,7 +57,6 @@ namespace SkillBridge.Controllers
                 Url = Url.Action("Index", "Notifications")
             }).ToList();
 
-            var unreadCount = notifications.Count(n => !n.IsRead);
             return Json(new { notifications, unreadCount }, JsonRequestBehavior.AllowGet);
         }
 
@@ -297,6 +297,7 @@ namespace SkillBridge.Controllers
         public JsonResult GetRealtimeNotifications()
         {
             var userId = User.Identity.GetUserId();
+            var unreadCount = _context.Notifications.Count(n => n.UserId == userId && !n.IsRead);
 
             var notificationsFromDb = _context.Notifications
                 .Where(n => n.UserId == userId)
@@ -314,7 +315,6 @@ namespace SkillBridge.Controllers
                 Url = Url.Action("Index", "Notifications")
             }).ToList();
 
-            var unreadCount = notifications.Count(n => !n.IsRead);
             return Json(new { notifications, unreadCount }, JsonRequestBehavior.AllowGet);
         }
 
