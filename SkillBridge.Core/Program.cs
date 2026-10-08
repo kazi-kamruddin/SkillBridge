@@ -24,7 +24,8 @@ if (!File.Exists(certificatePath))
 connection.SslMode = SslMode.VerifyFull;
 connection.RootCertificate = certificatePath;
 
-builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connection.ConnectionString));
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseLazyLoadingProxies().UseNpgsql(connection.ConnectionString));
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
         options.User.RequireUniqueEmail = true;
