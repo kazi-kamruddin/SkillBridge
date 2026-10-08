@@ -22,6 +22,7 @@ namespace SkillBridge
             {
                 AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
                 LoginPath = new PathString("/Account/Login"),
+                CookieSecure = CookieSecureOption.Always,
                 Provider = new CookieAuthenticationProvider
                 {
                     // Revalidates the security stamp on login (password changes, etc.)

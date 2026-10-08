@@ -19,8 +19,15 @@ namespace SkillBridge.Helpers
                 throw new InvalidOperationException("SKILLBRIDGE_DB_CONNECTION must use SSL Mode=Require without Trust Server Certificate.");
 
             var certificatePath = Environment.GetEnvironmentVariable("SKILLBRIDGE_DB_CA_CERT");
-            if (string.IsNullOrWhiteSpace(certificatePath) || !File.Exists(certificatePath))
-                throw new InvalidOperationException("Set SKILLBRIDGE_DB_CA_CERT to the absolute path of the Supabase CA certificate.");
+            if (string.IsNullOrWhiteSpace(certificatePath))
+                throw new InvalidOperationException("Set SKILLBRIDGE_DB_CA_CERT to the path of the Supabase CA certificate.");
+
+            // A relative path is resolved from the application root, which is
+            // stable across Windows hosts even when their physical paths differ.
+            if (!Path.IsPathRooted(certificatePath))
+                certificatePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, certificatePath);
+            if (!File.Exists(certificatePath))
+                throw new InvalidOperationException("The Supabase CA certificate configured by SKILLBRIDGE_DB_CA_CERT was not found.");
 
             var trustedRoot = new X509Certificate2(certificatePath);
             var connection = new NpgsqlConnection(nameOrConnectionString);

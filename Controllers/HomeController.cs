@@ -20,13 +20,10 @@ namespace SkillBridge.Controllers
         {
             var vm = new HomePageViewModel();
 
-            var id = User.Identity.GetUserId();
-            var user = db.Users.FirstOrDefault(u => u.Id == id);
-            var userInfo = db.UserInformations.FirstOrDefault(ui => ui.UserId == id);
-
             if (User.Identity.IsAuthenticated)
             {
                 var userId = User.Identity.GetUserId();
+                var userInfo = db.UserInformations.FirstOrDefault(ui => ui.UserId == userId);
                 vm.FullName = userInfo?.FullName ?? "";
                 vm.IsLoggedIn = true;
                 vm.MotivationalQuote = HomePageViewModel.GetRandomQuote();

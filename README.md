@@ -11,13 +11,15 @@ SkillBridge is a peer-to-peer skill exchange website. Members list skills they c
 
 The frontend and backend are one web application. Supabase Auth and the Supabase browser Data API are not used; the server connects to PostgreSQL directly.
 
+For host selection, production settings, and first-publish steps, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ## Run locally
 
 1. On Windows, install Visual Studio with the ASP.NET and web development workload and the .NET Framework 4.7.2 targeting pack.
 2. Restore the NuGet packages in `SkillBridge.sln` and build the solution.
 3. Create a new Supabase project. In its SQL Editor, run `database/postgres/001_initial.sql` and then `database/postgres/002_seed.sql`. These scripts create the app tables in the private `skillbridge` schema. Do not expose that schema in Supabase API settings.
 4. Set the `SKILLBRIDGE_DB_CONNECTION` environment variable for the web app process. Use the connection details from Supabase's **Connect** panel, not a connection string committed to Git. A persistent server can use the direct connection if it supports IPv6; otherwise use the session pooler on port 5432. Use `SSL Mode=Require` and do not set `Trust Server Certificate`. Example shape: `Host=<pooler-host>;Port=5432;Database=postgres;Username=postgres.<project-ref>;Password=<password>;SSL Mode=Require`.
-5. Download the server CA certificate from Supabase's Database Settings and keep it outside the repository. Set `SKILLBRIDGE_DB_CA_CERT` to its absolute path. Npgsql 4.1 does not support a `Root Certificate` connection string option, so the application's connection factory validates the server hostname and certificate chain against this CA. On Windows with .NET Framework, a DER-encoded `.cer` file is suitable.
+5. Download the server CA certificate from Supabase and keep it outside the repository. Set `SKILLBRIDGE_DB_CA_CERT` to its absolute path, or to a path relative to the application root such as `App_Data/certs/supabase-ca.cer`. For the relative option, place the certificate in the host's `App_Data/certs` folder after publishing; the folder is excluded from Git and is not served to browsers. Npgsql 4.1 does not support a `Root Certificate` connection string option, so the application's connection factory validates the server hostname and certificate chain against this CA. On Windows with .NET Framework, a DER-encoded `.cer` file is suitable.
 6. Set `SKILLBRIDGE_MESSAGE_KEY` to a stable, random 32-byte key encoded as Base64. Keep it secret and backed up; changing it makes existing messages unreadable.
 7. Start the MVC application with IIS Express or IIS.
 
