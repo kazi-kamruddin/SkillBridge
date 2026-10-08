@@ -1,0 +1,178 @@
+sessions
+@model SkillBridge.Models.InteractionSessionsViewModel
+
+@section Styles {
+    <style>
+        .skill-blocks {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .stage {
+            flex: 1 1 calc(33.333% - 16px); /* 3 per row on desktop */
+            min-width: 220px;
+            max-width: 280px;
+            height: 160px; /* ?? fixed height for uniform size */
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* center vertically */
+            align-items: center; /* center horizontally */
+
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            font-weight: 500;
+            color: #fff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+            .stage span {
+                display: block;
+                margin-bottom: 12px;
+                font-size: 1rem;
+            }
+
+            /* Stage Colors */
+            .stage.Red {
+                background: #dc3545; /* Bootstrap danger */
+            }
+
+            .stage.Yellow {
+                background: #ffc107; /* Bootstrap warning */
+                color: #333;
+            }
+
+            .stage.Green {
+                background: #28a745; /* Bootstrap success */
+            }
+
+            .stage:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+            }
+
+        /* Buttons */
+        .mark-done {
+            padding: 6px 14px;
+            font-size: 0.9rem;
+            border: 2px solid #fff; /* makes it stand out */
+            border-radius: 6px;
+            cursor: pointer;
+            color: #fff;
+            background: transparent; /* ?? matches the stage background */
+            transition: background 0.2s ease, color 0.2s ease;
+        }
+
+        .stage.Red .mark-done:hover {
+            background: #fff;
+            color: #dc3545; /* text matches Red stage */
+        }
+
+        .stage.Yellow .mark-done:hover {
+            background: #fff;
+            color: #ffc107; /* text matches Yellow stage */
+        }
+
+        .stage.Green .mark-done:hover {
+            background: #fff;
+            color: #28a745; /* text matches Green stage */
+        }
+
+        #end-interaction-btn {
+            margin-top: 25px;
+            padding: 10px 20px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        /* ?? Responsive Layout */
+        @@media (max-width: 992px) { /* tablet */
+            .stage {
+                flex: 1 1 calc(50% - 16px); /* 2 per row */
+            }
+        }
+
+        @@media (max-width: 576px) { /* mobile */
+            .stage {
+                flex: 1 1 100%; /* 1 per row */
+            }
+        }
+    </style>
+}
+
+<div class="container mt-4">
+    @Html.AntiForgeryToken()
+    <h2 class="mb-4">Interaction Stages</h2>
+
+    <div class="skill-blocks">
+        @foreach (var stage in Model.SkillBlocks)
+        {
+            <div class="stage @stage.Status"
+                 data-stage="@stage.StageNumber"
+                 data-skill="@stage.SkillId">
+                <span>Stage @stage.StageNumber: @stage.Description</span>
+                @if (!stage.IsLocked && !stage.UserConfirmed)
+                {
+                    <button class="mark-done" data-stage="@stage.StageNumber" data-skill="@stage.SkillId">
+                        Mark Done
+                    </button>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- End Interaction Button -->
+    @if (Model.SkillBlocks.All(s => s.Status == "Green"))
+    {
+        <button id="end-interaction-btn" class="btn btn-success">End Interaction</button>
+    }
+</div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            $(".mark-done").click(function () {
+                var button = $(this);
+                var stageNumber = button.data("stage");
+                var skillId = button.data("skill");
+
+                $.post("@Url.Action("MarkStageDone", "Interactions")",
+                    { stageNumber: stageNumber, skillId: skillId, interactionId: @Model.InteractionId,
+                      __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                    function (response) {
+                        if (response.success) {
+                            var stageDiv = button.closest(".stage");
+                            if (response.status === "Confirmed") {
+                                stageDiv.removeClass("Red Yellow").addClass("Green");
+                            } else {
+                                stageDiv.removeClass("Red Green").addClass("Yellow");
+                            }
+                            button.remove();
+
+                            if ($(".stage").length === $(".stage.Green").length && $("#end-interaction-btn").length === 0) {
+                                $(".skill-blocks").after('<button id="end-interaction-btn" class="btn btn-success">End Interaction</button>');
+                                attachEndInteractionClick();
+                            }
+                        }
+                    });
+            });
+
+            function attachEndInteractionClick() {
+                $("#end-interaction-btn").click(function () {
+                    $.post("@Url.Action("EndInteraction", "Interactions")",
+                        { id: @Model.InteractionId,
+                          __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                        function (response) {
+                            alert("Interaction completed!");
+                            window.location.href = "@Url.Action("Index", "Interactions")";
+                        });
+                });
+            }
+
+            attachEndInteractionClick();
+        });
+    </script>
+}

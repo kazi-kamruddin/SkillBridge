@@ -1,0 +1,53 @@
+
+@model SkillBridge.Models.CommunityPostCreateModel
+@{
+    ViewBag.Title = "Create Post";
+}
+
+<main class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Create a New Post</h4>
+                </div>
+                <div class="card-body p-4">
+                    @using (Html.BeginForm("CreatePost", "Communities", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.HiddenFor(m => m.CommunityId)
+
+                        <!-- Title -->
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.Title, new { @class = "form-label fw-bold" })
+                            @Html.TextBoxFor(m => m.Title, new { @class = "form-control form-control-lg", placeholder = "Enter a catchy title..." })
+                            @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger small" })
+                        </div>
+
+                        <!-- Content -->
+                        <div class="mb-3">
+                            @Html.LabelFor(m => m.Content, new { @class = "form-label fw-bold" })
+                            @Html.TextAreaFor(m => m.Content, 6, 60, new { @class = "form-control", placeholder = "Write your post content here..." })
+                            @Html.ValidationMessageFor(m => m.Content, "", new { @class = "text-danger small" })
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-end mt-4">
+                            <a href="@Url.Action("Landing", "Communities", new { id = Model.CommunityId })" class="btn btn-outline-secondary me-2">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send-fill me-1"></i> Create Post
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+@section Scripts {
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+<script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+}

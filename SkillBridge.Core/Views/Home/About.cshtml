@@ -1,0 +1,199 @@
+@{
+    ViewBag.Title = "About Us";
+}
+
+<main class="about-us-container">
+
+    <!-- Dev Team -->
+    <section>
+        <h2 class="about-us-section-dev-title">Meet Our Dev Team</h2>
+
+        <div class="about-us-gallery">
+            <div class="about-us-card">
+                <img src="~/Content/DP/rakibul.jpg" alt="Rakibul Islam Rahi" />
+                <div class="about-us-overlay-text">
+                    <h3>Rakibul Islam Rahi</h3>
+                    <p>FrontEnd</p>
+                </div>
+            </div>
+
+            <div class="about-us-card">
+                <img src="~/Content/DP/kazi.jpg" alt="Kazi Kamruddin Ahmed" />
+                <div class="about-us-overlay-text">
+                    <h3>Kazi Kamruddin Ahmed</h3>
+                    <p>FrontEnd + BackEnd</p>
+                </div>
+            </div>
+
+            <div class="about-us-card">
+                <img src="~/Content/DP/sakib.jpg" alt="Abdullah Ishtiaq" />
+                <div class="about-us-overlay-text">
+                    <h3>Abdullah Ishtiaq</h3>
+                    <p>FrontEnd</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Mission -->
+    <section class="about-us-section-container">
+        <h2 class="about-us-section-title">Our Mission</h2>
+        <p class="about-us-section-text">
+            Our mission is to connect learners and teachers worldwide, creating opportunities
+            to exchange skills, knowledge, and grow together as a community.
+        </p>
+    </section>
+
+    <!-- History -->
+    <section class="about-us-section-container">
+        <h2 class="about-us-section-title">Our History</h2>
+        <p class="about-us-section-text">
+            Started as a small initiative among friends, SkillBridge grew into a platform
+            where thousands of learners and mentors collaborate to unlock each other’s potential.
+        </p>
+    </section>
+
+    <!-- Special Thanks To -->
+    <section>
+        <h2 class="about-us-section-dev-title">Special Thanks To</h2>
+
+        <div class="about-us-gallery">
+
+            <div class="about-us-card about-us-card-visible">
+                <img src="~/Content/DP/broti.jpeg" alt="Second Mam" />
+                <div class="about-us-visible-text">
+                    <h3>Ms. Tanjila Broti</h3>
+                    <p>Lecturer</p>
+                </div>
+            </div>
+
+            <div class="about-us-card about-us-card-visible">
+                <img src="~/Content/DP/muthaki.jpeg" alt="Ms. Tahsina Muthaki" />
+                <div class="about-us-visible-text">
+                    <h3>Ms. Tahsina Muthaki</h3>
+                    <p>Lecturer</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Styles -->
+<style>
+    .about-us-container {
+        padding: 50px 20px;
+    }
+
+    .about-us-section-dev-title {
+        font-size: 2rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        text-align: center;
+        background: linear-gradient(20deg, #007BFF, #00C896);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 40px;
+    }
+
+    .about-us-gallery {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-bottom: 60px;
+    }
+
+    .about-us-card {
+        position: relative;
+        width: 260px;
+        height: 340px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        background: #000;
+    }
+
+        .about-us-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .about-us-card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+        }
+
+    /* Overlay (for Dev Team only) */
+    .about-us-overlay-text {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.75);
+        color: #fff;
+        padding: 15px;
+        text-align: center;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+    .about-us-card:hover .about-us-overlay-text {
+        opacity: 1;
+    }
+
+    /* Always visible text (for Mams) */
+    .about-us-card-visible {
+        display: flex;
+        flex-direction: column;
+    }
+
+        .about-us-card-visible img {
+            width: 100%;
+            height: 266.93px; /* same as .about-us-card height */
+            object-fit: cover; /* ensures proper cropping without distortion */
+        }
+
+
+    .about-us-visible-text {
+        background: #007BFF;
+        color: #fff;
+        text-align: center;
+        padding: 12px;
+    }
+
+        .about-us-visible-text h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        .about-us-visible-text p {
+            margin: 4px 0 0;
+            font-size: 1rem;
+        }
+
+    .about-us-section-container {
+        max-width: 900px;
+        margin: 40px auto;
+    }
+
+    .about-us-section-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+        background: linear-gradient(90deg, #007BFF, #00C896);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .about-us-section-text {
+        font-size: 1.1rem;
+        line-height: 1.7;
+        color: #444;
+        background: #f9f9f9;
+        border-left: 4px solid #007BFF;
+        padding: 15px;
+        border-radius: 6px;
+    }
+</style>

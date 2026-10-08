@@ -1,0 +1,105 @@
+@model SkillBridge.Models.IndexViewModel
+@{
+    ViewBag.Title = "Profile";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/Styles/indexProfile.css" />
+}
+
+
+<main class="container text-center mt-5" aria-labelledby="title">
+
+    <p class="text-success">@ViewBag.StatusMessage</p>
+
+    <div class="mb-3 text-center">
+        <img src="@Model.ProfileImageUrl"
+             alt="Profile Picture"
+             class="rounded-circle"
+             style="width:150px; height:150px; object-fit:cover; border:2px solid #ccc;" />
+    </div>
+
+    <h3>@Model.FullName</h3>
+
+    <p class="text-muted">@Model.Bio</p>
+    <p><i class="bi bi-geo-alt"></i> @Model.Location</p>
+
+    <hr />
+
+    <!-- Personal Information Section -->
+    <div class="text-start mx-auto" style="max-width: 600px;">
+        <h4 class="mt-4 mb-3">Personal Information</h4>
+        <dl class="row">
+            <dt class="col-sm-4">Profession:</dt>
+            <dd class="col-sm-8">@Model.Profession</dd>
+
+            <dt class="col-sm-4">Age:</dt>
+            <dd class="col-sm-8">@Model.Age</dd>
+
+            <dt class="col-sm-4">Average Rating:</dt>
+            <dd class="col-sm-8">
+                @Model.AverageRating.ToString("0.0") / 10
+                (out of @Model.RatingsReceived rated interaction@(Model.RatingsReceived == 1 ? "" : "s"))
+            </dd>
+            <dt class="col-sm-4"></dt>
+            <dd class="col-sm-8">
+                Completed total @Model.InteractionsCompleted interaction@(Model.InteractionsCompleted == 1 ? "" : "s")
+            </dd>
+
+        </dl>
+    </div>
+
+    <!-- Teaching Skills -->
+    <h4 class="mt-4 mb-3">Teaching Skills</h4>
+    <div class="card shadow p-4 mx-auto" style="max-width: 600px;">
+        @if (Model.TeachingSkills != null && Model.TeachingSkills.Count > 0)
+        {
+            foreach (var skill in Model.TeachingSkills)
+            {
+                <div class="mb-3 text-start">
+                    <label><strong>@skill.SkillName (@skill.CategoryName)</strong> — Stage @skill.KnownUpToStage of @skill.TotalStages</label>
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-danger" role="progressbar"
+                             style="width:@(skill.KnownUpToStage * 100 / skill.TotalStages)%;"
+                             aria-valuenow="@(skill.KnownUpToStage * 100 / skill.TotalStages)"
+                             aria-valuemin="0" aria-valuemax="100">
+                            @(skill.KnownUpToStage * 100 / skill.TotalStages)%
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p>No teaching skills added.</p>
+        }
+    </div>
+
+    <!-- Learning Skills -->
+    <h4 class="mt-5 mb-3">Seeking to Learn</h4>
+    <div class="d-flex flex-wrap justify-content-center gap-3">
+        @if (Model.LearningSkills != null && Model.LearningSkills.Count > 0)
+        {
+            foreach (var skill in Model.LearningSkills)
+            {
+                <div class="card" style="background-color:#004953; color:white; min-width:120px; max-width:200px;">
+                    <div class="card-body p-2 text-center">
+                        <span>@skill.SkillName </span>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <p>No learning skills added.</p>
+        }
+    </div>
+
+    <div style="height: 45px;"></div>
+
+    <!-- Action Buttons -->
+    <div class="mt-4 d-flex justify-content-center gap-2 flex-wrap">
+        <a class="btn btn-outline-primary" href="@Url.Action("ChangePassword", "Profile")">Change Password</a>
+        <a class="btn btn-outline-success" href="@Url.Action("UpdateProfile", "Profile")">Update Profile</a>
+    </div>
+</main>

@@ -1,0 +1,281 @@
+@model SkillBridge.Models.UpdateProfileViewModel
+@using Newtonsoft.Json;
+@using System.Collections.Generic;
+@{
+    ViewBag.Title = "Update Profile";
+
+    var allSkills = Model.AllSkillCategories.SelectMany(c => c.Skills).ToList();
+
+    var skillStagesDict = allSkills.ToDictionary(
+        s => s.Id.ToString(),
+        s => s.SkillStages.Select(st => new { id = st.StageNumber, name = st.Description }).ToList()
+    );
+
+    var skillStagesDataJson = JsonConvert.SerializeObject(skillStagesDict);
+
+    var knownSkillIds = new HashSet<int>(Model.SkillsIKnow.Select(s => s.SkillId));
+    var toLearnSkillIds = new HashSet<int>(Model.SkillsToLearn);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/Styles/updateProfile.css" />
+}
+
+<main class="container mt-4">
+    <h2>@ViewBag.Title</h2>
+
+    @using (Html.BeginForm("UpdateProfile", "Profile", FormMethod.Post, new { @id = "updateProfileForm" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.FullName, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.FullName, new { @class = "form-control" })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.Email, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @readonly = "readonly" })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.Bio, new { @class = "form-label" })
+            @Html.TextAreaFor(m => m.Bio, new { @class = "form-control", rows = 3 })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.Profession, new { @class = "form-label" })
+            @Html.DropDownListFor(m => m.Profession,
+                new SelectList(new[]
+                {
+                    "Student",
+                    "Teacher",
+                    "Software Developer",
+                    "Engineer",
+                    "Designer",
+                    "Freelancer",
+                    "Entrepreneur"
+                }, Model.Profession), new { @class = "form-select" })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.Location, new { @class = "form-label" })
+            @Html.DropDownListFor(m => m.Location, new SelectList(new[]
+            {
+                "Barishal",
+                "Chattogram",
+                "Dhaka",
+                "Khulna",
+                "Mymensingh",
+                "Rajshahi",
+                "Rangpur",
+                "Sylhet"
+            }, Model.Location), new { @class = "form-select" })
+        </div>
+
+        <div class="mb-3">
+            @Html.LabelFor(m => m.Age, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.Age, new { @class = "form-control", type = "number", min = "0" })
+        </div>
+
+        <hr />
+
+        <h4>Skills You Want to Learn</h4>
+        <div class="row" id="skillsToLearnContainer">
+            @foreach (var category in Model.AllSkillCategories)
+            {
+                <div class="col-md-4 mb-3">
+                    <h5>@category.Name</h5>
+                    <ul class="list-group">
+                        @foreach (var skill in category.Skills)
+                        {
+                            var selected = toLearnSkillIds.Contains(skill.Id) ? "active" : "";
+                            var disabled = knownSkillIds.Contains(skill.Id) ? "disabled" : "";
+                            <li class="list-group-item skill-learn @selected @disabled" data-skill-id="@skill.Id">
+                                @skill.Name
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+
+        <hr />
+
+        <h4>Skills You Know</h4>
+        <div id="skillsIKnowContainer" class="row">
+            @foreach (var category in Model.AllSkillCategories)
+            {
+                <div class="col-md-4 mb-3 skill-category-container" data-category="@category.Name">
+                    <h5>@category.Name</h5>
+                    <ul class="list-group">
+                        @foreach (var skill in category.Skills)
+                        {
+                            var knownSkill = Model.SkillsIKnow.FirstOrDefault(s => s.SkillId == skill.Id);
+                            var selected = knownSkill != null ? "active" : "";
+                            var disabled = toLearnSkillIds.Contains(skill.Id) ? "disabled" : "";
+                            <li class="list-group-item skill-know @selected @disabled"
+                                data-skill-id="@skill.Id"
+                                data-skill-name="@skill.Name"
+                                data-known-stage="@(knownSkill?.KnownUpToStage ?? 1)">
+                                @skill.Name
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+
+        <div id="skillStagesSelectionContainer" class="mt-3"></div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success">Save Changes</button>
+            <a href="@Url.Action("Index", "Profile")" class="btn btn-secondary ms-2">Cancel</a>
+            <button type="button" class="btn btn-info ms-2" id="debugButton">Debug Print</button>
+        </div>
+
+        <div id="debugOutput" class="mt-3 text-monospace"></div>
+    }
+</main>
+
+@section Scripts {
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+<script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+
+    
+    <script>
+        $(document).ready(function () {
+            var $form = $("#updateProfileForm");
+            var skillStagesData = @Html.Raw(skillStagesDataJson);
+
+            var selectedSkillsToLearn = new Set(@Html.Raw(JsonConvert.SerializeObject(Model.SkillsToLearn.Select(id => id.ToString()).ToList())));
+            var selectedSkillsIKnow = {};
+            @foreach (var sk in Model.SkillsIKnow) {
+                <text>selectedSkillsIKnow['@sk.SkillId'] = @sk.KnownUpToStage;</text>
+            }
+
+            function refreshSkillsIKnowHiddenInputs() {
+                $form.find('input[name^="SkillsIKnow"]').remove();
+                var idx = 0;
+                for (var skillId in selectedSkillsIKnow) {
+                    if (!selectedSkillsIKnow.hasOwnProperty(skillId)) continue;
+                    $('<input>').attr({ type: 'hidden', name: 'SkillsIKnow[' + idx + '].SkillId', value: skillId, 'data-skill-id': skillId }).appendTo($form);
+                    $('<input>').attr({ type: 'hidden', name: 'SkillsIKnow[' + idx + '].KnownUpToStage', value: selectedSkillsIKnow[skillId], 'data-skill-id': skillId }).appendTo($form);
+                    idx++;
+                }
+            }
+
+            function renderStageSelectionFor(skillId, skillName) {
+                var stages = skillStagesData[skillId.toString()];
+                if (!stages) return;
+                $("#stage-selection-" + skillId).remove();
+                var $container = $('<div class="stage-selection-container mt-2" id="stage-selection-' + skillId + '"><strong>Stages you know for ' + skillName + ':</strong><br/></div>');
+                stages.forEach(function (st) {
+                    $container.append('<span class="badge badge-secondary text-dark stage-option mr-1 mb-1" data-stage="' + st.id + '" data-skill-id="' + skillId + '">' + st.name + '</span>');
+                });
+                $("#skillStagesSelectionContainer").append($container);
+                var stage = selectedSkillsIKnow[skillId] || 1;
+                $('#stage-selection-' + skillId + ' .stage-option').each(function () {
+                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary');
+                    else $(this).removeClass('badge-primary').addClass('badge-secondary');
+                });
+            }
+
+            selectedSkillsToLearn.forEach(function (sid) { $('<input>').attr({ type: 'hidden', name: 'SkillsToLearn', value: sid }).appendTo($form); });
+            for (var sid in selectedSkillsIKnow) { renderStageSelectionFor(sid, $('.skill-know[data-skill-id="' + sid + '"]').data('skill-name') || ''); }
+            refreshSkillsIKnowHiddenInputs();
+
+            // ----- Click Handlers for Skills -----
+            $(".skill-learn").click(function () {
+                if ($(this).hasClass("disabled")) return;
+                var skillId = String($(this).data("skill-id"));
+                if ($(this).hasClass("active")) {
+                    $(this).removeClass("active");
+                    selectedSkillsToLearn.delete(skillId);
+                    $form.find('input[name="SkillsToLearn"][value="' + skillId + '"]').remove();
+                    $('.skill-know[data-skill-id="' + skillId + '"]').removeClass('disabled');
+                } else {
+                    $(this).addClass("active");
+                    selectedSkillsToLearn.add(skillId);
+                    $('<input>').attr({ type: 'hidden', name: 'SkillsToLearn', value: skillId }).appendTo($form);
+                    $('.skill-know[data-skill-id="' + skillId + '"]').addClass('disabled').removeClass('active');
+                    if (selectedSkillsIKnow.hasOwnProperty(skillId)) { delete selectedSkillsIKnow[skillId]; $("#stage-selection-" + skillId).remove(); refreshSkillsIKnowHiddenInputs(); }
+                }
+            });
+
+            $(document).on("click", ".skill-know", function () {
+                if ($(this).hasClass("disabled")) return;
+                var $this = $(this);
+                var skillId = String($this.data("skill-id")), skillName = $this.data("skill-name");
+                if ($this.hasClass("active")) { $this.removeClass("active"); delete selectedSkillsIKnow[skillId]; $("#stage-selection-" + skillId).remove(); refreshSkillsIKnowHiddenInputs(); $('.skill-learn[data-skill-id="' + skillId + '"]').removeClass('disabled'); }
+                else { $this.addClass("active"); selectedSkillsIKnow[skillId] = 1; renderStageSelectionFor(skillId, skillName); refreshSkillsIKnowHiddenInputs(); $('.skill-learn[data-skill-id="' + skillId + '"]').addClass('disabled').removeClass('active'); selectedSkillsToLearn.delete(skillId); $form.find('input[name="SkillsToLearn"][value="' + skillId + '"]').remove(); }
+            });
+
+            $(document).on("click", ".stage-option", function () {
+                var $this = $(this), skillId = String($this.data("skill-id")), stage = $this.data("stage");
+                selectedSkillsIKnow[skillId] = stage;
+                $('#stage-selection-' + skillId + ' .stage-option').each(function () {
+                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary');
+                    else $(this).removeClass('badge-primary').addClass('badge-secondary');
+                });
+                var $knownInput = $form.find('input[data-skill-id="' + skillId + '"][name$=".KnownUpToStage"]');
+                if ($knownInput.length) $knownInput.val(stage);
+                else refreshSkillsIKnowHiddenInputs();
+            });
+
+            // ----- Debug Button -----
+            $("#debugButton").click(function () {
+                var debugData = {};
+                $form.find("input, select, textarea").each(function () {
+                    var $el = $(this), name = $el.attr("name"), value = $el.val();
+                    if (!name) return;
+                    if (debugData[name]) { if (!Array.isArray(debugData[name])) debugData[name] = [debugData[name]]; debugData[name].push(value); }
+                    else { debugData[name] = value; }
+                });
+                $("#debugOutput").html("<pre>" + JSON.stringify(debugData, null, 4) + "</pre>");
+            });
+
+
+            // ----- Client-side Validation Before Submit -----
+            $form.submit(function (e) {
+                e.preventDefault();
+
+                $form.find(".invalid-feedback").remove();
+                $form.find(".is-invalid").removeClass("is-invalid");
+
+                var firstInvalidField = null;
+
+                function markInvalid($field, message) {
+                    if (!firstInvalidField) firstInvalidField = $field;
+                    $field.addClass("is-invalid");
+
+                    if ($field.next(".invalid-feedback").length === 0) {
+                        $("<div class='invalid-feedback'>" + message + "</div>").insertAfter($field);
+                    }
+                }
+
+                if (!$.trim($form.find("input[name='FullName']").val())) markInvalid($("input[name='FullName']"), "Full Name is required");
+                if (!$.trim($form.find("input[name='Email']").val())) markInvalid($("input[name='Email']"), "Email is required");
+                if (!$.trim($form.find("textarea[name='Bio']").val())) markInvalid($("textarea[name='Bio']"), "Bio is required");
+                if (!$form.find("select[name='Profession']").val()) markInvalid($("select[name='Profession']"), "Profession is required");
+                if (!$form.find("select[name='Location']").val()) markInvalid($("select[name='Location']"), "Location is required");
+
+                var age = $form.find("input[name='Age']").val();
+                if (!age || parseInt(age) <= 0) markInvalid($("input[name='Age']"), "Age must be greater than 0");
+
+                if ($("#skillsToLearnContainer .skill-learn.active").length === 0) markInvalid($("#skillsToLearnContainer"), "Select at least one skill to learn");
+                if ($("#skillsIKnowContainer .skill-know.active").length === 0) markInvalid($("#skillsIKnowContainer"), "Select at least one skill you know");
+
+                if (firstInvalidField) {
+                    $('html, body').animate({ scrollTop: firstInvalidField.offset().top - 100 }, 300);
+                    return false;
+                }
+
+                this.submit();
+            });
+
+
+        });
+    </script>
+}

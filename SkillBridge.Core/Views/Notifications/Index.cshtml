@@ -1,0 +1,392 @@
+@model List<SkillBridge.Models.Notification>
+@{
+    ViewBag.Title = "Notifications";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --success-color: #4cc9f0;
+            --info-color: #4895ef;
+            --warning-color: #f72585;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .notification-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 15px;
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .notification-title {
+            font-weight: 700;
+            color: #2b2d42;
+            margin: 0;
+        }
+
+        .btn-modern {
+            border-radius: 8px;
+            padding: 0.5rem 1.2rem;
+            font-weight: 600;
+            transition: var(--transition);
+            border: none;
+        }
+
+        .btn-primary-modern {
+            background: var(--primary-color);
+        }
+
+        .btn-primary-modern:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow);
+        }
+
+        .notification-list {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .notification-item {
+            padding: 1.5rem;
+            border: none;
+            border-bottom: 1px solid #eaeaea;
+            transition: var(--transition);
+            background: white;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item.unread {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
+            border-left: 4px solid var(--info-color);
+        }
+
+        .notification-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-message {
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #2b2d42;
+        }
+
+        .notification-time {
+            font-size: 0.85rem;
+            color: #6c757d;
+            display: flex;
+            align-items: center;
+        }
+
+        .notification-time i {
+            margin-right: 5px;
+        }
+
+        .notification-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 180px;
+        }
+
+        .btn-sm-modern {
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .btn-success-modern {
+            background: var(--success-color);
+            color: #fff;
+        }
+
+        .btn-danger-modern {
+            background: var(--warning-color);
+            color: #fff;
+        }
+
+        .btn-secondary-modern {
+            background: #6c757d;
+            color: #fff;
+        }
+
+        .skill-selection {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .form-control-modern {
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            padding: 0.5rem 0.75rem;
+            transition: var(--transition);
+        }
+
+        .form-control-modern:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: #dee2e6;
+        }
+
+        .empty-state h3 {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge-notification {
+            background: var(--warning-color);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            margin-left: 5px;
+        }
+
+        
+    </style>
+</head>
+<body>
+    @Html.AntiForgeryToken()
+    <div class="notification-container">
+        @if (!Model.Any())
+        {
+            <div class="empty-state">
+                <i class="far fa-bell"></i>
+                <h3>No notifications</h3>
+                <p>You're all caught up! Check back later for new notifications.</p>
+            </div>
+        }
+        else
+        {
+            <div class="notification-header">
+                <h1 class="notification-title">
+                    Notifications
+                    @if (Model.Any(n => !n.IsRead))
+                    {
+                        <span class="badge-notification">@Model.Count(n => !n.IsRead)</span>
+                    }
+                </h1>
+                <button id="markAllReadBtn" class="btn btn-primary-modern btn-modern">
+                    <i class="fas fa-check-double me-2"></i>Mark All as Read
+                </button>
+            </div>
+
+            <div class="notification-list">
+                @foreach (var n in Model)
+                {
+                    <div class="notification-item d-flex justify-content-between align-items-start @(n.IsRead ? "" : "unread")" data-id="@n.Id">
+                        <div class="notification-content">
+                            <div class="notification-message">@n.Message</div>
+                            <div class="notification-time">
+                                <i class="far fa-clock"></i>@n.CreatedAt.ToLocalTime().ToString("g")
+                            </div>
+
+                            @if (n.Type == "SkillRequest" && !n.IsRead)
+                            {
+                                <div class="skill-selection d-none" data-id="@n.Id">
+                                    <label class="form-label fw-semibold">Select skill to learn from requester:</label>
+                                    <select class="form-control form-control-modern skill-dropdown" data-id="@n.Id"></select>
+                                    <button class="btn btn-primary-modern btn-sm-modern mt-2 initialize-btn" data-id="@n.Id">
+                                        <i class="fas fa-play-circle me-1"></i>Start Interaction
+                                    </button>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="notification-actions">
+                            @if (n.Type == "SkillRequest" && !n.IsRead)
+                            {
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-success-modern btn-sm-modern accept-btn" data-id="@n.Id">
+                                        <i class="fas fa-check me-1"></i>Accept
+                                    </button>
+                                    <button class="btn btn-danger-modern btn-sm-modern decline-btn" data-id="@n.Id">
+                                        <i class="fas fa-times me-1"></i>Decline
+                                    </button>
+                                </div>
+                            }
+                            else if (n.Type == "Info" && !n.IsRead)
+                            {
+                                <button class="btn btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
+                                    <i class="fas fa-eye me-1"></i>Mark as Read
+                                </button>
+                            }
+                            else if (n.Type == "Feedback" && !n.IsRead)
+                            {
+                                <div class="d-flex flex-column gap-2">
+                                    <a href="@Url.Action("RateInteraction", "Interactions", new { interactionId = n.ReferenceId })" class="btn btn-primary-modern btn-sm-modern">
+                                        <i class="fas fa-star me-1"></i>Rate the Interaction
+                                    </a>
+                                    <button class="btn btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
+                                        <i class="fas fa-eye me-1"></i>Mark as Read
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            var verificationToken = $('input[name="__RequestVerificationToken"]').val();
+            $(document).on("click", ".mark-read", function () {
+                var btn = $(this);
+                var id = btn.data("id");
+                $.post("/Notifications/MarkAsRead/" + id, { __RequestVerificationToken: verificationToken }, function (res) {
+                    if (res.success) {
+                        var item = btn.closest(".notification-item");
+                        item.removeClass("unread");
+                        btn.closest(".notification-actions").html('');
+                        updateNotificationCount();
+                    }
+                });
+            });
+
+            // decline request
+            $(document).on("click", ".decline-btn", function () {
+                var btn = $(this);
+                var id = btn.data("id");
+                $.post("/Notifications/DeclineSkillRequest", { notificationId: id, __RequestVerificationToken: verificationToken }, function (res) {
+                    if (res.success) {
+                        btn.closest(".notification-item").fadeOut(300, function () {
+                            $(this).remove();
+                            updateNotificationCount();
+                        });
+                    }
+                });
+            });
+
+            // accept request
+            $(document).on("click", ".accept-btn", function () {
+                var btn = $(this);
+                var id = btn.data("id");
+                var container = $(".skill-selection[data-id='" + id + "']");
+                var dropdown = container.find(".skill-dropdown");
+
+                $.get("/Notifications/AcceptSkillRequest", { notificationId: id }, function (res) {
+                    dropdown.empty();
+                    if (res.skills.length === 0) {
+                        dropdown.append('<option value="">No skills available</option>');
+                    } else {
+                        $.each(res.skills, function (i, skill) {
+                            dropdown.append($('<option>').val(skill.SkillId).text(skill.Name));
+                        });
+                    }
+                    container.removeClass("d-none");
+                    btn.closest('.d-flex').hide();
+                });
+            });
+
+            // initiate interaction
+            $(document).on("click", ".initialize-btn", function () {
+                var btn = $(this);
+                var id = btn.data("id");
+                var dropdown = $(".skill-selection[data-id='" + id + "']").find(".skill-dropdown");
+                var selectedSkillId = dropdown.val();
+                if (!selectedSkillId) {
+                    alert("Please select a skill to learn from requester.");
+                    return;
+                }
+
+                $.post("/Notifications/InitializeInteraction", { notificationId: id, skillId: selectedSkillId, __RequestVerificationToken: verificationToken }, function (res) {
+                    if (res.success) {
+                        btn.closest(".notification-item").fadeOut(300, function () {
+                            $(this).remove();
+                            updateNotificationCount();
+                        });
+                    } else {
+                        alert("Failed to initialize interaction.");
+                    }
+                });
+            });
+
+            // Mark all notifications as read
+            $("#markAllReadBtn").click(function () {
+                if (!confirm("Mark all notifications as read?")) return;
+
+                $.post("/Notifications/MarkAllAsRead", { __RequestVerificationToken: verificationToken }, function (res) {
+                    if (res.success) {
+                        $(".notification-item.unread").removeClass("unread");
+                        $(".notification-actions").html('');
+                        $("#markAllReadBtn").prop('disabled', true).html('<i class="fas fa-check me-2"></i>All Read');
+                        updateNotificationCount();
+                    } else {
+                        alert("Failed to mark all as read.");
+                    }
+                });
+            });
+
+            function updateNotificationCount() {
+                var unreadCount = $(".notification-item.unread").length;
+                if (unreadCount === 0) {
+                    $(".badge-notification").remove();
+                    $("#notificationBadge").text("0");
+                } else {
+                    $(".badge-notification").text(unreadCount);
+                    $("#notificationBadge").text(unreadCount);
+                }
+            }
+        });
+    </script>
+</body>
+</html>

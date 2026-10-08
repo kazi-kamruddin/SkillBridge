@@ -1,0 +1,21 @@
+@{
+    ViewBag.Title = "Contact";
+}
+
+
+@section Styles {
+    <link rel="stylesheet" href="~/Styles/contacts.css" />
+}
+
+
+
+<main aria-labelledby="title">
+    <h2 id="title">Contact SkillBridge</h2>
+    <p>Need help with your account or an exchange? Please include a brief description of the issue, but do not send passwords or reset links.</p>
+    @if (!string.IsNullOrWhiteSpace(ViewBag.SupportEmail as string))
+    {
+        <p>Email <a href="mailto:@ViewBag.SupportEmail">@ViewBag.SupportEmail</a>.</p>
+    }
+    <p>You can also report a site issue on <a href="https://github.com/kazi-kamruddin/SkillBridge-renew/issues" rel="noopener noreferrer">the SkillBridge issue tracker</a>.</p>
+    <p>Forgot your password? <a href="@Url.Action("ForgotPassword", "Account")">Request a reset link</a>.</p>
+</main>

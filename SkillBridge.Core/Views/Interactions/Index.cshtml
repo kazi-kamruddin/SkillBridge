@@ -1,0 +1,146 @@
+
+@model List<SkillBridge.Models.InteractionIndexViewModel>
+
+@section Styles {
+    <style>
+        .container {
+            margin-top: 2rem;
+        }
+
+        h2 {
+            font-weight: 700;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            color: var(--text-color);
+            position: relative;
+            padding-bottom: 0.8rem;
+        }
+
+            h2::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 60px;
+                height: 4px;
+                background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+                border-radius: 2px;
+            }
+
+        /* Grid Layout */
+        .row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        /* Interaction Card */
+        .interaction-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid var(--border-color);
+            min-height: 250px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .interaction-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            }
+
+            .interaction-card:hover {
+                transform: translateY(-6px);
+                box-shadow: var(--shadow-lg);
+            }
+
+            .interaction-card h4 {
+                font-weight: 600;
+                color: var(--primary-color);
+                margin-bottom: 1rem;
+                font-size: 1.2rem;
+            }
+
+            .interaction-card p {
+                margin: 0.4rem 0;
+                font-size: 0.95rem;
+                color: var(--text-color);
+            }
+
+            .interaction-card strong {
+                color: var(--primary-color);
+            }
+
+            /* Action Button */
+            .interaction-card a {
+                margin-top: auto;
+                align-self: flex-start;
+                padding: 0.6rem 1.2rem;
+                font-size: 0.85rem;
+                font-weight: 600;
+                color: #fff;
+                background-color: var(--primary-color);
+                border-radius: 6px;
+                text-decoration: none;
+                transition: var(--transition);
+            }
+
+                .interaction-card a:hover {
+                    background-color: var(--primary-dark);
+                    transform: translateY(-2px);
+                    color: #fff;
+                    text-decoration: none;
+                }
+
+        /* Responsive */
+        @@media (max-width: 768px) {
+            h2 {
+                font-size: 1.8rem;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .container {
+                margin-top: 1rem;
+            }
+
+            h2 {
+                font-size: 1.6rem;
+            }
+
+            .interaction-card {
+                padding: 1.2rem;
+                min-height: 220px;
+            }
+        }
+    </style>
+}
+
+<div class="container">
+    <h2>Your Interactions</h2>
+    <div class="row">
+        @foreach (var interaction in Model)
+        {
+            <div class="interaction-card">
+                <h4>@interaction.OtherUserName</h4>
+                <p><strong>Teaching:</strong> @interaction.SkillYouTeach</p>
+                <p><strong>Learning:</strong> @interaction.SkillYouLearn</p>
+                <p><strong>Status:</strong> @interaction.Status</p>
+                <a href="@Url.Action("Sessions", "Interactions", new { id = interaction.InteractionId })">
+                    View Details
+                </a>
+            </div>
+        }
+    </div>
+</div>

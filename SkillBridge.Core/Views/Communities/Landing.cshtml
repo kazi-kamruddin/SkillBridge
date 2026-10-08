@@ -1,0 +1,65 @@
+
+@model SkillBridge.Models.CommunityLandingViewModel
+@{
+    ViewBag.Title = Model.CommunityName + " - Community";
+}
+
+<main class="container my-5">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">@Model.CommunityName</h2>
+            <p class="text-muted">Skill: @Model.SkillName</p>
+        </div>
+
+        @if (Model.IsMember)
+        {
+            <a href="@Url.Action("CreatePost", "Communities", new { communityId = Model.CommunityId })"
+               class="btn btn-success px-4">
+                <i class="fas fa-plus me-2"></i> Create Post
+            </a>
+        }
+    </div>
+
+    <!-- Posts -->
+    <section class="posts-section">
+        @if (Model.Posts.Any())
+        {
+            <div class="post-list">
+                @foreach (var post in Model.Posts.OrderByDescending(p => p.CreatedAt))
+                {
+                    <a href="@Url.Action("PostDetails", "Communities", new { id = post.PostId })"
+                       class="post-card d-block p-3 mb-3 rounded text-decoration-none">
+                        <h5 class="mb-1 text-dark">@post.Title</h5>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                by <strong>@post.CreatedByFullName</strong>
+                                � @post.CreatedAt.ToString("MMM dd, yyyy")
+                            </small>
+                            <span class="badge bg-light text-dark">View</span>
+                        </div>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                No posts yet. Be the first to post!
+            </div>
+        }
+    </section>
+</main>
+
+<style>
+    .post-card {
+        border: 1px solid #e5e5e5;
+        background: #fff;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+        .post-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+</style>

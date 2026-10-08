@@ -1,0 +1,73 @@
+@using SkillBridge.Models
+@model LoginViewModel
+@{
+    ViewBag.Title = "Log in";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/Styles/login.css" />
+}
+
+<div class="d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+    <div class="card shadow d-flex flex-row overflow-hidden" style="max-width: 850px; border-radius: 12px; width: 100%;">
+
+        <!-- Left Side (Login Form) -->
+        <div class="p-5 flex-fill" style="background-color: #fff;">
+            <h2 class="mb-4">Sign In</h2>
+
+            @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, false, new { role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                <!-- Email -->
+                <div class="form-group mb-3">
+                    @Html.LabelFor(m => m.Email)
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-envelope"></i>
+                        </span>
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "Enter your email" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                </div>
+
+                <!-- Password -->
+                <div class="form-group mb-4">
+                    @Html.LabelFor(m => m.Password)
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="bi bi-lock"></i>
+                        </span>
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter your password" })
+                    </div>
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                </div>
+
+                <!-- Remember Me -->
+                <div class="form-check mb-4">
+                    @Html.CheckBoxFor(m => m.RememberMe, new { @class = "form-check-input" })
+                    @Html.LabelFor(m => m.RememberMe, new { @class = "form-check-label" })
+                </div>
+
+                <!-- Sign In button -->
+                <button type="submit" class="btn text-white w-100" style="background: linear-gradient(to right, #ff416c, #ff4b2b); font-weight: bold; border-radius: 6px;">
+                    Sign In
+                </button>
+            }
+        </div>
+
+        <!-- Right Side (Welcome Message + Sign Up button) -->
+        <div class="d-flex flex-column justify-content-center align-items-center text-white flex-fill p-5"
+             style="background: linear-gradient(to right, #ff416c, #ff4b2b);">
+            <h3 class="mb-3">Welcome to login</h3>
+            <p>Don't have an account?</p>
+            @Html.ActionLink("Sign Up", "Register", "Account", null, new { @class = "btn btn-light" })
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+<script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+}

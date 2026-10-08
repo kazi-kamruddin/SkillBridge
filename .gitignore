@@ -53,6 +53,10 @@ packages/*
 
 # Node/npm (if used for frontend assets)
 node_modules/
+.dotnet/
+.dotnet-install.ps1
+.nuget-packages/
+.dotnet-cli-home/
 App_Data/certs/
 playwright-report/
 test-results/

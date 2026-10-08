@@ -1,0 +1,261 @@
+@model SkillBridge.Models.CompleteProfileViewModel
+@using Newtonsoft.Json;
+@{
+    ViewBag.Title = "Complete Your Profile";
+
+    var allSkills = Model.AllSkillCategories
+        .SelectMany(c => c.Skills)
+        .ToList();
+
+    var skillStagesDict = allSkills.ToDictionary(
+        s => s.Id.ToString(),
+        s => s.SkillStages.Select(st => new { id = st.StageNumber, name = st.Description }).ToList()
+    );
+
+    var skillStagesDataJson = JsonConvert.SerializeObject(skillStagesDict);
+}
+
+
+@section Styles {
+    <link rel="stylesheet" href="~/Styles/indexCompleteProfile.css" />
+}
+
+
+
+<main aria-labelledby="title">
+    <h2 id="title">@ViewBag.Title</h2>
+
+    @using (Html.BeginForm("Index", "CompleteProfile", FormMethod.Post, new { @id = "completeProfileForm" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <h4>Basic Information</h4>
+        <div class="form-group mb-3">
+            @Html.LabelFor(m => m.FullName)
+            @Html.TextBoxFor(m => m.FullName, new { @class = "form-control", placeholder = "Full Name" })
+        </div>
+        <div class="form-group mb-3">
+            @Html.LabelFor(m => m.Age)
+            @Html.TextBoxFor(m => m.Age, new { @class = "form-control", type = "number", min = "1", placeholder = "Age" })
+        </div>
+        <div class="form-group mb-3">
+            @Html.LabelFor(m => m.Profession)
+            @Html.DropDownListFor(m => m.Profession,
+                new SelectList(new[]
+                {
+                    "Student","Teacher","Software Developer","Engineer","Designer","Freelancer","Entrepreneur"
+                }, Model.Profession),
+                "Select Profession",
+                new { @class = "form-control" })
+        </div>
+        <div class="form-group mb-3">
+            @Html.LabelFor(m => m.Location)
+            @Html.DropDownListFor(m => m.Location,
+                new SelectList(new[]
+                {
+                    "Barishal","Chattogram","Dhaka","Khulna","Rajshahi","Rangpur","Mymensingh","Sylhet"
+                }, Model.Location),
+                "Select Location",
+                new { @class = "form-control" })
+        </div>
+        <div class="form-group mb-3">
+            @Html.LabelFor(m => m.Bio)
+            @Html.TextAreaFor(m => m.Bio, 4, 50, new { @class = "form-control", placeholder = "Short Bio" })
+        </div>
+
+        <hr />
+        <h4>Skills You Want to Learn</h4>
+        <div class="row" id="skillsToLearnContainer">
+            @foreach (var category in Model.AllSkillCategories)
+            {
+                <div class="col-md-4 mb-3">
+                    <h5>@category.Name</h5>
+                    <ul class="list-group">
+                        @foreach (var skill in category.Skills)
+                        {
+                            <li class="list-group-item skill-learn" data-skill-id="@skill.Id">
+                                @skill.Name
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+
+        <hr />
+        <h4>Skills You Know</h4>
+        <div id="skillsIKnowContainer" class="row">
+            @foreach (var category in Model.AllSkillCategories)
+            {
+                <div class="col-md-4 mb-3 skill-category-container" data-category="@category.Name">
+                    <h5>@category.Name</h5>
+                    <ul class="list-group">
+                        @foreach (var skill in category.Skills)
+                        {
+                            <li class="list-group-item skill-know" data-skill-id="@skill.Id" data-skill-name="@skill.Name">
+                                @skill.Name
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+        </div>
+
+        <div id="skillStagesSelectionContainer" class="mt-3"></div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success" id="proceedButton">Proceed</button>
+            <button type="button" class="btn btn-secondary" id="debugButton">Debug Print</button>
+        </div>
+
+        <div id="debugOutput" class="mt-3 text-monospace"></div>
+    }
+</main>
+
+@section Scripts {
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+<script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+    
+
+    <script>
+        $(document).ready(function () {
+            var $form = $("#completeProfileForm");
+            var skillStagesData = @Html.Raw(skillStagesDataJson);
+            var selectedSkillsToLearn = new Set();
+            var selectedSkillsIKnow = {};
+            var skillIKnowIndexMap = {};
+
+            function refreshSkillsIKnowHiddenInputs() {
+                $form.find('input[name^="SkillsIKnow"]').remove();
+                var idx = 0;
+                for (var skillId in selectedSkillsIKnow) {
+                    $('<input>').attr({ type: 'hidden', name: 'SkillsIKnow[' + idx + '].SkillId', value: skillId, 'data-skill-id': skillId }).appendTo($form);
+                    $('<input>').attr({ type: 'hidden', name: 'SkillsIKnow[' + idx + '].KnownUpToStage', value: selectedSkillsIKnow[skillId], 'data-skill-id': skillId }).appendTo($form);
+                    skillIKnowIndexMap[skillId] = idx;
+                    idx++;
+                }
+            }
+
+            function renderStageSelection(skillId, skillName) {
+                var stages = skillStagesData[skillId.toString()];
+                if (!stages) return;
+                $("#stage-selection-" + skillId).remove();
+                var $container = $('<div class="stage-selection-container mt-2" id="stage-selection-' + skillId + '"><strong>Stages you know for ' + skillName + ':</strong><br/></div>');
+                stages.forEach(function (st) {
+                    $container.append('<span class="badge badge-secondary text-dark stage-option mr-1 mb-1" data-stage="' + st.id + '" data-skill-id="' + skillId + '">' + st.name + '</span>');
+                });
+                $("#skillStagesSelectionContainer").append($container);
+
+                var stage = selectedSkillsIKnow[skillId] || 1;
+                $('#stage-selection-' + skillId + ' .stage-option').each(function () {
+                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary');
+                    else $(this).removeClass('badge-primary').addClass('badge-secondary');
+                });
+            }
+
+            // ----- Skill Selection -----
+            $(".skill-learn").click(function () {
+                if ($(this).hasClass("disabled")) return;
+                var skillId = String($(this).data("skill-id"));
+                $(this).toggleClass("active");
+
+                if ($(this).hasClass("active")) {
+                    selectedSkillsToLearn.add(skillId);
+                    $('<input>').attr({ type: 'hidden', name: 'SkillsToLearn', value: skillId }).appendTo($form);
+                    $('.skill-know[data-skill-id="' + skillId + '"]').addClass('disabled').removeClass('active');
+                    delete selectedSkillsIKnow[skillId];
+                    $("#stage-selection-" + skillId).remove();
+                    refreshSkillsIKnowHiddenInputs();
+                } else {
+                    selectedSkillsToLearn.delete(skillId);
+                    $form.find('input[name="SkillsToLearn"][value="' + skillId + '"]').remove();
+                    $('.skill-know[data-skill-id="' + skillId + '"]').removeClass('disabled');
+                }
+            });
+
+            $(document).on("click", ".skill-know", function () {
+                if ($(this).hasClass("disabled")) return;
+                var $this = $(this);
+                var skillId = String($this.data("skill-id")), skillName = $this.data("skill-name");
+
+                if ($this.hasClass("active")) {
+                    $this.removeClass("active");
+                    delete selectedSkillsIKnow[skillId];
+                    $("#stage-selection-" + skillId).remove();
+                } else {
+                    $this.addClass("active");
+                    selectedSkillsIKnow[skillId] = 1;
+                    renderStageSelection(skillId, skillName);
+                }
+
+                refreshSkillsIKnowHiddenInputs();
+
+                // Disable corresponding skill-learn
+                if ($this.hasClass("active")) $('.skill-learn[data-skill-id="' + skillId + '"]').addClass('disabled').removeClass('active');
+                else $('.skill-learn[data-skill-id="' + skillId + '"]').removeClass('disabled');
+            });
+
+            $(document).on("click", ".stage-option", function () {
+                var $this = $(this), skillId = String($this.data("skill-id")), stage = $this.data("stage");
+                selectedSkillsIKnow[skillId] = stage;
+
+                var $allStages = $('#stage-selection-' + skillId + ' .stage-option');
+                $allStages.each(function () {
+                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary');
+                    else $(this).removeClass('badge-primary').addClass('badge-secondary');
+                });
+
+                var idx = skillIKnowIndexMap[skillId];
+                $form.find('input[name="SkillsIKnow[' + idx + '].KnownUpToStage"]').val(stage);
+            });
+
+            // ----- Debug Print -----
+            $("#debugButton").click(function () {
+                var debugData = {};
+                $form.find("input, select, textarea").each(function () {
+                    var $el = $(this), name = $el.attr("name"), value = $el.val();
+                    if (!name) return;
+                    if (debugData[name]) {
+                        if (!Array.isArray(debugData[name])) debugData[name] = [debugData[name]];
+                        debugData[name].push(value);
+                    } else debugData[name] = value;
+                });
+                $("#debugOutput").html("<pre>" + JSON.stringify(debugData, null, 2) + "</pre>");
+            });
+
+            // ----- Client-side Validation -----
+            $form.submit(function (e) {
+                e.preventDefault();
+                $form.find(".invalid-feedback").remove();
+                $form.find(".is-invalid").removeClass("is-invalid");
+
+                var firstInvalidField = null;
+                function markInvalid($field, message) {
+                    if (!firstInvalidField) firstInvalidField = $field;
+                    $field.addClass("is-invalid");
+                    if ($field.next(".invalid-feedback").length === 0) {
+                        $("<div class='invalid-feedback'>" + message + "</div>").insertAfter($field);
+                    }
+                }
+
+                if (!$.trim($form.find("input[name='FullName']").val())) markInvalid($("input[name='FullName']"), "Full Name is required");
+                var age = $form.find("input[name='Age']").val();
+                if (!age || parseInt(age) <= 0) markInvalid($("input[name='Age']"), "Age must be greater than 0");
+                if (!$form.find("select[name='Profession']").val()) markInvalid($("select[name='Profession']"), "Profession is required");
+                if (!$form.find("select[name='Location']").val()) markInvalid($("select[name='Location']"), "Location is required");
+                if (!$.trim($form.find("textarea[name='Bio']").val())) markInvalid($("textarea[name='Bio']"), "Bio is required");
+                if ($("#skillsToLearnContainer .skill-learn.active").length === 0) markInvalid($("#skillsToLearnContainer"), "Select at least one skill to learn");
+                if ($("#skillsIKnowContainer .skill-know.active").length === 0) markInvalid($("#skillsIKnowContainer"), "Select at least one skill you know");
+
+                if (firstInvalidField) {
+                    $('html, body').animate({ scrollTop: firstInvalidField.offset().top - 100 }, 300);
+                    return false;
+                }
+
+                this.submit();
+            });
+
+        });
+    </script>
+}
