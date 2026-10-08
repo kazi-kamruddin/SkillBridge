@@ -2,48 +2,24 @@
 
 SkillBridge is a peer-to-peer skill exchange website. Members list skills they can teach and learn, find reciprocal matches, request exchanges, confirm seven learning stages, rate completed exchanges, message one another, and post in skill communities.
 
-## Technology
+## Current application
 
-- ASP.NET MVC 5 and Razor views on .NET Framework 4.7.2
-- Entity Framework 6 and ASP.NET Identity 2
-- PostgreSQL through Npgsql (Supabase is the intended managed database)
-- SignalR 2 for live chat, Bootstrap and jQuery for the interface
+`SkillBridge.Core/` is the ASP.NET Core 10 MVC application. It serves the existing Razor pages, Bootstrap/jQuery assets, C# controllers, Identity login, and SignalR chat from one URL. EF Core connects directly to the existing Supabase PostgreSQL `skillbridge` schema; the browser never receives database credentials and Supabase Auth/Data API are not used.
 
-The frontend and backend are one web application. Supabase Auth and the Supabase browser Data API are not used; the server connects to PostgreSQL directly.
+The original ASP.NET MVC 5/.NET Framework 4.7.2 application remains at the repository root for comparison and rollback. Its Windows hosting instructions are in [DEPLOYMENT.md](DEPLOYMENT.md). The new Render deployment steps are in [DEPLOYMENT_CORE.md](DEPLOYMENT_CORE.md).
 
-For host selection, production settings, and first-publish steps, see [DEPLOYMENT.md](DEPLOYMENT.md).
+## Local development of the Core app
 
-## Run locally
+1. Install the .NET 10 SDK. Docker Desktop is not needed for normal development.
+2. Use the existing Supabase project. The new app needs `database/postgres/003_aspnet_core_identity.sql` applied after `001_initial.sql` and `002_seed.sql`. Existing databases must **not** rerun `001_initial.sql`.
+3. Set `SKILLBRIDGE_DB_CONNECTION` to the Supabase PostgreSQL session-pooler connection string and `SKILLBRIDGE_MESSAGE_KEY` to the same stable Base64 32-byte key used by the MVC 5 app. Set these outside Git.
+4. Run `dotnet run --project SkillBridge.Core/SkillBridge.Core.csproj`. The included public Supabase root CA certificate is used for full TLS verification. `SKILLBRIDGE_DB_CA_CERT` can override its file path if Supabase rotates the CA.
+5. For password reset, set `SKILLBRIDGE_PUBLIC_URL`, `SKILLBRIDGE_BREVO_API_KEY`, and `SKILLBRIDGE_BREVO_FROM`. Until configured, the reset form accurately reports that delivery is unavailable. `SKILLBRIDGE_SUPPORT_EMAIL` is optional for the Contact page.
 
-1. On Windows, install Visual Studio with the ASP.NET and web development workload and the .NET Framework 4.7.2 targeting pack.
-2. Restore the NuGet packages in `SkillBridge.sln` and build the solution.
-3. Create a new Supabase project. In its SQL Editor, run `database/postgres/001_initial.sql` and then `database/postgres/002_seed.sql`. These scripts create the app tables in the private `skillbridge` schema. Do not expose that schema in Supabase API settings.
-4. Set the `SKILLBRIDGE_DB_CONNECTION` environment variable for the web app process. Use the connection details from Supabase's **Connect** panel, not a connection string committed to Git. A persistent server can use the direct connection if it supports IPv6; otherwise use the session pooler on port 5432. Use `SSL Mode=Require` and do not set `Trust Server Certificate`. Example shape: `Host=<pooler-host>;Port=5432;Database=postgres;Username=postgres.<project-ref>;Password=<password>;SSL Mode=Require`.
-5. Download the server CA certificate from Supabase and keep it outside the repository. Set `SKILLBRIDGE_DB_CA_CERT` to its absolute path, or to a path relative to the application root such as `App_Data/certs/supabase-ca.cer`. For the relative option, place the certificate in the host's `App_Data/certs` folder after publishing; the folder is excluded from Git and is not served to browsers. Npgsql 4.1 does not support a `Root Certificate` connection string option, so the application's connection factory validates the server hostname and certificate chain against this CA. On Windows with .NET Framework, a DER-encoded `.cer` file is suitable.
-6. Set `SKILLBRIDGE_MESSAGE_KEY` to a stable, random 32-byte key encoded as Base64. Keep it secret and backed up; changing it makes existing messages unreadable.
-7. Start the MVC application with IIS Express or IIS.
+The database schema is managed by the numbered SQL files in `database/postgres/`. The application does not run schema migrations at startup. The Core compatibility script preserves existing accounts, password hashes, messages, and application records. The message encryption format is unchanged, so the original message key must be kept.
 
-## Password reset and contact settings
+## Checks
 
-The password reset form sends a one-hour link through SMTP. Set these environment variables on the web app process before offering password resets:
+Run `dotnet publish SkillBridge.Core/SkillBridge.Core.csproj -c Release` to compile controllers and Razor views. Existing Playwright guest checks can run with `npm ci`, `npx playwright install chromium`, `SKILLBRIDGE_BASE_URL` pointed at the running site, and `npm run test:e2e`.
 
-- `SKILLBRIDGE_PUBLIC_URL`: the site's public HTTPS origin, such as `https://your-site.example/`. The app uses this fixed origin in reset links instead of trusting the request's Host header. HTTP is allowed only for localhost testing.
-- `SKILLBRIDGE_SMTP_HOST`, `SKILLBRIDGE_SMTP_PORT`, `SKILLBRIDGE_SMTP_FROM`: the mail server, its submission port, and a verified sender address. Use a provider that supports STARTTLS on port 587; .NET Framework's SMTP client does not use implicit TLS on port 465.
-- `SKILLBRIDGE_SMTP_USERNAME` and `SKILLBRIDGE_SMTP_PASSWORD`: credentials if the provider requires authentication. Keep them outside Git.
-- `SKILLBRIDGE_SUPPORT_EMAIL`: the address to show on the Contact page, if available.
-
-SMTP encryption is enabled by default. `SKILLBRIDGE_SMTP_SSL=false` works only with `localhost` or `127.0.0.1` for local email-catcher tests. When SMTP or the public URL is missing, the reset form shows an unavailable message instead of claiming an email was sent. A local SMTP catcher has verified the complete reset path; a real provider and sender address still need to be configured and checked before public deployment.
-
-## Browser smoke checks
-
-Install Node.js, run `npm ci`, then `npx playwright install chromium`. With the site running, set `SKILLBRIDGE_BASE_URL` to its URL (or use the IIS Express default `https://localhost:44364`) and run `npm run test:e2e`. The current checks cover guest pages and redirects; a live database and test accounts are needed for member flows.
-
-The database scripts are for a **new, empty** PostgreSQL database. Existing SQL Server data needs a separate data migration; the historical SQL Server migrations in `Migrations/` are retained for reference and are excluded from the PostgreSQL build. Schema changes after this baseline should be added as numbered PostgreSQL SQL scripts and reviewed before running. The app does not modify its schema at startup.
-
-A live two-user browser check passed against Supabase PostgreSQL: registration, reciprocal matching, skill request and acceptance, encrypted chat, confirmation of both skills' seven stages by both users, interaction completion, and both ratings. The temporary test accounts and their data were removed afterward.
-
-## Current development limits
-
-- Production password-reset delivery needs SMTP provider settings and a verified sender address.
-- Set a support email and verify that the issue tracker is accessible to visitors before opening the site publicly.
-- Legacy ASP.NET MVC 5 requires Windows hosting or a compatible Windows container.
+The prior MVC 5 version passed a live two-user flow against Supabase: registration, matching, request and acceptance, encrypted chat, confirmation of both skills' seven stages by both users, completion, and ratings. The temporary accounts were removed. The Core port still needs the same live flow after the compatibility SQL is applied.

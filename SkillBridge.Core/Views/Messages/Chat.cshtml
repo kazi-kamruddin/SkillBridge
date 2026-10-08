@@ -107,9 +107,12 @@
     <script>
         $(function () {
             var conversationId = @Model.Id;
-            var chat = $.connection.chatHub;
+            const connection = new signalR.HubConnectionBuilder()
+                .withUrl('/chatHub')
+                .withAutomaticReconnect()
+                .build();
 
-            chat.client.receiveMessage = function (msg) {
+            connection.on('receiveMessage', function (msg) {
                 if (String(msg.conversationId) !== String(conversationId)) return;
 
                 var mine = msg.fromUserId === '@User.Identity.GetUserId()';
@@ -125,10 +128,16 @@
 
                 var pane = $("#messagePane");
                 pane.scrollTop(pane.prop("scrollHeight"));
-            };
+            });
 
-            $.connection.hub.start().done(function () {
-                chat.server.joinConversation(conversationId);
+            connection.start().then(function () {
+                return connection.invoke('JoinConversation', conversationId);
+            }).catch(function (error) {
+                console.error('Could not connect to chat:', error);
+            });
+
+            connection.onreconnected(function () {
+                connection.invoke('JoinConversation', conversationId).catch(console.error);
             });
 
             $("#sendMessageForm").submit(function (e) {
