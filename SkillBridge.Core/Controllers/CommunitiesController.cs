@@ -16,8 +16,10 @@ namespace SkillBridge.Controllers
         public CommunitiesController(ApplicationDbContext db) => this.db = db;
 
         [AllowAnonymous]
-        public ActionResult Index()
+        public ActionResult Index(string q = "")
         {
+            q = (q ?? "").Trim();
+            if (q.Length > 100) q = q[..100];
             var currentUserId = User.Identity.GetUserId();
 
             var userSkills = db.UserSkills
@@ -35,11 +37,16 @@ namespace SkillBridge.Controllers
                 .Select(us => us.Skill)
                 .ToList();
 
-            var allCommunities = db.Communities.Include(c => c.Skill).Include(c => c.Skill.SkillCategory).ToList();
+            var allCommunities = db.Communities.Include(c => c.Skill).Include(c => c.Skill.SkillCategory)
+                .Where(c => q == "" || EF.Functions.ILike(c.Name, "%" + q + "%") ||
+                    EF.Functions.ILike(c.Skill.Name, "%" + q + "%") ||
+                    EF.Functions.ILike(c.Skill.SkillCategory.Name, "%" + q + "%"))
+                .ToList();
 
             var model = new CommunityIndexViewModel
             {
                 IsGuest = !User.Identity.IsAuthenticated,
+                SearchQuery = q,
                 SkillsYouKnow = allCommunities
                     .Where(c => teachingSkills.Contains(c.Skill))
                     .Select(c => new CommunityViewModel
@@ -76,8 +83,11 @@ namespace SkillBridge.Controllers
 
 
         [AllowAnonymous]
-        public ActionResult Landing(int id)
+        public ActionResult Landing(int id, string q = "", string sort = "newest")
         {
+            q = (q ?? "").Trim();
+            if (q.Length > 100) q = q[..100];
+            if (sort != "active") sort = "newest";
             var community = db.Communities.Include(c => c.Skill).FirstOrDefault(c => c.Id == id);
             if (community == null) return NotFound();
 
@@ -86,11 +96,18 @@ namespace SkillBridge.Controllers
 
             var posts = db.CommunityPosts
                 .Where(p => p.CommunityId == id && !p.IsHidden)
-                .OrderByDescending(p => p.CreatedAt)
+                .Where(p => q == "" || EF.Functions.ILike(p.Title, "%" + q + "%") ||
+                    EF.Functions.ILike(p.Content, "%" + q + "%"))
+                .Include(p => p.Comments)
                 .ToList()
+                .OrderByDescending(p => sort == "active"
+                    ? p.Comments.Where(c => !c.IsHidden).Select(c => c.CreatedAt)
+                        .DefaultIfEmpty(p.CreatedAt).Max()
+                    : p.CreatedAt)
                 .Select(p => new CommunityPostListItemViewModel
                 {
                     PostId = p.Id,
+                    CommentCount = p.Comments.Count(c => !c.IsHidden),
                     Title = p.Title,
                     CreatedByFullName = DisplayName(p.CreatedByUserId),
                     CreatedAt = p.CreatedAt
@@ -105,6 +122,8 @@ namespace SkillBridge.Controllers
                 CommunityName = community.Name,
                 SkillName = community.Skill.Name,
                 IsMember = isMember,
+                SearchQuery = q,
+                Sort = sort,
                 Posts = posts
             };
 
@@ -277,7 +296,7 @@ namespace SkillBridge.Controllers
         private string DisplayName(string userId)
         {
             var info = db.UserInformations.FirstOrDefault(ui => ui.UserId == userId);
-            return !User.Identity.IsAuthenticated && info?.IsPublic != true
+            return !User.Identity.IsAuthenticated && (info?.IsPublic != true || info.IsHidden)
                 ? "SkillBridge member" : info?.FullName ?? "SkillBridge member";
         }
 

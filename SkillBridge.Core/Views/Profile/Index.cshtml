@@ -20,7 +20,9 @@
     </div>
 
     <h3>@Model.FullName</h3>
+    @if (Model.IsHidden) { <div class="alert alert-warning">Your profile is currently hidden from discovery. Contact the site moderator if you believe this is a mistake.</div> }
     <p class="small text-muted">Your profile is @(Model.IsPublic ? "visible to signed-out visitors" : "visible only to signed-in members"). <a href="@Url.Action("UpdateProfile", "Profile")">Change visibility</a></p>
+    <p><a href="@Url.Action("Requests", "Profile")">Exchange proposals</a> · <a href="@Url.Action("BlockedMembers", "Profile")">Blocked members</a></p>
 
     <p class="text-muted">@Model.Bio</p>
     <p><i class="bi bi-geo-alt"></i> @Model.Location</p>

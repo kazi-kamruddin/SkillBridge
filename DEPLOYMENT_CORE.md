@@ -7,6 +7,7 @@ This is one ASP.NET Core 10 MVC app with Razor pages, C# controllers, Identity, 
 1. Export or back up the current Supabase database. The compatibility script keeps data, but its identity changes need an independent recovery copy before applying them.
 2. In the existing Supabase project's SQL Editor, review and run `database/postgres/003_aspnet_core_identity.sql` **once**. Do not rerun `001_initial.sql` on an existing database. The new script adds Core Identity fields, persistent cookie/reset-token keys, and required Identity tables. It does not recreate users or application data.
    Before deploying the public-browsing update, also run `database/postgres/004_public_browsing_and_moderation.sql` once. It adds profile visibility, content moderation flags and reports. Existing profiles default to hidden from signed-out visitors. Review existing community content before publishing it to guests.
+   Before deploying the issue #36 update, run `database/postgres/005_discovery_exchanges_safety.sql` once after 004. It adds exchange proposal fields, profile reports and blocks, moderation hiding, and early exchange endings. Do not rerun 001.
 3. Keep the existing `SKILLBRIDGE_MESSAGE_KEY`. Changing it makes old encrypted chat messages unreadable.
 4. Publish and test the Core app locally against the updated database before pointing visitors to it. Existing ASP.NET Identity 2 password hashes can be verified by Core Identity; successful login may upgrade a hash, so a database backup also matters for rollback to MVC 5.
 

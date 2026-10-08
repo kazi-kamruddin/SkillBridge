@@ -35,7 +35,28 @@ public class ModerationController : Controller
                 : db.CommunityPosts.Where(p => p.Id == r.PostId.Value)
                     .Select(p => p.Title).FirstOrDefault() ?? "Removed post"
         }).ToList();
-        return View(model);
+        var profileReports = db.ProfileReports.Where(r => r.Status == "Pending")
+            .OrderBy(r => r.CreatedAt).ToList();
+        var dashboard = new ModerationDashboardViewModel
+        {
+            CommunityReports = model,
+            ProfileReports = profileReports.Select(r => new ProfileReportItemViewModel
+            {
+                Id = r.Id,
+                ReportedUserId = r.ReportedUserId,
+                ReportedName = db.UserInformations.Where(info => info.UserId == r.ReportedUserId)
+                    .Select(info => info.FullName).FirstOrDefault() ?? "SkillBridge member",
+                ProfileBio = db.UserInformations.Where(info => info.UserId == r.ReportedUserId)
+                    .Select(info => info.Bio).FirstOrDefault() ?? "",
+                Reason = r.Reason,
+                CreatedAt = r.CreatedAt
+            }).ToList(),
+            HiddenProfiles = db.UserInformations.Where(info => info.IsHidden)
+                .OrderBy(info => info.FullName)
+                .Select(info => new HiddenProfileViewModel { UserId = info.UserId, Name = info.FullName })
+                .ToList()
+        };
+        return View(dashboard);
     }
 
     [HttpPost, ValidateAntiForgeryToken]
@@ -73,6 +94,39 @@ public class ModerationController : Controller
 
         db.SaveChanges();
         TempData["ModerationNotice"] = "Report reviewed.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public IActionResult ResolveProfile(int id, string decision)
+    {
+        if (!IsModerator()) return Forbid();
+        if (decision != "Dismissed" && decision != "Reviewed") return BadRequest();
+        var report = db.ProfileReports.FirstOrDefault(r => r.Id == id && r.Status == "Pending");
+        if (report == null) return NotFound();
+        if (decision == "Reviewed")
+        {
+            var profile = db.UserInformations.FirstOrDefault(info => info.UserId == report.ReportedUserId);
+            if (profile != null) profile.IsHidden = true;
+            foreach (var related in db.ProfileReports.Where(r =>
+                r.ReportedUserId == report.ReportedUserId && r.Status == "Pending"))
+                related.Status = "Reviewed";
+        }
+        else report.Status = "Dismissed";
+        db.SaveChanges();
+        TempData["ModerationNotice"] = "Profile report reviewed.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public IActionResult RestoreProfile(string id)
+    {
+        if (!IsModerator()) return Forbid();
+        var profile = db.UserInformations.FirstOrDefault(info => info.UserId == id && info.IsHidden);
+        if (profile == null) return NotFound();
+        profile.IsHidden = false;
+        db.SaveChanges();
+        TempData["ModerationNotice"] = "Profile restored to discovery.";
         return RedirectToAction(nameof(Index));
     }
 

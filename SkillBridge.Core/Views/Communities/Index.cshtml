@@ -15,9 +15,14 @@
         }
     </div>
 
+    <form method="get" action="@Url.Action("Index", "Communities")" class="row g-2 mb-4" role="search">
+        <div class="col-sm-9"><label for="community-search" class="form-label">Search communities</label><input id="community-search" class="form-control" name="q" value="@Model.SearchQuery" maxlength="100" placeholder="Skill or category" /></div>
+        <div class="col-sm-3 align-self-end"><button class="btn btn-outline-primary w-100" type="submit">Search</button></div>
+    </form>
+
     @if (!Model.SkillsYouKnow.Any() && !Model.SkillsYouWantToLearn.Any() && !Model.OtherCommunities.Any())
     {
-        <div class="alert alert-info">Communities are being prepared. Browse the <a href="@Url.Action("Index", "Explore")">skills directory</a> in the meantime.</div>
+        <div class="alert alert-info">@(string.IsNullOrEmpty(Model.SearchQuery) ? "Communities are being prepared." : "No communities match that search.") <a href="@Url.Action("Skills", "Explore")">Browse skills</a>.</div>
     }
     <div class="row g-4">
         <!-- Skills You Know -->

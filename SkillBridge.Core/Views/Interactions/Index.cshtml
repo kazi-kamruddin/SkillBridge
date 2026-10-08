@@ -143,9 +143,14 @@
                 <p><strong>Teaching:</strong> @interaction.SkillYouTeach</p>
                 <p><strong>Learning:</strong> @interaction.SkillYouLearn</p>
                 <p><strong>Status:</strong> @interaction.Status</p>
-                <a href="@Url.Action("Sessions", "Interactions", new { id = interaction.InteractionId })">
-                    View Details
-                </a>
+                @if (interaction.Status == "Ended")
+                {
+                    <p><strong>Reason:</strong> @interaction.EndReason</p>
+                }
+                else
+                {
+                    <a href="@Url.Action("Sessions", "Interactions", new { id = interaction.InteractionId })">View Details</a>
+                }
             </div>
         }
     </div>

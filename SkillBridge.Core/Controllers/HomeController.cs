@@ -107,6 +107,8 @@ namespace SkillBridge.Controllers
             return View();
         }
 
+        public ActionResult HowItWorks() => View();
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public ActionResult Error() => View("~/Views/Shared/Error.cshtml");
     }

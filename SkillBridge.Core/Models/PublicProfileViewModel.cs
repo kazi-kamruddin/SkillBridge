@@ -19,6 +19,8 @@ namespace SkillBridge.Models
         public int InteractionsCompleted { get; set; }
 
         public string ProfileImageUrl { get; set; }
+        public string YouCanLearn { get; set; } = "";
+        public string TheyCanLearn { get; set; } = "";
     }
 
     public class SkillViewModel
@@ -35,6 +37,7 @@ namespace SkillBridge.Models
 
     public class GuestExploreViewModel
     {
+        public string Query { get; set; } = "";
         public List<GuestSkillViewModel> Skills { get; set; } = new();
     }
 

@@ -29,36 +29,14 @@ namespace SkillBridge.Controllers
         public ActionResult Index(string skillFilter = "", int stageFilter = 0, string locationFilter = "")
         {
             if (!User.Identity.IsAuthenticated)
-            {
-                var publicTeachers = (from userSkill in db.UserSkills
-                                      join info in db.UserInformations on userSkill.UserId equals info.UserId
-                                      where userSkill.Status == "Teaching" && info.IsPublic
-                                      select new { userSkill.SkillId, info.UserId, info.FullName })
-                    .ToList();
-                var publicSkills = db.Skills.Include(s => s.SkillCategory)
-                    .OrderBy(s => s.SkillCategory.Name).ThenBy(s => s.Name).ToList();
-                var guestModel = new GuestExploreViewModel
-                {
-                    Skills = publicSkills.Select(skill => new GuestSkillViewModel
-                    {
-                        SkillName = skill.Name,
-                        CategoryName = skill.SkillCategory.Name,
-                        Teachers = publicTeachers.Where(t => t.SkillId == skill.Id)
-                            .Select(t => new GuestTeacherViewModel
-                            {
-                                UserId = t.UserId,
-                                FullName = t.FullName
-                            }).ToList()
-                    }).ToList()
-                };
-                return View("GuestIndex", guestModel);
-            }
+                return Skills("");
 
             var currentUserId = User.Identity.GetUserId();
             if (!db.UserInformations.Any(info => info.UserId == currentUserId))
                 return RedirectToAction("Index", "CompleteProfile");
 
             var currentUserSkills = db.UserSkills
+                .Include(us => us.Skill.SkillStages)
                 .Where(us => us.UserId == currentUserId)
                 .ToList();
 
@@ -82,10 +60,13 @@ namespace SkillBridge.Controllers
 
             foreach (var user in otherUsers)
             {
+                if (BlockRules.EitherBlocked(db, currentUserId, user.Id)) continue;
                 var userInfo = db.UserInformations.FirstOrDefault(ui => ui.UserId == user.Id);
+                if (userInfo == null || userInfo.IsHidden) continue;
 
                 var userSkills = db.UserSkills
                     .Include(us => us.Skill.SkillCategory)
+                    .Include(us => us.Skill.SkillStages)
                     .Where(us => us.UserId == user.Id)
                     .ToList();
 
@@ -116,6 +97,12 @@ namespace SkillBridge.Controllers
                     Bio = userInfo?.Bio ?? "",
                     AverageRating = averageRating,
                     ProfileImageUrl = ProfileImageHelper.GetRandomProfileImage(),
+                    YouCanLearn = string.Join(", ", userTeachingSkills
+                        .Where(us => learningSkills.Any(ls => ls.SkillId == us.SkillId))
+                        .Select(us => $"{us.Skill.Name} (stage {us.KnownUpToStage ?? 0}/{us.Skill.SkillStages.Count})")),
+                    TheyCanLearn = string.Join(", ", currentUserSkills
+                        .Where(us => us.Status == "Teaching" && userLearningSkills.Any(ls => ls.SkillId == us.SkillId))
+                        .Select(us => $"{us.Skill.Name} (stage {us.KnownUpToStage ?? 0}/{us.Skill.SkillStages.Count})")),
 
                     SkillsToTeach = userTeachingSkills
                         .Select(us => new SkillViewModel
@@ -169,6 +156,30 @@ namespace SkillBridge.Controllers
             };
 
             return View(model);
+        }
+
+        [AllowAnonymous]
+        public ActionResult Skills(string q = "")
+        {
+            q = (q ?? "").Trim();
+            if (q.Length > 100) q = q[..100];
+            var publicTeachers = (from userSkill in db.UserSkills
+                                  join info in db.UserInformations on userSkill.UserId equals info.UserId
+                                  where userSkill.Status == "Teaching" && info.IsPublic && !info.IsHidden
+                                  select new { userSkill.SkillId, info.UserId, info.FullName }).ToList();
+            var skills = db.Skills.Include(s => s.SkillCategory).Include(s => s.SkillStages).ToList();
+            var model = new GuestExploreViewModel
+            {
+                Query = q,
+                Skills = SkillSearch.Rank(skills, q).Select(skill => new GuestSkillViewModel
+                {
+                    SkillName = skill.Name,
+                    CategoryName = skill.SkillCategory.Name,
+                    Teachers = publicTeachers.Where(t => t.SkillId == skill.Id)
+                        .Select(t => new GuestTeacherViewModel { UserId = t.UserId, FullName = t.FullName }).ToList()
+                }).ToList()
+            };
+            return View("GuestIndex", model);
         }
     }
 }

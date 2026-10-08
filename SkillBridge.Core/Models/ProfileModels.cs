@@ -8,6 +8,7 @@ namespace SkillBridge.Models
     {
         public bool HasPassword { get; set; }
         public bool IsPublic { get; set; }
+        public bool IsHidden { get; set; }
 
         // Personal info
         public string FullName { get; set; }

@@ -10,6 +10,7 @@ namespace SkillBridge.Models
         public string SkillYouTeach { get; set; }
         public string SkillYouLearn { get; set; }
         public string Status { get; set; }
+        public string EndReason { get; set; }
     }
 
     public class SkillStageBlock

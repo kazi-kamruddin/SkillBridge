@@ -37,3 +37,9 @@ test('public help pages provide working destinations', async ({ page }) => {
   await expect(page.getByRole('heading', { name: /Forgot your password/i })).toBeVisible();
   await expect(page.locator('input[name="__RequestVerificationToken"]')).toHaveCount(1);
 });
+
+test('guest can read the exchange guide', async ({ page }) => {
+  await page.goto('/Home/HowItWorks');
+  await expect(page.getByRole('heading', { name: 'How an exchange works' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Browse skills' })).toHaveAttribute('href', /Explore\/Skills/i);
+});

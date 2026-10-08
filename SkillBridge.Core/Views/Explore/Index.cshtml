@@ -363,6 +363,7 @@
         </div>*@
 
         <!-- Filters Section -->
+        <p><a href="@Url.Action("Skills", "Explore")">Search the skills directory by topic or goal</a></p>
         <div class="filter-section">
             <h3 class="filter-title"><i class="fas fa-filter"></i>Filter Results</h3>
             <div class="filter-row">
@@ -433,6 +434,7 @@
                                     </div>
 
                                     <div class="skills-section">
+                                        <div class="small mb-3"><strong>Why this match:</strong> They can teach you @person.YouCanLearn. You can teach them @person.TheyCanLearn.</div>
                                         <div class="mb-3">
                                             <div class="skills-title">
                                                 <i class="fas fa-gift"></i>Offers to Teach
@@ -518,6 +520,7 @@
                                     </div>
 
                                     <div class="skills-section">
+                                        <div class="small mb-3"><strong>Why this match:</strong> They can teach you @person.YouCanLearn. Your skills do not yet match what they want to learn.</div>
                                         <div>
                                             <div class="skills-title">
                                                 <i class="fas fa-gift"></i>Offers to Teach

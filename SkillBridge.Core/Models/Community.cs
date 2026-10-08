@@ -51,6 +51,7 @@ namespace SkillBridge.Models
     public class CommunityIndexViewModel
     {
         public bool IsGuest { get; set; }
+        public string SearchQuery { get; set; } = "";
         public List<CommunityViewModel> SkillsYouKnow { get; set; } = new List<CommunityViewModel>();
         public List<CommunityViewModel> SkillsYouWantToLearn { get; set; } = new List<CommunityViewModel>();
         public List<CommunityViewModel> OtherCommunities { get; set; } = new List<CommunityViewModel>();
@@ -70,12 +71,15 @@ namespace SkillBridge.Models
         public string CommunityName { get; set; }
         public string SkillName { get; set; }
         public bool IsMember { get; set; }
+        public string SearchQuery { get; set; } = "";
+        public string Sort { get; set; } = "newest";
         public List<CommunityPostListItemViewModel> Posts { get; set; } = new List<CommunityPostListItemViewModel>();
     }
 
     public class CommunityPostListItemViewModel
     {
         public int PostId { get; set; }
+        public int CommentCount { get; set; }
         public string Title { get; set; }
         public string CreatedByFullName { get; set; }
         public DateTime CreatedAt { get; set; }

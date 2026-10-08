@@ -129,6 +129,16 @@ sessions
     {
         <button id="end-interaction-btn" class="btn btn-success">End Interaction</button>
     }
+    <details class="mt-4">
+        <summary>Need to end this exchange early?</summary>
+        <form method="post" action="@Url.Action("StopInteraction", "Interactions")" class="mt-3" style="max-width: 600px;">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.InteractionId" />
+            <label class="form-label" for="end-reason">Tell the other member why</label>
+            <textarea id="end-reason" name="reason" class="form-control mb-2" maxlength="500" required></textarea>
+            <button class="btn btn-outline-danger" type="submit" onclick="return confirm('End this exchange without completing it?')">End exchange early</button>
+        </form>
+    </details>
 </div>
 
 @section scripts {

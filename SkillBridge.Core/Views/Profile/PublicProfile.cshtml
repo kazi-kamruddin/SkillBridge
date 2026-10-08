@@ -7,6 +7,7 @@
 
 <main class="container text-center mt-5" aria-labelledby="title">
     @Html.AntiForgeryToken()
+    @if (TempData["ProfileNotice"] is string notice) { <div class="alert alert-info" role="status">@notice</div> }
 
     <div class="mb-3 text-center">
         <img src="@Model.ProfileImageUrl"
@@ -28,6 +29,20 @@
                 @Html.Hidden("targetUserId", Model.UserId)
                 <button type="submit" class="btn btn-success"><i class="fas fa-hand-point-right"></i> Knock</button>
             }
+            <details class="mt-3"><summary>Report this profile</summary>
+                <form action="@Url.Action("ReportProfile", "Profile")" method="post" class="mt-2 mx-auto" style="max-width: 500px;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.UserId" />
+                    <label class="form-label" for="profile-report-reason">Reason</label>
+                    <textarea id="profile-report-reason" name="reason" class="form-control mb-2" maxlength="500" required></textarea>
+                    <button class="btn btn-outline-danger btn-sm" type="submit">Send report</button>
+                </form>
+            </details>
+            <form action="@Url.Action("Block", "Profile")" method="post" class="mt-3">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.UserId" />
+                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Block this member? You will no longer be able to contact each other.')">Block member</button>
+            </form>
         </div>
     }
 
@@ -75,6 +90,11 @@
                     buttonText = "Request Again";
                     buttonClass = "btn btn-danger"; 
                 }
+                else if (skill.RequestStatus == "Accepted")
+                {
+                    buttonText = "Exchange started";
+                    isDisabled = true;
+                }
 
                 var percent = skill.TotalStages > 0
                     ? Math.Min(100, skill.Stage * 100 / skill.TotalStages) : 0;
@@ -93,12 +113,25 @@
                     @if (User.Identity.IsAuthenticated && showButton)
                     {
                         <div class="text-center mt-3">
-                            <button class="@buttonClass requestSkillBtn"
-                                    data-userskill-id="@skill.UserSkillId"
-                                    data-profile-id="@Model.UserId"
-                                    @((isDisabled) ? "disabled=\"disabled\"" : "")>
-                                @buttonText
-                            </button>
+                            @if (isDisabled) { <span class="badge bg-warning text-dark">@buttonText</span> }
+                            else
+                            {
+                                <details class="text-start"><summary class="btn @buttonClass">@buttonText</summary>
+                                    <form class="requestSkillForm mt-3">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userSkillId" value="@skill.UserSkillId" />
+                                        <input type="hidden" name="profileId" value="@Model.UserId" />
+                                        <label class="form-label" for="goal-@skill.UserSkillId">What would you like to achieve?</label>
+                                        <textarea id="goal-@skill.UserSkillId" name="goal" class="form-control mb-2" maxlength="500" required></textarea>
+                                        <label class="form-label" for="pace-@skill.UserSkillId">Preferred pace</label>
+                                        <select id="pace-@skill.UserSkillId" name="pace" class="form-select mb-2" required><option value="">Choose a pace</option><option>Weekly</option><option>Twice weekly</option><option>Flexible</option></select>
+                                        <label class="form-label" for="meeting-@skill.UserSkillId">First meeting idea (optional)</label>
+                                        <input id="meeting-@skill.UserSkillId" name="firstMeetingIdea" class="form-control mb-2" maxlength="300" placeholder="For example, discuss goals over chat" />
+                                        <button type="submit" class="btn btn-primary">Send proposal</button>
+                                        <span class="request-result ms-2" role="status"></span>
+                                    </form>
+                                </details>
+                            }
                         </div>
                     }
                 </li>
@@ -125,29 +158,25 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            $(".requestSkillBtn").click(function () {
-                var $btn = $(this);
-                var userSkillId = $btn.data("userskill-id");
-                var profileId = $btn.data("profile-id");
-
-                if (!confirm("Send a request to learn " + $btn.closest("li").find("label").text() + "?")) return;
-
+            $(".requestSkillForm").on("submit", function (event) {
+                event.preventDefault();
+                var $form = $(this), $button = $form.find('button[type="submit"]');
+                $button.prop("disabled", true);
                 $.ajax({
                     url: '@Url.Action("SendSkillRequest", "Profile")',
                     type: 'POST',
-                    data: { userSkillId: userSkillId, profileId: profileId, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+                    data: $form.serialize(),
                     success: function (res) {
                         if (res.success) {
-                            $btn.text("Request Sent");
-                            $btn.removeClass("btn-success btn-danger").addClass("btn-warning");
-                            $btn.prop("disabled", true);
-                            alert("Request sent successfully!");
+                            $form.find(".request-result").text("Proposal sent.");
                         } else {
-                            alert(res.message || "Failed to send request.");
+                            $form.find(".request-result").text(res.message || "Could not send proposal.");
+                            $button.prop("disabled", false);
                         }
                     },
                     error: function () {
-                        alert("Error sending request. Try again.");
+                        $form.find(".request-result").text("Could not send proposal. Try again.");
+                        $button.prop("disabled", false);
                     }
                 });
             });

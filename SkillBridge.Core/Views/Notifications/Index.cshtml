@@ -236,8 +236,9 @@
                                 <i class="far fa-clock"></i>@n.CreatedAt.ToLocalTime().ToString("g")
                             </div>
 
-                            @if (n.Type == "SkillRequest" && !n.IsRead)
+                            @if (n.Type == "SkillRequest")
                             {
+                                <a href="@Url.Action("RequestDetails", "Profile", new { id = n.ReferenceId })" class="d-block mb-2">Read exchange proposal</a>
                                 <div class="skill-selection d-none" data-id="@n.Id">
                                     <label class="form-label fw-semibold">Select skill to learn from requester:</label>
                                     <select class="form-control form-control-modern skill-dropdown" data-id="@n.Id"></select>
