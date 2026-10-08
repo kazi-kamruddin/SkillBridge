@@ -14,10 +14,20 @@ test('guest can open the home, login, and registration pages', async ({ page }) 
 });
 
 test('guest is redirected to login from protected pages', async ({ page }) => {
-  for (const path of ['/Explore', '/Interactions', '/Notifications', '/Messages']) {
+  for (const path of ['/Interactions', '/Notifications', '/Messages', '/Profile', '/Moderation']) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/Account\/Login/i);
   }
+});
+
+test('guest navigation offers browsing and keeps private areas out of view', async ({ page }) => {
+  await page.goto('/');
+  const navigation = page.locator('nav.navbar');
+  await expect(navigation.getByRole('link', { name: 'Explore' })).toBeVisible();
+  await expect(navigation.getByRole('link', { name: 'Communities' })).toBeVisible();
+  await expect(navigation.getByRole('link', { name: 'Interactions' })).toHaveCount(0);
+  await expect(navigation.getByRole('link', { name: 'Messages' })).toHaveCount(0);
+  await expect(navigation.getByRole('link', { name: 'Reports' })).toHaveCount(0);
 });
 
 test('public help pages provide working destinations', async ({ page }) => {

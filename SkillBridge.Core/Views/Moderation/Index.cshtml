@@ -1,0 +1,40 @@
+@model List<SkillBridge.Models.ModerationReportViewModel>
+@{
+    ViewBag.Title = "Community Reports";
+}
+
+<main class="container my-5" aria-labelledby="title">
+    <h1 id="title" class="h2 mb-4">Community Reports</h1>
+    @if (TempData["ModerationNotice"] is string notice)
+    {
+        <div class="alert alert-success" role="status">@notice</div>
+    }
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No reports need review.</div>
+    }
+    else
+    {
+        @foreach (var report in Model)
+        {
+            <article class="card mb-3">
+                <div class="card-body">
+                    <h2 class="h5">@report.ContentType report</h2>
+                    <p class="mb-1"><strong>Content:</strong> @report.ContentPreview</p>
+                    <p class="mb-1"><strong>Reason:</strong> @report.Reason</p>
+                    <p class="small text-muted">Reported @report.CreatedAt.ToString("MMM dd, yyyy HH:mm")</p>
+                    @if (report.PostId.HasValue)
+                    {
+                        <p><a href="@Url.Action("PostDetails", "Communities", new { id = report.PostId.Value })">View discussion</a></p>
+                    }
+                    <form method="post" action="@Url.Action("Resolve", "Moderation")" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@report.Id" />
+                        <button type="submit" name="decision" value="Dismissed" class="btn btn-outline-secondary btn-sm">Dismiss</button>
+                        <button type="submit" name="decision" value="Hidden" class="btn btn-danger btn-sm">Hide content</button>
+                    </form>
+                </div>
+            </article>
+        }
+    }
+</main>

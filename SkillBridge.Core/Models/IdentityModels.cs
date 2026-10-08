@@ -27,6 +27,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IDataPro
     public DbSet<Community> Communities { get; set; }
     public DbSet<CommunityPost> CommunityPosts { get; set; }
     public DbSet<CommunityComment> CommunityComments { get; set; }
+    public DbSet<CommunityReport> CommunityReports { get; set; }
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<Message> Messages { get; set; }
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }

@@ -19,6 +19,10 @@
                 <i class="fas fa-plus me-2"></i> Create Post
             </a>
         }
+        else if (!User.Identity.IsAuthenticated)
+        {
+            <a class="btn btn-outline-primary" href="@Url.Action("Register", "Account")">Join to post</a>
+        }
     </div>
 
     <!-- Posts -->
@@ -34,7 +38,7 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">
                                 by <strong>@post.CreatedByFullName</strong>
-                                � @post.CreatedAt.ToString("MMM dd, yyyy")
+                                posted @post.CreatedAt.ToString("MMM dd, yyyy")
                             </small>
                             <span class="badge bg-light text-dark">View</span>
                         </div>
@@ -45,7 +49,7 @@
         else
         {
             <div class="alert alert-info">
-                No posts yet. Be the first to post!
+                No posts yet. @(Model.IsMember ? "Be the first to post!" : "Check back soon, or join this skill to start the discussion.")
             </div>
         }
     </section>

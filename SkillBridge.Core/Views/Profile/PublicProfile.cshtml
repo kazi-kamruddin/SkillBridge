@@ -15,7 +15,7 @@
              style="width:150px; height:150px; object-fit:cover; border:2px solid #ccc;" />
     </div>
 
-    <h3 id="title">@Model.FullName�s Profile</h3>
+    <h3 id="title">Profile: @Model.FullName</h3>
     <p class="text-muted">@Model.Profession | @Model.Location</p>
     <p>@Model.Bio</p>
 
@@ -76,30 +76,10 @@
                     buttonClass = "btn btn-danger"; 
                 }
 
-                var knownProp = skill.GetType().GetProperty("KnownUpToStage");
-                var stageProp = skill.GetType().GetProperty("Stage");
-                var totalProp = skill.GetType().GetProperty("TotalStages");
-
-                int known = 0;
-                int total = 10; 
-
-                if (knownProp != null)
-                {
-                    known = Convert.ToInt32(knownProp.GetValue(skill) ?? 0);
-                }
-                else if (stageProp != null)
-                {
-                    known = Convert.ToInt32(stageProp.GetValue(skill) ?? 0);
-                }
-
-                if (totalProp != null)
-                {
-                    total = Convert.ToInt32(totalProp.GetValue(skill) ?? 10);
-                }
-
-                var percent = (total > 0) ? (known * 100 / total) : 0;
+                var percent = skill.TotalStages > 0
+                    ? Math.Min(100, skill.Stage * 100 / skill.TotalStages) : 0;
                 <li class="mb-4 text-start">
-                    <label><strong>@skill.SkillName</strong> (Stage: @((stageProp != null) ? stageProp.GetValue(skill) : (knownProp != null ? knownProp.GetValue(skill) : skill.Stage)))</label>
+                    <label><strong>@skill.SkillName</strong> (Stage: @skill.Stage of @skill.TotalStages)</label>
 
                     <div class="progress mt-2" style="height:25px;">
                         <div class="progress-bar bg-danger" role="progressbar"
@@ -110,7 +90,7 @@
                         </div>
                     </div>
 
-                    @if (showButton)
+                    @if (User.Identity.IsAuthenticated && showButton)
                     {
                         <div class="text-center mt-3">
                             <button class="@buttonClass requestSkillBtn"

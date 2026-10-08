@@ -83,7 +83,8 @@ namespace SkillBridge.Controllers
                 Age = model.Age,
                 Profession = model.Profession,
                 Location = model.Location,
-                Bio = model.Bio
+                Bio = model.Bio,
+                IsPublic = model.IsPublic
             };
             db.UserInformations.Add(userInfo);
 

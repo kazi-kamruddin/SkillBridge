@@ -24,6 +24,7 @@ namespace SkillBridge.Models
         public string Content { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }
+        public bool IsHidden { get; set; }
 
         public virtual Community Community { get; set; }
         public virtual ApplicationUser CreatedByUser { get; set; }
@@ -37,6 +38,7 @@ namespace SkillBridge.Models
         public string CreatedByUserId { get; set; }
         public string Content { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public bool IsHidden { get; set; }
 
         public virtual CommunityPost Post { get; set; }
         public virtual ApplicationUser CreatedByUser { get; set; }
@@ -48,6 +50,7 @@ namespace SkillBridge.Models
 
     public class CommunityIndexViewModel
     {
+        public bool IsGuest { get; set; }
         public List<CommunityViewModel> SkillsYouKnow { get; set; } = new List<CommunityViewModel>();
         public List<CommunityViewModel> SkillsYouWantToLearn { get; set; } = new List<CommunityViewModel>();
         public List<CommunityViewModel> OtherCommunities { get; set; } = new List<CommunityViewModel>();
@@ -99,6 +102,28 @@ namespace SkillBridge.Models
         public int CommentId { get; set; }
         public string Content { get; set; }
         public string CreatedByFullName { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class CommunityReport
+    {
+        public int Id { get; set; }
+        public string ReporterId { get; set; }
+        public int? PostId { get; set; }
+        public int? CommentId { get; set; }
+        [Required, StringLength(500)]
+        public string Reason { get; set; }
+        public string Status { get; set; } = "Pending";
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+    }
+
+    public class ModerationReportViewModel
+    {
+        public int Id { get; set; }
+        public int? PostId { get; set; }
+        public string Reason { get; set; }
+        public string ContentType { get; set; }
+        public string ContentPreview { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 

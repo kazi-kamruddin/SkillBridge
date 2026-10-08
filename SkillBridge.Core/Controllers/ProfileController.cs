@@ -71,6 +71,7 @@ namespace SkillBridge.Controllers
                 Profession = userInfo?.Profession ?? "",
                 Location = userInfo?.Location ?? "",
                 Age = userInfo?.Age ?? 0,
+                IsPublic = userInfo?.IsPublic ?? false,
                 TeachingSkills = teachingSkills,
                 LearningSkills = learningSkills,
                 AverageRating = averageRating,
@@ -109,6 +110,7 @@ namespace SkillBridge.Controllers
                 Profession = userInfo.Profession,
                 Location = userInfo.Location,
                 Age = userInfo.Age,
+                IsPublic = userInfo.IsPublic,
                 SkillsToLearn = userSkills.Where(s => s.Status == "Learning").Select(s => s.SkillId).ToList(),
                 SkillsIKnow = userSkills.Where(s => s.Status == "Teaching").Select(s => new UpdateProfileViewModel.UserKnownSkill
                 {
@@ -162,6 +164,7 @@ namespace SkillBridge.Controllers
             userInfo.Profession = model.Profession;
             userInfo.Location = model.Location;
             userInfo.Age = model.Age;
+            userInfo.IsPublic = model.IsPublic;
 
             var existingSkills = db.UserSkills.Where(us => us.UserId == userId).ToList();
             using (var transaction = db.Database.BeginTransaction())
@@ -233,6 +236,7 @@ namespace SkillBridge.Controllers
         //////////////////////////////////////////////////////////////////
         //////////////////////////////////////////////////////////////////
         // GET: /Profile/PublicProfile
+        [AllowAnonymous]
         public ActionResult PublicProfile(string id)
         {
             if (id == null) return NotFound();
@@ -241,6 +245,8 @@ namespace SkillBridge.Controllers
             if (user == null) return NotFound();
 
             var userInfo = db.UserInformations.FirstOrDefault(ui => ui.UserId == id);
+            if (userInfo == null || (!User.Identity.IsAuthenticated && !userInfo.IsPublic))
+                return NotFound();
             var currentUserId = User.Identity.GetUserId();
 
             var userSkills = db.UserSkills
@@ -271,6 +277,7 @@ namespace SkillBridge.Controllers
                     SkillId = skill.SkillId,
                     SkillName = skill.Skill.Name,
                     Stage = skill.KnownUpToStage ?? 1,
+                    TotalStages = skill.Skill.SkillStages.Count,
                     RequestStatus = visitorWantsThisSkill
                         ? (existingRequest != null
                             ? (existingRequest.Status == "Pending" ? "Pending" : "Declined")

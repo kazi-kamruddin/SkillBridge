@@ -7,9 +7,18 @@
 <main class="container my-5">
     <div class="text-center mb-5">
         <h2 class="fw-bold">@ViewBag.Title</h2>
-        <p class="text-muted">Join communities to learn, share, and grow your skills ??</p>
+        <p class="text-muted">Join communities to learn, share, and grow your skills.</p>
+        @if (Model.IsGuest)
+        {
+            <p class="text-muted">Read discussions freely. Create an account and add a skill to your profile to participate.</p>
+            <a class="btn btn-primary" href="@Url.Action("Register", "Account")">Join SkillBridge</a>
+        }
     </div>
 
+    @if (!Model.SkillsYouKnow.Any() && !Model.SkillsYouWantToLearn.Any() && !Model.OtherCommunities.Any())
+    {
+        <div class="alert alert-info">Communities are being prepared. Browse the <a href="@Url.Action("Index", "Explore")">skills directory</a> in the meantime.</div>
+    }
     <div class="row g-4">
         <!-- Skills You Know -->
         @if (Model.SkillsYouKnow.Any())
@@ -54,7 +63,7 @@
         {
             <div class="col-12">
                 <section class="community-section mt-4">
-                    <h4 class="mb-3 text-secondary fw-semibold">Other Communities</h4>
+                    <h4 class="mb-3 text-secondary fw-semibold">@(Model.IsGuest ? "Browse Communities" : "Other Communities")</h4>
                     <div class="community-grid">
                         @foreach (var c in Model.OtherCommunities)
                         {

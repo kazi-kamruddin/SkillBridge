@@ -5,6 +5,7 @@ namespace SkillBridge.Models
 {
     public class CompleteProfileViewModel
     {
+        public bool IsPublic { get; set; }
         [Required(ErrorMessage = "Full name is required.")]
         public string FullName { get; set; }
 

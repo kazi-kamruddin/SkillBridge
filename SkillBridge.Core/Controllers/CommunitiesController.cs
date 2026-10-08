@@ -15,6 +15,7 @@ namespace SkillBridge.Controllers
 
         public CommunitiesController(ApplicationDbContext db) => this.db = db;
 
+        [AllowAnonymous]
         public ActionResult Index()
         {
             var currentUserId = User.Identity.GetUserId();
@@ -38,6 +39,7 @@ namespace SkillBridge.Controllers
 
             var model = new CommunityIndexViewModel
             {
+                IsGuest = !User.Identity.IsAuthenticated,
                 SkillsYouKnow = allCommunities
                     .Where(c => teachingSkills.Contains(c.Skill))
                     .Select(c => new CommunityViewModel
@@ -73,6 +75,7 @@ namespace SkillBridge.Controllers
         }
 
 
+        [AllowAnonymous]
         public ActionResult Landing(int id)
         {
             var community = db.Communities.Include(c => c.Skill).FirstOrDefault(c => c.Id == id);
@@ -82,17 +85,14 @@ namespace SkillBridge.Controllers
             bool isMember = db.UserSkills.Any(us => us.UserId == currentUserId && us.SkillId == community.SkillId);
 
             var posts = db.CommunityPosts
-                .Where(p => p.CommunityId == id)
+                .Where(p => p.CommunityId == id && !p.IsHidden)
                 .OrderByDescending(p => p.CreatedAt)
                 .ToList()
                 .Select(p => new CommunityPostListItemViewModel
                 {
                     PostId = p.Id,
                     Title = p.Title,
-                    CreatedByFullName = db.UserInformations
-                        .Where(ui => ui.UserId == p.CreatedByUserId)
-                        .Select(ui => ui.FullName)
-                        .FirstOrDefault() ?? "Unknown",
+                    CreatedByFullName = DisplayName(p.CreatedByUserId),
                     CreatedAt = p.CreatedAt
                 })
                 .ToList();
@@ -139,6 +139,7 @@ namespace SkillBridge.Controllers
 
             bool isMember = db.UserSkills.Any(us => us.UserId == currentUserId && us.SkillId == community.SkillId);
             if (!isMember) return StatusCode(403);
+            if (!ModelState.IsValid) return View(model);
 
             var post = new CommunityPost
             {
@@ -157,12 +158,13 @@ namespace SkillBridge.Controllers
 
 
 
+        [AllowAnonymous]
         public ActionResult PostDetails(int id)
         {
             var post = db.CommunityPosts
                 .Include(p => p.Community)
                 .Include(p => p.Comments)
-                .FirstOrDefault(p => p.Id == id);
+                .FirstOrDefault(p => p.Id == id && !p.IsHidden);
 
             if (post == null) return NotFound();
 
@@ -175,21 +177,15 @@ namespace SkillBridge.Controllers
                 CommunityId = post.CommunityId,
                 Title = post.Title,
                 Content = post.Content,
-                CreatedByUserName = db.UserInformations
-                .Where(ui => ui.UserId == post.CreatedByUserId)
-                .Select(ui => ui.FullName)
-                .FirstOrDefault() ?? "Unknown",
+                CreatedByUserName = DisplayName(post.CreatedByUserId),
                         CreatedAt = post.CreatedAt,
                         IsMember = isMember,
-                        Comments = post.Comments.OrderBy(c => c.CreatedAt)
+                        Comments = post.Comments.Where(c => !c.IsHidden).OrderBy(c => c.CreatedAt)
                 .Select(c => new CommunityCommentViewModel
                 {
                     CommentId = c.Id,
                     Content = c.Content,
-                    CreatedByFullName = db.UserInformations
-                        .Where(ui => ui.UserId == c.CreatedByUserId)
-                        .Select(ui => ui.FullName)
-                        .FirstOrDefault() ?? "Unknown",
+                    CreatedByFullName = DisplayName(c.CreatedByUserId),
                     CreatedAt = c.CreatedAt
                 }).ToList(),
                 NewComment = new CommunityCommentCreateModel
@@ -220,10 +216,15 @@ namespace SkillBridge.Controllers
                 .Include(p => p.Community)
                 .FirstOrDefault(p => p.Id == model.PostId);
 
-            if (post == null) return NotFound();
-
+            if (post == null || post.IsHidden) return NotFound();
             bool isMember = db.UserSkills.Any(us => us.UserId == currentUserId && us.SkillId == post.Community.SkillId);
             if (!isMember) return StatusCode(403);
+
+            if (!ModelState.IsValid)
+            {
+                TempData["CommunityNotice"] = "Please write a comment of at most 1,000 characters.";
+                return RedirectToAction("PostDetails", new { id = model.PostId });
+            }
 
             var comment = new CommunityComment
             {
@@ -237,6 +238,47 @@ namespace SkillBridge.Controllers
             db.SaveChanges();
 
             return RedirectToAction("PostDetails", new { id = model.PostId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Report(int postId, int? commentId, string reason)
+        {
+            var post = db.CommunityPosts.FirstOrDefault(p => p.Id == postId && !p.IsHidden);
+            if (post == null) return NotFound();
+            if (commentId.HasValue && !db.CommunityComments.Any(c =>
+                    c.Id == commentId.Value && c.PostId == postId && !c.IsHidden))
+                return NotFound();
+
+            if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length > 500)
+            {
+                TempData["CommunityNotice"] = "Please give a reason of at most 500 characters.";
+                return RedirectToAction("PostDetails", new { id = postId });
+            }
+
+            var reporterId = User.Identity.GetUserId();
+            var alreadyReported = db.CommunityReports.Any(r => r.ReporterId == reporterId &&
+                (commentId.HasValue ? r.CommentId == commentId.Value : r.PostId == postId));
+            if (!alreadyReported)
+            {
+                db.CommunityReports.Add(new CommunityReport
+                {
+                    ReporterId = reporterId,
+                    PostId = commentId.HasValue ? null : postId,
+                    CommentId = commentId,
+                    Reason = reason.Trim()
+                });
+                db.SaveChanges();
+            }
+            TempData["CommunityNotice"] = "Thanks. Your report has been sent for review.";
+            return RedirectToAction("PostDetails", new { id = postId });
+        }
+
+        private string DisplayName(string userId)
+        {
+            var info = db.UserInformations.FirstOrDefault(ui => ui.UserId == userId);
+            return !User.Identity.IsAuthenticated && info?.IsPublic != true
+                ? "SkillBridge member" : info?.FullName ?? "SkillBridge member";
         }
 
     }

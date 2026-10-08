@@ -129,6 +129,12 @@
 
 <div class="container">
     <h2>Your Interactions</h2>
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            You have no exchanges yet. <a href="@Url.Action("Index", "Explore")">Explore matching members</a> to get started.
+        </div>
+    }
     <div class="row">
         @foreach (var interaction in Model)
         {

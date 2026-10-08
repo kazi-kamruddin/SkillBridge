@@ -411,11 +411,15 @@
             <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">@Html.ActionLink("Explore", "Index", "Explore", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li class="nav-item">@Html.ActionLink("Interactions", "Index", "Interactions", new { area = "" }, new { @class = "nav-link" })</li>
-
                     @if (User.Identity.IsAuthenticated)
                     {
+                        <li class="nav-item">@Html.ActionLink("Interactions", "Index", "Interactions", new { area = "" }, new { @class = "nav-link" })</li>
                         <li class="nav-item">@Html.ActionLink("Messages", "Index", "Messages", new { area = "" }, new { @class = "nav-link" })</li>
+                        @if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SKILLBRIDGE_MODERATOR_EMAIL")) &&
+                             string.Equals(User.Identity.Name, Environment.GetEnvironmentVariable("SKILLBRIDGE_MODERATOR_EMAIL"), StringComparison.OrdinalIgnoreCase))
+                        {
+                            <li class="nav-item">@Html.ActionLink("Reports", "Index", "Moderation", new { area = "" }, new { @class = "nav-link" })</li>
+                        }
                     }
 
                     <li class="nav-item">@Html.ActionLink("Communities", "Index", "Communities", new { area = "" }, new { @class = "nav-link" })</li>
@@ -467,7 +471,10 @@
                         <h4>Explore</h4>
                         <ul>
                             <li><a href="@Url.Action("Index", "Explore")">Skills Directory</a></li>
-                            <li><a href="@Url.Action("Index", "Interactions")">Interactions</a></li>
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <li><a href="@Url.Action("Index", "Interactions")">Interactions</a></li>
+                            }
                             <li><a href="@Url.Action("Index", "Communities")">Communities</a></li>
                         </ul>
                     </div>
@@ -482,7 +489,7 @@
                         <h4>Support</h4>
                         <ul>
                             <li><a href="@Url.Action("ForgotPassword", "Account")">Password Help</a></li>
-                            <li><a href="https://github.com/kazi-kamruddin/SkillBridge-renew/issues" rel="noopener noreferrer">Report an Issue</a></li>
+                            <li><a href="https://github.com/kazi-kamruddin/SkillBridge/issues" rel="noopener noreferrer">Report an Issue</a></li>
                         </ul>
                     </div>
                 </div>

@@ -25,10 +25,38 @@ namespace SkillBridge.Controllers
 
 
         ////////////////////////////////////////////////////////////////////////////
-        
+        [AllowAnonymous]
         public ActionResult Index(string skillFilter = "", int stageFilter = 0, string locationFilter = "")
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                var publicTeachers = (from userSkill in db.UserSkills
+                                      join info in db.UserInformations on userSkill.UserId equals info.UserId
+                                      where userSkill.Status == "Teaching" && info.IsPublic
+                                      select new { userSkill.SkillId, info.UserId, info.FullName })
+                    .ToList();
+                var publicSkills = db.Skills.Include(s => s.SkillCategory)
+                    .OrderBy(s => s.SkillCategory.Name).ThenBy(s => s.Name).ToList();
+                var guestModel = new GuestExploreViewModel
+                {
+                    Skills = publicSkills.Select(skill => new GuestSkillViewModel
+                    {
+                        SkillName = skill.Name,
+                        CategoryName = skill.SkillCategory.Name,
+                        Teachers = publicTeachers.Where(t => t.SkillId == skill.Id)
+                            .Select(t => new GuestTeacherViewModel
+                            {
+                                UserId = t.UserId,
+                                FullName = t.FullName
+                            }).ToList()
+                    }).ToList()
+                };
+                return View("GuestIndex", guestModel);
+            }
+
             var currentUserId = User.Identity.GetUserId();
+            if (!db.UserInformations.Any(info => info.UserId == currentUserId))
+                return RedirectToAction("Index", "CompleteProfile");
 
             var currentUserSkills = db.UserSkills
                 .Where(us => us.UserId == currentUserId)

@@ -36,12 +36,12 @@ namespace SkillBridge.Controllers
                     .ToList();
 
                 vm.MyLatestPost = db.CommunityPosts
-                    .Where(p => p.CreatedByUserId == userId)
+                    .Where(p => p.CreatedByUserId == userId && !p.IsHidden)
                     .OrderByDescending(p => p.CreatedAt)
                     .FirstOrDefault();
 
                 vm.OtherLatestPost = db.CommunityPosts
-                    .Where(p => p.CreatedByUserId != userId)
+                    .Where(p => p.CreatedByUserId != userId && !p.IsHidden)
                     .OrderByDescending(p => p.CreatedAt)
                     .FirstOrDefault();
 

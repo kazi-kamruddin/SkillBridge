@@ -1,0 +1,54 @@
+@model SkillBridge.Models.GuestExploreViewModel
+@{
+    ViewBag.Title = "Explore Skills";
+}
+
+<main class="container my-5" aria-labelledby="title">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 id="title" class="h2">Explore Skills</h1>
+            <p class="text-muted mb-0">Browse the skills people share on SkillBridge.</p>
+        </div>
+        <a class="btn btn-primary" href="@Url.Action("Register", "Account")">Join to find your matches</a>
+    </div>
+
+    @if (!Model.Skills.Any())
+    {
+        <div class="alert alert-info">The skills directory is being prepared. Please check back soon.</div>
+    }
+    else
+    {
+        @foreach (var category in Model.Skills.GroupBy(s => s.CategoryName))
+        {
+            <section class="mb-4" aria-label="@category.Key">
+                <h2 class="h4 mb-3">@category.Key</h2>
+                <div class="row g-3">
+                    @foreach (var skill in category)
+                    {
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <h3 class="h5">@skill.SkillName</h3>
+                                    @if (skill.Teachers.Any())
+                                    {
+                                        <p class="small text-muted mb-2">Members sharing this skill:</p>
+                                        <ul class="mb-0">
+                                            @foreach (var teacher in skill.Teachers)
+                                            {
+                                                <li><a href="@Url.Action("PublicProfile", "Profile", new { id = teacher.UserId })">@teacher.FullName</a></li>
+                                            }
+                                        </ul>
+                                    }
+                                    else
+                                    {
+                                        <p class="small text-muted mb-0">No public profiles for this skill yet.</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </section>
+        }
+    }
+</main>
