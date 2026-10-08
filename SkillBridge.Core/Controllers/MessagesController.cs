@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 using SkillBridge.Helpers;
 using SkillBridge.Models;
+using SkillBridge.Services;
 
 namespace SkillBridge.Controllers
 {
@@ -113,6 +115,7 @@ namespace SkillBridge.Controllers
         // POST: /Messages/Send
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> Send(int conversationId, string messageText)
         {
             if (string.IsNullOrWhiteSpace(messageText) || messageText.Length > 4000)
@@ -167,6 +170,7 @@ namespace SkillBridge.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> Knock(string targetUserId)
         {
             var currentUserId = User.Identity.GetUserId();

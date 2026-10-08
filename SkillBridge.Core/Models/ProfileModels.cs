@@ -53,8 +53,10 @@ namespace SkillBridge.Models
         [StringLength(500)]
         public string Bio { get; set; }
         [Required]
+        [StringLength(100)]
         public string Profession { get; set; }
         [Required]
+        [StringLength(100)]
         public string Location { get; set; }
         [Range(1, 150)]
         public int Age { get; set; }

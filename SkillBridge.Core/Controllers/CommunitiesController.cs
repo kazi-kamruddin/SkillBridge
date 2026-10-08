@@ -1,10 +1,12 @@
 
 using SkillBridge.Models;
+using SkillBridge.Services;
 using System;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace SkillBridge.Controllers
 {
@@ -150,6 +152,7 @@ namespace SkillBridge.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public ActionResult CreatePost(CommunityPostCreateModel model)
         {
             var currentUserId = User.Identity.GetUserId();
@@ -158,14 +161,18 @@ namespace SkillBridge.Controllers
 
             bool isMember = db.UserSkills.Any(us => us.UserId == currentUserId && us.SkillId == community.SkillId);
             if (!isMember) return StatusCode(403);
+            if (string.IsNullOrWhiteSpace(model.Title))
+                ModelState.AddModelError(nameof(model.Title), "Write a title.");
+            if (string.IsNullOrWhiteSpace(model.Content))
+                ModelState.AddModelError(nameof(model.Content), "Write some content.");
             if (!ModelState.IsValid) return View(model);
 
             var post = new CommunityPost
             {
                 CommunityId = model.CommunityId,
                 CreatedByUserId = currentUserId,
-                Title = model.Title,
-                Content = model.Content,
+                Title = model.Title.Trim(),
+                Content = model.Content.Trim(),
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -227,6 +234,7 @@ namespace SkillBridge.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public ActionResult CreateComment(CommunityCommentCreateModel model)
         {
             var currentUserId = User.Identity.GetUserId();
@@ -238,6 +246,8 @@ namespace SkillBridge.Controllers
             if (post == null || post.IsHidden) return NotFound();
             bool isMember = db.UserSkills.Any(us => us.UserId == currentUserId && us.SkillId == post.Community.SkillId);
             if (!isMember) return StatusCode(403);
+            if (string.IsNullOrWhiteSpace(model.Content))
+                ModelState.AddModelError(nameof(model.Content), "Write a comment.");
 
             if (!ModelState.IsValid)
             {
@@ -249,7 +259,7 @@ namespace SkillBridge.Controllers
             {
                 PostId = model.PostId,
                 CreatedByUserId = currentUserId,
-                Content = model.Content,
+                Content = model.Content.Trim(),
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -261,6 +271,7 @@ namespace SkillBridge.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public ActionResult Report(int postId, int? commentId, string reason)
         {
             var post = db.CommunityPosts.FirstOrDefault(p => p.Id == postId && !p.IsHidden);

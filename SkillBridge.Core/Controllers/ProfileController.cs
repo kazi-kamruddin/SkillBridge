@@ -2,6 +2,7 @@
 
 using SkillBridge.Helpers;
 using SkillBridge.Models;
+using SkillBridge.Services;
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace SkillBridge.Controllers
 {
@@ -160,10 +162,10 @@ namespace SkillBridge.Controllers
                 return View(model);
             }
 
-            userInfo.FullName = model.FullName;
-            userInfo.Bio = model.Bio;
-            userInfo.Profession = model.Profession;
-            userInfo.Location = model.Location;
+            userInfo.FullName = model.FullName.Trim();
+            userInfo.Bio = model.Bio.Trim();
+            userInfo.Profession = model.Profession.Trim();
+            userInfo.Location = model.Location.Trim();
             userInfo.Age = model.Age;
             userInfo.IsPublic = model.IsPublic;
 
@@ -333,6 +335,7 @@ namespace SkillBridge.Controllers
         // POST: /Profile/SendSkillRequest
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public JsonResult SendSkillRequest(int userSkillId, string profileId, string goal, string pace, string firstMeetingIdea)
         {
             var currentUserId = User.Identity.GetUserId();
@@ -479,7 +482,7 @@ namespace SkillBridge.Controllers
             return RedirectToAction(nameof(BlockedMembers));
         }
 
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public ActionResult ReportProfile(string id, string reason)
         {
             var userId = User.Identity.GetUserId();

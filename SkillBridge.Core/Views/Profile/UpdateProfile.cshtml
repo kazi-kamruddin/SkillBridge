@@ -1,5 +1,5 @@
 @model SkillBridge.Models.UpdateProfileViewModel
-@using Newtonsoft.Json;
+@using System.Text.Json;
 @using System.Collections.Generic;
 @{
     ViewBag.Title = "Update Profile";
@@ -11,7 +11,7 @@
         s => s.SkillStages.Select(st => new { id = st.StageNumber, name = st.Description }).ToList()
     );
 
-    var skillStagesDataJson = JsonConvert.SerializeObject(skillStagesDict);
+    var skillStagesDataJson = JsonSerializer.Serialize(skillStagesDict);
 
     var knownSkillIds = new HashSet<int>(Model.SkillsIKnow.Select(s => s.SkillId));
     var toLearnSkillIds = new HashSet<int>(Model.SkillsToLearn);
@@ -152,7 +152,7 @@
             var $form = $("#updateProfileForm");
             var skillStagesData = @Html.Raw(skillStagesDataJson);
 
-            var selectedSkillsToLearn = new Set(@Html.Raw(JsonConvert.SerializeObject(Model.SkillsToLearn.Select(id => id.ToString()).ToList())));
+            var selectedSkillsToLearn = new Set(@Html.Raw(JsonSerializer.Serialize(Model.SkillsToLearn.Select(id => id.ToString()).ToList())));
             var selectedSkillsIKnow = {};
             @foreach (var sk in Model.SkillsIKnow) {
                 <text>selectedSkillsIKnow['@sk.SkillId'] = @sk.KnownUpToStage;</text>

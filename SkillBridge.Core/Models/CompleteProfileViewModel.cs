@@ -7,6 +7,7 @@ namespace SkillBridge.Models
     {
         public bool IsPublic { get; set; }
         [Required(ErrorMessage = "Full name is required.")]
+        [StringLength(100)]
         public string FullName { get; set; }
 
         [Required(ErrorMessage = "Age is required.")]
@@ -14,9 +15,11 @@ namespace SkillBridge.Models
         public int Age { get; set; }
 
         [Required(ErrorMessage = "Profession is required.")]
+        [StringLength(100)]
         public string Profession { get; set; }
 
         [Required(ErrorMessage = "Location is required.")]
+        [StringLength(100)]
         public string Location { get; set; }
 
         [Required(ErrorMessage = "Bio is required.")]

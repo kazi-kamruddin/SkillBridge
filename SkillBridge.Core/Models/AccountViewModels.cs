@@ -4,10 +4,13 @@ namespace SkillBridge.Models
 {
     public class LoginViewModel
     {
+        private string email;
+
         [Required]
         [Display(Name = "Email")]
         [EmailAddress]
-        public string Email { get; set; }
+        [StringLength(254)]
+        public string Email { get => email; set => email = value?.Trim(); }
 
         [Required]
         [DataType(DataType.Password)]
@@ -20,10 +23,13 @@ namespace SkillBridge.Models
 
     public class RegisterViewModel
     {
+        private string email;
+
         [Required]
         [EmailAddress]
+        [StringLength(254)]
         [Display(Name = "Email")]
-        public string Email { get; set; }
+        public string Email { get => email; set => email = value?.Trim(); }
 
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
@@ -39,18 +45,24 @@ namespace SkillBridge.Models
 
     public class ForgotPasswordViewModel
     {
+        private string email;
+
         [Required]
         [EmailAddress]
+        [StringLength(254)]
         [Display(Name = "Email")]
-        public string Email { get; set; }
+        public string Email { get => email; set => email = value?.Trim(); }
     }
 
     public class ResetPasswordViewModel
     {
+        private string email;
+
         [Required]
         [EmailAddress]
+        [StringLength(254)]
         [Display(Name = "Email")]
-        public string Email { get; set; }
+        public string Email { get => email; set => email = value?.Trim(); }
 
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} characters long.", MinimumLength = 6)]
@@ -64,6 +76,7 @@ namespace SkillBridge.Models
         public string ConfirmPassword { get; set; }
 
         [Required]
+        [StringLength(2048)]
         public string Code { get; set; }
     }
 }

@@ -10,8 +10,13 @@ namespace SkillBridge.Controllers;
 public class ModerationController : Controller
 {
     private readonly ApplicationDbContext db;
+    private readonly ILogger<ModerationController> logger;
 
-    public ModerationController(ApplicationDbContext db) => this.db = db;
+    public ModerationController(ApplicationDbContext db, ILogger<ModerationController> logger)
+    {
+        this.db = db;
+        this.logger = logger;
+    }
 
     public IActionResult Index()
     {
@@ -93,6 +98,7 @@ public class ModerationController : Controller
         }
 
         db.SaveChanges();
+        logger.LogInformation("Community report {ReportId} resolved as {Decision}", id, decision);
         TempData["ModerationNotice"] = "Report reviewed.";
         return RedirectToAction(nameof(Index));
     }
@@ -114,6 +120,7 @@ public class ModerationController : Controller
         }
         else report.Status = "Dismissed";
         db.SaveChanges();
+        logger.LogInformation("Profile report {ReportId} resolved as {Decision}", id, decision);
         TempData["ModerationNotice"] = "Profile report reviewed.";
         return RedirectToAction(nameof(Index));
     }
@@ -126,6 +133,7 @@ public class ModerationController : Controller
         if (profile == null) return NotFound();
         profile.IsHidden = false;
         db.SaveChanges();
+        logger.LogInformation("A hidden profile was restored to discovery");
         TempData["ModerationNotice"] = "Profile restored to discovery.";
         return RedirectToAction(nameof(Index));
     }

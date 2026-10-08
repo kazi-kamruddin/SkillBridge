@@ -1,5 +1,5 @@
 @model SkillBridge.Models.CompleteProfileViewModel
-@using Newtonsoft.Json;
+@using System.Text.Json;
 @{
     ViewBag.Title = "Complete Your Profile";
 
@@ -12,7 +12,7 @@
         s => s.SkillStages.Select(st => new { id = st.StageNumber, name = st.Description }).ToList()
     );
 
-    var skillStagesDataJson = JsonConvert.SerializeObject(skillStagesDict);
+    var skillStagesDataJson = JsonSerializer.Serialize(skillStagesDict);
 }
 
 

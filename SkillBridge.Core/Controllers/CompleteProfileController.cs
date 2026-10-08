@@ -79,11 +79,11 @@ namespace SkillBridge.Controllers
             var userInfo = new UserInformation
             {
                 UserId = userId,
-                FullName = model.FullName,
+                FullName = model.FullName.Trim(),
                 Age = model.Age,
-                Profession = model.Profession,
-                Location = model.Location,
-                Bio = model.Bio,
+                Profession = model.Profession.Trim(),
+                Location = model.Location.Trim(),
+                Bio = model.Bio.Trim(),
                 IsPublic = model.IsPublic
             };
             db.UserInformations.Add(userInfo);

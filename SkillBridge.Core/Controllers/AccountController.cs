@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SkillBridge.Models;
 using SkillBridge.Services;
 
@@ -33,7 +34,7 @@ public class AccountController : Controller
         return View();
     }
 
-    [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
+    [HttpPost, AllowAnonymous, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.AccountWrites)]
     public async Task<IActionResult> Login(LoginViewModel model, string returnUrl)
     {
         if (!ModelState.IsValid) return View(model);
@@ -43,8 +44,12 @@ public class AccountController : Controller
         if (result.Succeeded)
             return Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl) : RedirectToAction("Index", "Home");
         if (result.IsLockedOut)
+        {
+            logger.LogWarning("An account was locked out after failed sign-in attempts");
             return View("Lockout");
+        }
 
+        logger.LogWarning("A sign-in attempt failed");
         ModelState.AddModelError("", "Invalid login attempt.");
         return View(model);
     }
@@ -52,7 +57,7 @@ public class AccountController : Controller
     [AllowAnonymous]
     public IActionResult Register() => View();
 
-    [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
+    [HttpPost, AllowAnonymous, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.AccountWrites)]
     public async Task<IActionResult> Register(RegisterViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
@@ -74,7 +79,7 @@ public class AccountController : Controller
     [AllowAnonymous]
     public IActionResult ForgotPassword() => View();
 
-    [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
+    [HttpPost, AllowAnonymous, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.AccountWrites)]
     public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
@@ -120,7 +125,7 @@ public class AccountController : Controller
     public IActionResult ResetPassword(string code) => string.IsNullOrWhiteSpace(code)
         ? View("Error") : View(new ResetPasswordViewModel { Code = code });
 
-    [HttpPost, AllowAnonymous, ValidateAntiForgeryToken]
+    [HttpPost, AllowAnonymous, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.AccountWrites)]
     public async Task<IActionResult> ResetPassword(ResetPasswordViewModel model)
     {
         if (!ModelState.IsValid) return View(model);
