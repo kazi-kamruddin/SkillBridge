@@ -1,0 +1,94 @@
+
+@model SkillBridge.Models.PostDetailsViewModel
+@{
+    ViewBag.Title = Model.Title;
+}
+
+<main class="container my-5">
+    <!-- Post Header -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <h2 class="fw-bold">@Model.Title</h2>
+            <p class="text-muted mb-3">
+                by <strong>@Model.CreatedByUserName</strong> � @Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+            </p>
+            <p class="fs-5">@Model.Content</p>
+        </div>
+    </div>
+
+    <!-- Comments Section -->
+    <section class="comments">
+        <h4 class="mb-3">Comments (@Model.Comments.Count)</h4>
+
+        @if (Model.Comments.Any())
+        {
+            foreach (var c in Model.Comments.OrderBy(c => c.CreatedAt))
+            {
+                <div class="comment-card d-flex align-items-start p-3 mb-3 rounded">
+                    <div class="comment-avatar me-3">
+                        <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                    </div>
+                    <div class="comment-body flex-grow-1">
+                        <p class="mb-1">@c.Content</p>
+                        <small class="text-muted">� @c.CreatedByFullName, @c.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="alert alert-light border">No comments yet. Be the first!</div>
+        }
+    </section>
+
+    <!-- Add Comment Form -->
+    @if (Model.IsMember)
+    {
+        <section class="comment-form mt-4">
+            <h5 class="mb-3">Add a Comment</h5>
+
+            <form action="/Communities/CreateComment" method="post" class="card p-3 shadow-sm border-0">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="PostId" value="@Model.PostId" />
+
+                <div class="mb-3">
+                    <textarea name="Content" class="form-control" placeholder="Write your comment..." rows="3" required></textarea>
+                    @Html.ValidationMessage("Content", "", new { @class = "text-danger small" })
+                </div>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-1"></i> Submit
+                    </button>
+                </div>
+            </form>
+        </section>
+    }
+</main>
+
+@section Styles {
+    <style>
+        .comment-card {
+            background: #f8f9fa;
+            border: 1px solid #e5e5e5;
+            transition: background 0.2s ease;
+        }
+
+            .comment-card:hover {
+                background: #f1f3f5;
+            }
+
+        .comment-avatar {
+            flex-shrink: 0;
+        }
+
+        .comment-body {
+            font-size: 0.95rem;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="~/Scripts/jquery.validate.min.js"></script>
+<script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+}

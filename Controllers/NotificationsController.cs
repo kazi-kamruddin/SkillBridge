@@ -40,6 +40,7 @@ namespace SkillBridge.Controllers
         public JsonResult GetNotifications()
         {
             var userId = User.Identity.GetUserId();
+            var unreadCount = _context.Notifications.Count(n => n.UserId == userId && !n.IsRead);
 
             var notificationsFromDb = _context.Notifications
                 .Where(n => n.UserId == userId)
@@ -56,7 +57,6 @@ namespace SkillBridge.Controllers
                 Url = Url.Action("Index", "Notifications")
             }).ToList();
 
-            var unreadCount = notifications.Count(n => !n.IsRead);
             return Json(new { notifications, unreadCount }, JsonRequestBehavior.AllowGet);
         }
 
@@ -65,6 +65,7 @@ namespace SkillBridge.Controllers
         ////////////////////////////////////////////////////////////////////////////
         // POST: Mark notification as read
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult MarkAsRead(int id)
         {
             var userId = User.Identity.GetUserId();
@@ -83,6 +84,7 @@ namespace SkillBridge.Controllers
         ////////////////////////////////////////////////////////////////////////////
         // POST: Decline skill request
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult DeclineSkillRequest(int notificationId)
         {
             var userId = User.Identity.GetUserId();
@@ -90,19 +92,19 @@ namespace SkillBridge.Controllers
             if (notif == null || notif.Type != "SkillRequest") return Json(new { success = false });
 
             var skillRequest = _context.SkillRequests.FirstOrDefault(r => r.Id == notif.ReferenceId);
-            if (skillRequest != null && skillRequest.Status == "Pending")
+            if (skillRequest != null && skillRequest.Status == "Pending" && skillRequest.ReceiverId == userId)
             {
                 skillRequest.Status = "Declined";
 
                 notif.Type = "Info";
-                notif.Message = $"You declined the skill request for <b>{skillRequest.Skill.Name}</b> from {skillRequest.Requester.UserName}.";
+                notif.Message = $"You declined the skill request for {skillRequest.Skill.Name} from {skillRequest.Requester.UserName}.";
                 notif.IsRead = true;
 
                 _context.Notifications.Add(new Notification
                 {
                     UserId = skillRequest.RequesterId,
                     Type = "Info",
-                    Message = $"Your skill request for <b>{skillRequest.Skill.Name}</b> was declined by {User.Identity.Name}.",
+                    Message = $"Your skill request for {skillRequest.Skill.Name} was declined by {User.Identity.Name}.",
                     CreatedAt = DateTime.Now,
                     IsRead = false
                 });
@@ -126,7 +128,7 @@ namespace SkillBridge.Controllers
 
             var skillRequest = _context.SkillRequests
                 .Include(r => r.Skill)
-                .FirstOrDefault(r => r.Id == notif.ReferenceId && r.Status == "Pending");
+                .FirstOrDefault(r => r.Id == notif.ReferenceId && r.Status == "Pending" && r.ReceiverId == userId);
             if (skillRequest == null) return Json(new { skills = new object[0] }, JsonRequestBehavior.AllowGet);
 
             var requesterId = skillRequest.RequesterId;
@@ -152,6 +154,7 @@ namespace SkillBridge.Controllers
         ////////////////////////////////////////////////////////////////////////////
         // POST: Initialize interaction after selecting skill
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public ActionResult InitializeInteraction(int notificationId, int skillId)
         {
             var userId = User.Identity.GetUserId();
@@ -162,10 +165,24 @@ namespace SkillBridge.Controllers
             var skillRequest = _context.SkillRequests
                 .Include(r => r.Skill)      
                 .Include(r => r.Requester)  
-                .FirstOrDefault(r => r.Id == notif.ReferenceId && r.Status == "Pending");
+                .FirstOrDefault(r => r.Id == notif.ReferenceId && r.Status == "Pending" && r.ReceiverId == userId);
 
             if (skillRequest == null)
                 return Json(new { success = false });
+
+            var requesterCanTeach = _context.UserSkills.Any(us => us.UserId == skillRequest.RequesterId &&
+                us.SkillId == skillId && us.Status == "Teaching" && us.KnownUpToStage > 0);
+            var receiverWantsToLearn = _context.UserSkills.Any(us => us.UserId == userId &&
+                us.SkillId == skillId && us.Status == "Learning");
+            var receiverCanTeach = _context.UserSkills.Any(us => us.UserId == userId &&
+                us.SkillId == skillRequest.SkillId && us.Status == "Teaching" && us.KnownUpToStage > 0);
+            var requesterWantsToLearn = _context.UserSkills.Any(us => us.UserId == skillRequest.RequesterId &&
+                us.SkillId == skillRequest.SkillId && us.Status == "Learning");
+            if (!requesterCanTeach || !receiverWantsToLearn || !receiverCanTeach || !requesterWantsToLearn)
+                return Json(new { success = false });
+
+            using (var transaction = _context.Database.BeginTransaction())
+            {
 
             var interaction = new Interaction
             {
@@ -229,19 +246,21 @@ namespace SkillBridge.Controllers
             skillRequest.Status = "Accepted";
 
             notif.Type = "Info";
-            notif.Message = $"You accepted the skill request for <b>{skillRequest.Skill.Name}</b> from {skillRequest.Requester.UserName}.";
+            notif.Message = $"You accepted the skill request for {skillRequest.Skill.Name} from {skillRequest.Requester.UserName}.";
             notif.IsRead = true;
 
             _context.Notifications.Add(new Notification
             {
                 UserId = skillRequest.RequesterId,
                 Type = "Info",
-                Message = $"Your skill request for <b>{skillRequest.Skill.Name}</b> has been accepted by {User.Identity.Name}.",
+                Message = $"Your skill request for {skillRequest.Skill.Name} has been accepted by {User.Identity.Name}.",
                 CreatedAt = DateTime.Now,
                 IsRead = false
             });
 
             _context.SaveChanges();
+            transaction.Commit();
+            }
 
             return Json(new { success = true });
         }
@@ -250,6 +269,7 @@ namespace SkillBridge.Controllers
 
         ////////////////////////////////////////////////////////////////////////////
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public JsonResult MarkAllAsRead()
         {
             var userId = User.Identity.GetUserId();
@@ -277,6 +297,7 @@ namespace SkillBridge.Controllers
         public JsonResult GetRealtimeNotifications()
         {
             var userId = User.Identity.GetUserId();
+            var unreadCount = _context.Notifications.Count(n => n.UserId == userId && !n.IsRead);
 
             var notificationsFromDb = _context.Notifications
                 .Where(n => n.UserId == userId)
@@ -294,7 +315,6 @@ namespace SkillBridge.Controllers
                 Url = Url.Action("Index", "Notifications")
             }).ToList();
 
-            var unreadCount = notifications.Count(n => !n.IsRead);
             return Json(new { notifications, unreadCount }, JsonRequestBehavior.AllowGet);
         }
 

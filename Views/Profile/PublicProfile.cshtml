@@ -6,6 +6,7 @@
 }
 
 <main class="container text-center mt-5" aria-labelledby="title">
+    @Html.AntiForgeryToken()
 
     <div class="mb-3 text-center">
         <img src="@Model.ProfileImageUrl"
@@ -21,10 +22,12 @@
     @if (User.Identity.IsAuthenticated && Model.UserId != User.Identity.GetUserId())
     {
         <div class="mt-3 mb-4">
-            <a class="btn btn-success"
-               href="@Url.Action("Knock", "Messages", new { targetUserId = Model.UserId })">
-                <i class="fas fa-hand-point-right"></i> Knock
-            </a>
+            @using (Html.BeginForm("Knock", "Messages", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                @Html.Hidden("targetUserId", Model.UserId)
+                <button type="submit" class="btn btn-success"><i class="fas fa-hand-point-right"></i> Knock</button>
+            }
         </div>
     }
 
@@ -153,7 +156,7 @@
                 $.ajax({
                     url: '@Url.Action("SendSkillRequest", "Profile")',
                     type: 'POST',
-                    data: { userSkillId: userSkillId, profileId: profileId },
+                    data: { userSkillId: userSkillId, profileId: profileId, __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
                     success: function (res) {
                         if (res.success) {
                             $btn.text("Request Sent");

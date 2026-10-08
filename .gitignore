@@ -43,6 +43,9 @@ _IISExpress/
 # Publish profiles
 *.pubxml
 *.publishproj
+*.publishSettings
+.env
+.env.*
 
 # Packages (but keep the `packages.config`)
 packages/*
@@ -50,6 +53,13 @@ packages/*
 
 # Node/npm (if used for frontend assets)
 node_modules/
+.dotnet/
+.dotnet-install.ps1
+.nuget-packages/
+.dotnet-cli-home/
+App_Data/certs/
+playwright-report/
+test-results/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

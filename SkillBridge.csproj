@@ -52,8 +52,38 @@
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
       <HintPath>packages\EntityFramework.6.4.4\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
-    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
-      <HintPath>packages\EntityFramework.6.4.4\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    <Reference Include="EntityFramework6.Npgsql">
+      <HintPath>packages\EntityFramework6.Npgsql.6.4.3\lib\net461\EntityFramework6.Npgsql.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces">
+      <HintPath>packages\Microsoft.Bcl.AsyncInterfaces.1.1.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Npgsql">
+      <HintPath>packages\Npgsql.4.1.14\lib\net461\Npgsql.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Buffers">
+      <HintPath>packages\System.Buffers.4.5.0\lib\netstandard2.0\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>packages\System.Memory.4.5.3\lib\netstandard2.0\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics.Vectors">
+      <HintPath>packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>packages\System.Runtime.CompilerServices.Unsafe.4.6.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web">
+      <HintPath>packages\System.Text.Encodings.Web.4.6.0\lib\netstandard2.0\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json">
+      <HintPath>packages\System.Text.Json.4.6.0\lib\net461\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions">
+      <HintPath>packages\System.Threading.Tasks.Extensions.4.5.3\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.ValueTuple">
+      <HintPath>packages\System.ValueTuple.4.5.0\lib\net47\System.ValueTuple.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.AspNet.Identity.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.AspNet.Identity.Core.2.2.4\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
@@ -183,52 +213,8 @@
     </Compile>
     <Compile Include="Helpers\MessageEncryptionService.cs" />
     <Compile Include="Helpers\ProfileImageHelper.cs" />
+    <Compile Include="Helpers\SupabaseConnectionFactory.cs" />
     <Compile Include="Hubs\ChatHub.cs" />
-    <Compile Include="Migrations\202509101925387_RemoveNameFromUser.cs" />
-    <Compile Include="Migrations\202509101925387_RemoveNameFromUser.Designer.cs">
-      <DependentUpon>202509101925387_RemoveNameFromUser.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202509111324410_AddSkillTables.cs" />
-    <Compile Include="Migrations\202509111324410_AddSkillTables.Designer.cs">
-      <DependentUpon>202509111324410_AddSkillTables.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202509111827435_AddUserInformationAndUserSkills.cs" />
-    <Compile Include="Migrations\202509111827435_AddUserInformationAndUserSkills.Designer.cs">
-      <DependentUpon>202509111827435_AddUserInformationAndUserSkills.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202509130736499_AddAllInteractionsFeature.cs" />
-    <Compile Include="Migrations\202509130736499_AddAllInteractionsFeature.Designer.cs">
-      <DependentUpon>202509130736499_AddAllInteractionsFeature.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202509131107511_AddSkillRequestsTable.cs" />
-    <Compile Include="Migrations\202509131107511_AddSkillRequestsTable.Designer.cs">
-      <DependentUpon>202509131107511_AddSkillRequestsTable.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202509131712157_RenameInteractionColumns.cs" />
-    <Compile Include="Migrations\202509131712157_RenameInteractionColumns.Designer.cs">
-      <DependentUpon>202509131712157_RenameInteractionColumns.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202509150930470_AddUserRatings.cs" />
-    <Compile Include="Migrations\202509150930470_AddUserRatings.Designer.cs">
-      <DependentUpon>202509150930470_AddUserRatings.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202509231229324_AddCommunityFeature.cs" />
-    <Compile Include="Migrations\202509231229324_AddCommunityFeature.Designer.cs">
-      <DependentUpon>202509231229324_AddCommunityFeature.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202509231235280_AddCommunitiesFeature.cs" />
-    <Compile Include="Migrations\202509231235280_AddCommunitiesFeature.Designer.cs">
-      <DependentUpon>202509231235280_AddCommunitiesFeature.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202509281819542_AddMessagingTables.cs" />
-    <Compile Include="Migrations\202509281819542_AddMessagingTables.Designer.cs">
-      <DependentUpon>202509281819542_AddMessagingTables.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202509281824067_UpdateMessageEncryptionFields.cs" />
-    <Compile Include="Migrations\202509281824067_UpdateMessageEncryptionFields.Designer.cs">
-      <DependentUpon>202509281824067_UpdateMessageEncryptionFields.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\Community.cs" />
     <Compile Include="Models\CompleteProfileViewModel.cs" />
@@ -278,8 +264,6 @@
     <Content Include="favicon.ico" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
-    <Content Include="notes.txt" />
-    <Content Include=".gitignore" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
@@ -359,39 +343,6 @@
     <Folder Include="App_Data\" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\202509101925387_RemoveNameFromUser.resx">
-      <DependentUpon>202509101925387_RemoveNameFromUser.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202509111324410_AddSkillTables.resx">
-      <DependentUpon>202509111324410_AddSkillTables.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202509111827435_AddUserInformationAndUserSkills.resx">
-      <DependentUpon>202509111827435_AddUserInformationAndUserSkills.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202509130736499_AddAllInteractionsFeature.resx">
-      <DependentUpon>202509130736499_AddAllInteractionsFeature.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202509131107511_AddSkillRequestsTable.resx">
-      <DependentUpon>202509131107511_AddSkillRequestsTable.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202509131712157_RenameInteractionColumns.resx">
-      <DependentUpon>202509131712157_RenameInteractionColumns.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202509150930470_AddUserRatings.resx">
-      <DependentUpon>202509150930470_AddUserRatings.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202509231229324_AddCommunityFeature.resx">
-      <DependentUpon>202509231229324_AddCommunityFeature.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202509231235280_AddCommunitiesFeature.resx">
-      <DependentUpon>202509231235280_AddCommunitiesFeature.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202509281819542_AddMessagingTables.resx">
-      <DependentUpon>202509281819542_AddMessagingTables.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202509281824067_UpdateMessageEncryptionFields.resx">
-      <DependentUpon>202509281824067_UpdateMessageEncryptionFields.cs</DependentUpon>
-    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.rtl.min.css.map" />

@@ -1,4 +1,5 @@
-﻿using System.Data.Entity;
+﻿using System;
+using System.Data.Entity;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNet.Identity;
@@ -19,8 +20,17 @@ namespace SkillBridge.Models
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext()
-            : base("DefaultConnection", throwIfV1Schema: false)
+            : base(GetConnectionString(), throwIfV1Schema: false)
         {
+        }
+
+        private static string GetConnectionString()
+        {
+            var connectionString = Environment.GetEnvironmentVariable("SKILLBRIDGE_DB_CONNECTION");
+            if (string.IsNullOrWhiteSpace(connectionString))
+                throw new InvalidOperationException("Set SKILLBRIDGE_DB_CONNECTION to a PostgreSQL connection string before starting SkillBridge.");
+
+            return connectionString;
         }
 
         public DbSet<SkillCategory> SkillCategories { get; set; }
@@ -45,6 +55,9 @@ namespace SkillBridge.Models
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Keep ASP.NET Identity and application tables outside Supabase's exposed public schema.
+            modelBuilder.HasDefaultSchema("skillbridge");
 
             modelBuilder.Entity<Interaction>()
                 .HasRequired(i => i.User1)

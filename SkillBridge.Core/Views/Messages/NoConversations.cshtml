@@ -1,0 +1,10 @@
+@{
+    ViewBag.Title = "Messages";
+}
+
+<div class="container mt-5 text-center">
+    <h3>@ViewBag.Message</h3>
+    <a href="@Url.Action("Index", "Explore")" class="btn btn-primary mt-3">
+        Explore People
+    </a>
+</div>

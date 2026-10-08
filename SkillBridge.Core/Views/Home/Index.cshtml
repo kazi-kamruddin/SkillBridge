@@ -1,0 +1,539 @@
+
+@model SkillBridge.Models.HomePageViewModel
+@{
+    ViewBag.Title = "Home";
+}
+
+@section Styles {
+    <style>
+        /* Hero Section */
+        .hero {
+            position: relative;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 4rem 2rem;
+            overflow: hidden;
+        }
+
+            .hero::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
+                background-size: cover;
+            }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 800;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .hero p {
+            font-size: 1.4rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .hero-btn {
+            padding: 1rem 2.5rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+            .hero-btn:hover {
+                background: rgba(255,255,255,0.3);
+                transform: translateY(-3px);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            }
+
+        /* Dashboard Styles */
+        .dashboard-welcome {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        /* Section Titles */
+        .section-title {
+            font-weight: 700;
+            margin-bottom: 2rem;
+            font-size: 1.8rem;
+            color: var(--text-color);
+            position: relative;
+            padding-bottom: 0.8rem;
+        }
+
+            .section-title::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 60px;
+                height: 4px;
+                background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+                border-radius: 2px;
+            }
+
+        /* Grid Layout */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Cards */
+        .quotes-card {
+            background: var(--card-bg); /* White in light mode, dark in dark mode */
+            color: var(--text-color); /* Black in light mode, white/gray in dark mode */
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid var(--border-color);
+            text-align: center;
+            font-style: italic;
+            font-size: 1.3rem;
+        }
+
+        .dashboard-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid var(--border-color);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .dashboard-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 4px;
+                background: linear-gradient(45deg, var(--success-bg), var(--success-bg));
+            }
+
+            .dashboard-card:hover {
+                transform: translateY(-8px);
+                box-shadow: var(--shadow-lg);
+            }
+
+            .dashboard-card h5 {
+                font-weight: 600;
+                margin-bottom: 1rem;
+                color: var(--success-bg);
+                font-size: 1.3rem;
+            }
+
+            .dashboard-card p {
+                margin-bottom: 0.8rem;
+                color: var(--text-color);
+                flex-grow: 1;
+            }
+
+            .dashboard-card .status-badge {
+                background: var(--success-bg);
+                color: white;
+                padding: 0.3rem 0.8rem;
+                border-radius: 20px;
+                font-size: 0.8rem;
+                font-weight: 600;
+                display: inline-block;
+                margin-top: 0.5rem;
+            }
+
+        /* Buttons */
+        .btn-action {
+            display: flex;
+            justify-content: flex-end;
+            padding: 0.7rem 1.5rem;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            margin-left: 300px;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+            .btn-action:hover {
+                transform: translateY(-2px);
+            }
+
+        /* Empty States */
+        .empty-state {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 2rem;
+            text-align: center;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            border: 2px dashed var(--border-color);
+        }
+
+            .empty-state i {
+                font-size: 3rem;
+                margin-bottom: 1rem;
+                opacity: 0.5;
+            }
+
+        /* Latest Interaction Section */
+        .interaction-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .interaction-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .interaction-user {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .skill-pair {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 1rem;
+            align-items: center;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .skill-teach, .skill-learn {
+            padding: 1rem;
+            background: rgba(var(--primary-color), 0.1);
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .skill-exchange {
+            font-size: 2rem;
+            color: var(--primary-color);
+        }
+
+        /* Responsive Design */
+        @@media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1.2rem;
+            }
+
+            .dashboard-welcome {
+                font-size: 2rem;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .skill-pair {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+
+            .skill-exchange {
+                transform: rotate(90deg);
+                margin: 0.5rem 0;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .hero {
+                min-height: 60vh;
+                padding: 2rem 1rem;
+            }
+
+                .hero h1 {
+                    font-size: 2rem;
+                }
+
+                .hero p {
+                    font-size: 1.1rem;
+                }
+
+            .dashboard-welcome {
+                font-size: 1.8rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+}
+
+<main>
+    @if (!Model.IsLoggedIn)
+    {
+        <!-- Guest Hero -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Bridge Your Skills, Build Connections</h1>
+                <p>Learn from peers, teach what you know, and grow together in a community of knowledge sharing.</p>
+                <a class="btn btn-light hero-btn" href="@Url.Action("Index", "Communities")">
+                    <i class="fas fa-rocket me-2"></i>Explore Communities
+                </a>
+            </div>
+        </section>
+
+        <!-- Features Section for Guests -->
+        <div class="container py-5">
+            <div class="row text-center">
+                <div class="col-md-4 mb-4">
+                    <div class="dashboard-card">
+                        <i class="fas fa-users fa-3x mb-3" style="color: var(--primary-color);"></i>
+                        <h5>Join Communities</h5>
+                        <p>Connect with like-minded individuals who share your interests and goals.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="dashboard-card">
+                        <i class="fas fa-exchange-alt fa-3x mb-3" style="color: var(--accent-color);"></i>
+                        <h5>Skill Exchange</h5>
+                        <p>Teach what you know and learn what you need in a reciprocal learning environment.</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-4">
+                    <div class="dashboard-card">
+                        <i class="fas fa-chart-line fa-3x mb-3" style="color: var(--success-color);"></i>
+                        <h5>Grow Together</h5>
+                        <p>Track your progress and celebrate milestones with your learning partners.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Dashboard for logged-in users -->
+        <div class="container py-5">
+            <h1 class="dashboard-welcome">
+                <i class="fas fa-hand-wave"></i>Welcome back, @Model.FullName!
+            </h1>
+            <!-- Motivational Quote Section -->
+            @if (!string.IsNullOrEmpty(Model.MotivationalQuote))
+            {
+                <div class="container my-4">
+                    <div class="quotes-card">
+                        <i class="fas fa-quote-left fa-2x mb-3"></i>
+                        <blockquote class="mb-0">
+                            "@Model.MotivationalQuote"
+                        </blockquote>
+                    </div>
+                </div>
+            }
+
+
+
+            <!-- Your Skills -->
+            <section class="mb-5">
+                <h2 class="section-title">Your Skills</h2>
+                <div class="card-grid">
+                    @if (Model.MySkills.Any())
+                    {
+                        foreach (var skill in Model.MySkills)
+                        {
+                            <div class="dashboard-card">
+                                <h5><i class="fas fa-star me-2"></i>@skill.Skill.Name</h5>
+
+                                <span class="status-badge ">@skill.Status</span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard-list"></i>
+                            <p>You haven't added any skills yet.</p>
+                            <a href="@Url.Action("Index", "Explore")" class="btn btn-primary mt-2">Add Skills</a>
+                        </div>
+                    }
+                </div>
+            </section>
+
+            <!-- Latest Interaction -->
+            <section class="mb-5">
+                <h2 class="section-title">Latest Interaction</h2>
+                @if (Model.LatestInteractionId != null)
+                {
+                    <div class="interaction-card">
+                        <div class="interaction-header">
+                            <div class="interaction-user d-flex align-items-center">
+                                <img src="@Model.LatestInteractionOtherUserProfileImage"
+                                     alt="@Model.LatestInteractionOtherUserFullName"
+                                     class="rounded-circle me-3"
+                                     style="width:50px; height:50px; object-fit:cover; border:2px solid #ccc;" />
+
+                                <div>
+                                    <h5>With: @Model.LatestInteractionOtherUserFullName</h5>
+                                    <p class="text-muted">
+                                        Status:
+                                        <span class="badge bg-info">@Model.LatestInteractionStatus</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <a href="@Url.Action("Sessions", "Interactions", new { id = Model.LatestInteractionId })"
+                               class="btn btn-primary btn-action">
+                                <i class="fas fa-eye me-1"></i>View Stages
+                            </a>
+                        </div>
+
+                        <div class="skill-pair">
+                            <div class="skill-teach">
+                                <h6>You're Teaching</h6>
+                                <p class="mb-0"><strong>@Model.LatestInteractionSkillYouTeach</strong></p>
+                            </div>
+                            <div class="skill-exchange">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <div class="skill-learn">
+                                <h6>You're Learning</h6>
+                                <p class="mb-0"><strong>@Model.LatestInteractionSkillYouLearn</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="empty-state">
+                        <i class="fas fa-comments"></i>
+                        <p>No recent interactions. Start a new skill exchange!</p>
+                        <a href="@Url.Action("Index", "Interactions")" class="btn btn-primary mt-2">Find Partners</a>
+                    </div>
+                }
+            </section>
+
+            <!-- Latest Posts -->
+            <section>
+                <h2 class="section-title">Latest Community Posts</h2>
+                <div class="card-grid">
+                    @if (Model.MyLatestPost != null)
+                    {
+                        <div class="dashboard-card">
+                            <h5><i class="fas fa-feather me-2"></i>@Model.MyLatestPost.Title</h5>
+                            <p>@Model.MyLatestPost.Content</p>
+                            <div class="mt-auto">
+                                <small class="text-muted">Posted on @Model.MyLatestPost.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                <span class="badge bg-primary ms-2">Your Post</span>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.OtherLatestPost != null)
+                    {
+                        <div class="dashboard-card">
+                            <h5><i class="fas fa-newspaper me-2"></i>@Model.OtherLatestPost.Title</h5>
+                            <p>@Model.OtherLatestPost.Content</p>
+                            <div class="mt-auto">
+                                <small class="text-muted">Posted on @Model.OtherLatestPost.CreatedAt.ToString("MMM dd, yyyy")</small>
+                                <span class="badge bg-success ms-2">Community</span>
+                            </div>
+                        </div>
+                    }
+
+                    @if (Model.MyLatestPost == null && Model.OtherLatestPost == null)
+                    {
+                        <div class="empty-state">
+                            <i class="fas fa-newspaper"></i>
+                            <p>No posts yet in your communities.</p>
+                            <a href="@Url.Action("Index", "Communities")" class="btn btn-primary mt-2">Explore Communities</a>
+                        </div>
+                    }
+                </div>
+            </section>
+        </div>
+    }
+</main>
+
+@section Scripts {
+    <script>
+        // Add subtle animations to cards when they come into view
+        $(document).ready(function() {
+            // Animate cards on scroll
+            function animateOnScroll() {
+                $('.dashboard-card, .interaction-card').each(function() {
+                    var elementTop = $(this).offset().top;
+                    var elementBottom = elementTop + $(this).outerHeight();
+                    var viewportTop = $(window).scrollTop();
+                    var viewportBottom = viewportTop + $(window).height();
+
+                    if (elementBottom > viewportTop && elementTop < viewportBottom) {
+                        $(this).addClass('animate__animated animate__fadeInUp');
+                    }
+                });
+            }
+
+            // Initial check
+            animateOnScroll();
+
+            // Check on scroll
+            $(window).on('scroll', function() {
+                animateOnScroll();
+            });
+        });
+    </script>
+}

@@ -10,18 +10,12 @@
 
 
 <main aria-labelledby="title">
-    <h2 id="title">@ViewBag.Title.</h2>
-    <h3>@ViewBag.Message</h3>
-
-    <address>
-        One Microsoft Way<br />
-        Redmond, WA 98052-6399<br />
-        <abbr title="Phone">P:</abbr>
-        425.555.0100
-    </address>
-
-    <address>
-        <strong>Support:</strong>   <a href="mailto:Support@example.com">Support@example.com</a><br />
-        <strong>Marketing:</strong> <a href="mailto:Marketing@example.com">Marketing@example.com</a>
-    </address>
+    <h2 id="title">Contact SkillBridge</h2>
+    <p>Need help with your account or an exchange? Please include a brief description of the issue, but do not send passwords or reset links.</p>
+    @if (!string.IsNullOrWhiteSpace(ViewBag.SupportEmail as string))
+    {
+        <p>Email <a href="mailto:@ViewBag.SupportEmail">@ViewBag.SupportEmail</a>.</p>
+    }
+    <p>You can also report a site issue on <a href="https://github.com/kazi-kamruddin/SkillBridge-renew/issues" rel="noopener noreferrer">the SkillBridge issue tracker</a>.</p>
+    <p>Forgot your password? <a href="@Url.Action("ForgotPassword", "Account")">Request a reset link</a>.</p>
 </main>

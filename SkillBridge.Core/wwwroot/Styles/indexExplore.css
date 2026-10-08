@@ -1,0 +1,24 @@
+﻿.rating-badge {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 0.9rem;
+    min-width: 40px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.rating-deepblue {
+    background-color: #106cc2;
+}
+.rating-green {
+    background-color: #12a649;
+}
+.rating-yellow {
+    background-color: #de8704;
+}
+.rating-red {
+    background-color: #c20404;
+}

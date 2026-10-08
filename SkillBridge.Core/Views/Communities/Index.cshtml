@@ -1,0 +1,102 @@
+
+@model SkillBridge.Models.CommunityIndexViewModel
+@{
+    ViewBag.Title = "Communities";
+}
+
+<main class="container my-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">@ViewBag.Title</h2>
+        <p class="text-muted">Join communities to learn, share, and grow your skills ??</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Skills You Know -->
+        @if (Model.SkillsYouKnow.Any())
+        {
+            <div class="col-12">
+                <section class="community-section">
+                    <h4 class="mb-3 text-primary fw-semibold">Skills You Know</h4>
+                    <div class="community-grid">
+                        @foreach (var c in Model.SkillsYouKnow)
+                        {
+                            <a href="@Url.Action("Landing", "Communities", new { id = c.CommunityId })"
+                               class="community-card bg-primary text-white">
+                                <span>@c.SkillName</span>
+                            </a>
+                        }
+                    </div>
+                </section>
+            </div>
+        }
+
+        <!-- Skills You Want to Learn -->
+        @if (Model.SkillsYouWantToLearn.Any())
+        {
+            <div class="col-12">
+                <section class="community-section mt-4">
+                    <h4 class="mb-3 text-success fw-semibold">Skills You Want to Learn</h4>
+                    <div class="community-grid">
+                        @foreach (var c in Model.SkillsYouWantToLearn)
+                        {
+                            <a href="@Url.Action("Landing", "Communities", new { id = c.CommunityId })"
+                               class="community-card bg-success text-white">
+                                <span>@c.SkillName</span>
+                            </a>
+                        }
+                    </div>
+                </section>
+            </div>
+        }
+
+        <!-- Other Communities -->
+        @if (Model.OtherCommunities.Any())
+        {
+            <div class="col-12">
+                <section class="community-section mt-4">
+                    <h4 class="mb-3 text-secondary fw-semibold">Other Communities</h4>
+                    <div class="community-grid">
+                        @foreach (var c in Model.OtherCommunities)
+                        {
+                            <a href="@Url.Action("Landing", "Communities", new { id = c.CommunityId })"
+                               class="community-card bg-light border text-dark">
+                                <span>@c.SkillName</span>
+                            </a>
+                        }
+                    </div>
+                </section>
+            </div>
+        }
+    </div>
+</main>
+
+<style>
+    .community-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 16px;
+    }
+
+    .community-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        border-radius: 10px;
+        font-weight: 500;
+        font-size: 1rem;
+        text-decoration: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .community-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+            text-decoration: none;
+        }
+
+    .community-section h4 {
+        border-left: 4px solid currentColor;
+        padding-left: 8px;
+    }
+</style>

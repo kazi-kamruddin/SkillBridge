@@ -1,0 +1,150 @@
+@model SkillBridge.Models.Conversation
+
+@using System
+@using SkillBridge.Models
+
+@{
+    ViewBag.Title = "Messages";
+
+    var messages = ViewBag.Messages as IEnumerable<ChatMessageViewModel>;
+    var conversationId = Convert.ToString(ViewBag.ConversationId);
+    var otherUserId = ViewBag.OtherUserId;
+    var allConversations = ViewBag.AllConversations as IEnumerable<SkillBridge.Models.Conversation>;
+    var currentUserId = User.Identity.GetUserId();
+
+    var otherUserProfile = ViewBag.OtherUserProfile as ChatPartnerViewModel;
+}
+
+<div class="container-fluid mt-3">
+    <div class="row">
+        <!-- Left column: conversation list -->
+        <div class="col-md-3 border-end" style="height:80vh; overflow-y:auto;">
+            <h5 class="mb-3">Conversations</h5>
+            <ul class="list-group">
+                @foreach (var convo in allConversations)
+                {
+                    var partnerId = convo.User1Id == currentUserId ? convo.User2Id : convo.User1Id;
+
+                    <li class="list-group-item @(convo.Id == Model.Id ? "active" : "")">
+                        <a class="d-block text-decoration-none text-dark @(convo.Id == Model.Id ? "text-white" : "")"
+                           href="@Url.Action("Chat", "Messages", new { id = convo.Id })">
+                            With @partnerId
+                            <br />
+                            <small class="text-muted">Last: @convo.LastMessageAt?.ToString("g")</small>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <!-- Middle column: chat history -->
+        <div class="col-md-6 d-flex flex-column" style="height:80vh;">
+            <div id="messagePane" class="flex-grow-1 border p-2 mb-2" style="overflow-y:auto;">
+                <h5>Chat with @otherUserProfile?.FullName</h5>
+                <hr />
+                <div id="messageList">
+                    @if (messages != null && messages.Any())
+                    {
+                        foreach (var m in messages)
+                        {
+                            if (m.IsMine)
+                            {
+                                <div class="text-end mb-2">
+                                    <span class="badge bg-primary">@m.Text</span>
+                                    <br />
+                                    <small class="text-muted">@m.CreatedAt</small>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="text-start mb-2">
+                                    <span class="badge bg-secondary">@m.Text</span>
+                                    <br />
+                                    <small class="text-muted">@m.CreatedAt</small>
+                                </div>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <p class="text-muted">No messages yet. Say hi ??</p>
+                    }
+                </div>
+            </div>
+
+            <form id="sendMessageForm" class="d-flex" method="post" action="@Url.Action("Send", "Messages")">
+                @Html.AntiForgeryToken()
+                @Html.Hidden("conversationId", (string)conversationId)
+
+                <input type="text" id="messageText" name="messageText" class="form-control me-2" placeholder="Type your message..." required />
+                <button type="submit" class="btn btn-primary">Send</button>
+            </form>
+        </div>
+
+        <!-- Right column: profile info -->
+        <div class="col-md-3 border-start" style="height:80vh; overflow-y:auto;">
+            <h5>Profile Info</h5>
+            <hr />
+            @if (otherUserProfile != null)
+            {
+                <div class="text-center mb-3">
+                    <img src="@Url.Content(otherUserProfile.ProfileImageUrl)"
+                         class="rounded-circle" style="width:100px; height:100px; object-fit:cover;" />
+                    <h6 class="mt-2">@otherUserProfile.FullName</h6>
+                    <p class="text-muted">@otherUserProfile.Profession | @otherUserProfile.Location</p>
+                </div>
+                <p>@otherUserProfile.Bio</p>
+            }
+            else
+            {
+                <p>No profile info available.</p>
+            }
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        $(function () {
+            var conversationId = @Model.Id;
+            var chat = $.connection.chatHub;
+
+            chat.client.receiveMessage = function (msg) {
+                if (String(msg.conversationId) !== String(conversationId)) return;
+
+                var mine = msg.fromUserId === '@User.Identity.GetUserId()';
+                var css = mine ? 'text-end' : 'text-start';
+                var badge = mine ? 'bg-primary' : 'bg-secondary';
+
+                var row = $("<div>").addClass(css + " mb-2");
+                $("<span>").addClass("badge " + badge).text(msg.text).appendTo(row);
+                row.append($("<br>"));
+                $("<small>").addClass("text-muted")
+                    .text(new Date(msg.sentAt).toLocaleString()).appendTo(row);
+                $("#messageList").append(row);
+
+                var pane = $("#messagePane");
+                pane.scrollTop(pane.prop("scrollHeight"));
+            };
+
+            $.connection.hub.start().done(function () {
+                chat.server.joinConversation(conversationId);
+            });
+
+            $("#sendMessageForm").submit(function (e) {
+                e.preventDefault();
+
+                var $form = $(this);
+                var data = $form.serialize();
+
+                $.post($form.attr("action"), data)
+                    .done(function () {
+                        $("#messageText").val("").focus();
+                    })
+                    .fail(function () {
+                        alert("Failed to send message.");
+                    });
+            });
+        });
+    </script>
+}

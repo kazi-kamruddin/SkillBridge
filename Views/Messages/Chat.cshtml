@@ -106,8 +106,7 @@
 @section scripts {
     <script>
         $(function () {
-            var conversationId = '@Model.Id';
-            var groupName = 'convo-' + conversationId;
+            var conversationId = @Model.Id;
             var chat = $.connection.chatHub;
 
             chat.client.receiveMessage = function (msg) {
@@ -117,21 +116,19 @@
                 var css = mine ? 'text-end' : 'text-start';
                 var badge = mine ? 'bg-primary' : 'bg-secondary';
 
-                var html = `
-                    <div class="${css} mb-2">
-                        <span class="badge ${badge}">${msg.text}</span><br/>
-                        <small class="text-muted">${new Date(msg.sentAt).toLocaleString()}</small>
-                    </div>`;
-
-                $("#messageList").append(html);
+                var row = $("<div>").addClass(css + " mb-2");
+                $("<span>").addClass("badge " + badge).text(msg.text).appendTo(row);
+                row.append($("<br>"));
+                $("<small>").addClass("text-muted")
+                    .text(new Date(msg.sentAt).toLocaleString()).appendTo(row);
+                $("#messageList").append(row);
 
                 var pane = $("#messagePane");
                 pane.scrollTop(pane.prop("scrollHeight"));
             };
 
             $.connection.hub.start().done(function () {
-                chat.server.joinConversation(groupName);
-                console.log("Joined SignalR group:", groupName);
+                chat.server.joinConversation(conversationId);
             });
 
             $("#sendMessageForm").submit(function (e) {

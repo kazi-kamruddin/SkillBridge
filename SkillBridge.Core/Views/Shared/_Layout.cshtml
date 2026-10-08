@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - SkillBridge</title>
+    <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/Content/Site.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    @RenderSection("Styles", required: false)
+    <script src="~/Scripts/modernizr-2.8.3.js"></script>
+
+    <style>
+        :root {
+            /* Light theme variables */
+            --success-bg: #198754;
+            --primary-color: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --success-color: #4cc9f0;
+            --warning-color: #f72585;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #212529;
+            --text-muted: #6c757d;
+            --border-color: #dee2e6;
+            --navbar-bg: #ffffff;
+            --footer-bg: #2b2d42;
+            --footer-text: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+            --border-radius: 8px;
+        }
+
+        [data-theme="dark"] {
+            /* Dark theme variables */
+            --primary-color: #5a6cff;
+            --primary-dark: #4a5bd9;
+            --secondary-color: #4a5bd9;
+            --accent-color: #6a8eff;
+            --success-color: #5ed3f0;
+            --warning-color: #ff4d8d;
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #e4e4e4;
+            --text-muted: #a0a0a0;
+            --border-color: #2a2a2a;
+            --navbar-bg: #1a1a1a;
+            --footer-bg: #0d0d0d;
+            --footer-text: #e4e4e4;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            transition: var(--transition);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Navigation Styles */
+        .navbar {
+            height: 100px;
+            display: flex;
+            align-items: center;
+            background-color: var(--navbar-bg);
+            box-shadow: var(--shadow);
+            padding: 0.8rem 0;
+            transition: var(--transition);
+        }
+
+            .navbar .nav-link {
+                line-height: 50px; /* lock link alignment */
+                padding-top: 0;
+                padding-bottom: 0;
+            }
+
+        /* Make sure the underline doesn't push text */
+        .nav-link:before {
+            content: '';
+            position: absolute;
+            bottom: 4px; /* sits slightly above the bottom, no shifting */
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--primary-color);
+            transition: var(--transition);
+            transform: translateX(-50%);
+            pointer-events: none; /* underline shouldn't affect layout */
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.8rem;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+            .navbar-brand:hover {
+                transform: scale(1.03);
+            }
+
+        .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            border-radius: var(--border-radius);
+            margin: 0 2px;
+            position: relative;
+        }
+
+            .nav-link:before {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 50%;
+                width: 0;
+                height: 2px;
+                background: var(--primary-color);
+                transition: var(--transition);
+                transform: translateX(-50%);
+            }
+
+            .nav-link:hover:before {
+                width: 80%;
+            }
+
+            .nav-link:hover {
+                color: var(--primary-color) !important;
+            }
+
+        .nav-item.active .nav-link {
+            color: var(--primary-color) !important;
+            font-weight: 600;
+        }
+
+            .nav-item.active .nav-link:before {
+                width: 80%;
+            }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            margin-left: 10px;
+        }
+
+            .theme-toggle:hover {
+                background-color: var(--primary-color);
+                color: white;
+                transform: rotate(15deg);
+            }
+
+        /* Notification Badge */
+        .notification-badge {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+            min-width: 20px;
+            animation: subtlePulse 2s infinite;
+            transition: var(--transition);
+        }
+
+            .notification-badge.pulse {
+                animation: strongPulse 0.5s ease-in-out;
+            }
+
+        @@keyframes subtlePulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+        }
+
+        @@keyframes strongPulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.3);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            padding: 150px 0 2rem; /* top | left/right | bottom */
+        }
+
+
+        /* Footer Styles */
+        footer {
+            background-color: var(--footer-bg);
+            color: var(--footer-text);
+            padding: 2.5rem 0 1.5rem;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .footer-brand {
+            flex: 1;
+            min-width: 250px;
+            margin-bottom: 1.5rem;
+        }
+
+            .footer-brand h3 {
+                font-size: 1.5rem;
+                margin-bottom: 0.5rem;
+                background: linear-gradient(45deg, var(--accent-color), var(--success-color));
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+            }
+
+            .footer-brand p {
+                color: var(--text-muted);
+                max-width: 300px;
+            }
+
+        .footer-links {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .footer-links-column {
+            min-width: 150px;
+        }
+
+            .footer-links-column h4 {
+                font-size: 1.1rem;
+                margin-bottom: 1rem;
+                position: relative;
+                padding-bottom: 0.5rem;
+            }
+
+                .footer-links-column h4:after {
+                    content: '';
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 30px;
+                    height: 2px;
+                    background: var(--accent-color);
+                }
+
+            .footer-links-column ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .footer-links-column li {
+                margin-bottom: 0.5rem;
+            }
+
+            .footer-links-column a {
+                color: var(--footer-text);
+                text-decoration: none;
+                transition: var(--transition);
+                display: inline-block;
+            }
+
+                .footer-links-column a:hover {
+                    color: var(--accent-color);
+                    transform: translateX(5px);
+                }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+        }
+
+            .social-links a {
+                color: var(--footer-text);
+                font-size: 1.2rem;
+                transition: var(--transition);
+            }
+
+                .social-links a:hover {
+                    color: var(--accent-color);
+                    transform: translateY(-3px);
+                }
+
+        /* Card Styles */
+        .card, .step-card, .benefit-card {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+
+            .card:hover, .step-card:hover, .benefit-card:hover {
+                transform: translateY(-5px);
+                box-shadow: var(--shadow-lg);
+            }
+
+        /* Utility Classes */
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+            .btn-primary:hover {
+                background-color: var(--primary-dark);
+                border-color: var(--primary-dark);
+                transform: translateY(-2px);
+            }
+
+        hr {
+            border-color: var(--border-color);
+            opacity: 0.5;
+        }
+
+        /* Responsive adjustments */
+        @@media (max-width: 768px) {
+            .navbar-nav {
+                text-align: center;
+                margin-top: 1rem;
+            }
+
+            .footer-content {
+                flex-direction: column;
+            }
+
+            .footer-links {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .footer-links {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+
+            .footer-links-column {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="@Url.Action("Index", "Home")">
+                <i class="fas fa-bridge  me-2"></i>SkillBridge
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+                    aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">@Html.ActionLink("Explore", "Index", "Explore", new { area = "" }, new { @class = "nav-link" })</li>
+                    <li class="nav-item">@Html.ActionLink("Interactions", "Index", "Interactions", new { area = "" }, new { @class = "nav-link" })</li>
+
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item">@Html.ActionLink("Messages", "Index", "Messages", new { area = "" }, new { @class = "nav-link" })</li>
+                    }
+
+                    <li class="nav-item">@Html.ActionLink("Communities", "Index", "Communities", new { area = "" }, new { @class = "nav-link" })</li>
+                    <li class="nav-item">@Html.ActionLink("About", "About", "Home", new { area = "" }, new { @class = "nav-link" })</li>
+                    <li class="nav-item">@Html.ActionLink("Contact", "Contact", "Home", new { area = "" }, new { @class = "nav-link" })</li>
+                </ul>
+
+                <ul class="navbar-nav ms-auto ">
+                    <partial name="_LoginPartial" />
+
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link position-relative" href="@Url.Action("Index", "Notifications")" title="Notifications">
+                                <i class="fas fa-bell "></i>
+                                <span id="notifBadge" class="notification-badge badge bg-danger position-absolute top-0 start-100 translate-middle" style="display:none;"></span>
+                            </a>
+                        </li>
+                    }
+
+                    <li class="nav-item">
+                        <a class="nav-link p-0">
+                            <button id="themeToggle" class="btn theme-toggle" title="Toggle Dark/Light Mode">
+                                <i class="fas fa-moon"></i>
+                            </button>
+                        </a>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <div class="container">
+            @RenderBody()
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3><i class="fas fa-bridge me-2"></i>SkillBridge</h3>
+                    <p>Connecting talent with opportunity through skill sharing and community collaboration.</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-links-column">
+                        <h4>Explore</h4>
+                        <ul>
+                            <li><a href="@Url.Action("Index", "Explore")">Skills Directory</a></li>
+                            <li><a href="@Url.Action("Index", "Interactions")">Interactions</a></li>
+                            <li><a href="@Url.Action("Index", "Communities")">Communities</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-links-column">
+                        <h4>Company</h4>
+                        <ul>
+                            <li><a href="@Url.Action("About", "Home")">About Us</a></li>
+                            <li><a href="@Url.Action("Contact", "Home")">Contact</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-links-column">
+                        <h4>Support</h4>
+                        <ul>
+                            <li><a href="@Url.Action("ForgotPassword", "Account")">Password Help</a></li>
+                            <li><a href="https://github.com/kazi-kamruddin/SkillBridge-renew/issues" rel="noopener noreferrer">Report an Issue</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div class="copyright">
+                    <p>&copy; @DateTime.Now.Year - SkillBridge. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/Scripts/jquery-3.7.0.min.js"></script>
+    <script src="~/Scripts/bootstrap.bundle.min.js"></script>
+    <script src="~/Scripts/signalr.min.js"></script>
+
+    @RenderSection("scripts", required: false)
+
+    <script>
+        $(function () {
+            function updateNotifBadge() {
+                if ('@User.Identity.IsAuthenticated' === 'True') {
+                    $.get('@Url.Action("GetNotifications", "Notifications")', function (data) {
+                        var badge = $("#notifBadge");
+                        if (data.unreadCount > 0) {
+                            badge.text(data.unreadCount).show();
+                            badge.addClass('pulse');
+                            setTimeout(() => badge.removeClass('pulse'), 500);
+                        } else {
+                            badge.hide();
+                        }
+                    }).fail(function() {
+                        console.log("Failed to fetch notifications");
+                    });
+                }
+            }
+
+            updateNotifBadge();
+            setInterval(updateNotifBadge, 1000);
+        });
+
+        $(function () {
+            const body = $("body");
+            const toggleBtn = $("#themeToggle");
+            const icon = toggleBtn.find("i");
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            function initTheme() {
+                const savedTheme = localStorage.getItem("theme");
+
+                if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+                    enableDarkMode();
+                } else {
+                    enableLightMode();
+                }
+            }
+
+            function enableDarkMode() {
+                body.attr("data-theme", "dark");
+                localStorage.setItem("theme", "dark");
+                icon.removeClass("fa-moon").addClass("fa-sun");
+                toggleBtn.attr("title", "Switch to Light Mode");
+            }
+
+            function enableLightMode() {
+                body.removeAttr("data-theme");
+                localStorage.setItem("theme", "light");
+                icon.removeClass("fa-sun").addClass("fa-moon");
+                toggleBtn.attr("title", "Switch to Dark Mode");
+            }
+
+            toggleBtn.on("click", function () {
+                if (body.attr("data-theme") === "dark") {
+                    enableLightMode();
+                } else {
+                    enableDarkMode();
+                }
+            });
+
+            initTheme();
+
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                if (!localStorage.getItem("theme")) {
+                    if (e.matches) {
+                        enableDarkMode();
+                    } else {
+                        enableLightMode();
+                    }
+                }
+            });
+        });
+
+        $(document).ready(function() {
+            const currentUrl = window.location.pathname;
+            $('.navbar-nav .nav-link').each(function() {
+                const linkUrl = $(this).attr('href');
+                if (currentUrl === linkUrl) {
+                    $(this).closest('.nav-item').addClass('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+﻿.stage {
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+}
+
+.Red {
+    background-color: #f8d7da;
+}
+
+.Yellow {
+    background-color: #fff3cd;
+}
+
+.Green {
+    background-color: #d4edda;
+}
+
+.mark-done {
+    margin-left: 10px;
+}
+
+#end-interaction-btn {
+    margin-top: 20px;
+}

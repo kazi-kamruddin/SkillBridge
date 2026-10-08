@@ -1,0 +1,33 @@
+﻿.stage-option {
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.stage-option.badge-primary {
+    background-color: #007bff !important;
+    color: white !important;
+}
+
+.stage-option.badge-secondary {
+    background-color: #e9ecef !important;
+    color: #212529 !important;
+}
+
+.skill-learn.active, .skill-know.active {
+    background-color: #d0ebff;
+}
+
+.skill-learn.disabled, .skill-know.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+.invalid-feedback {
+    color: #dc3545;
+    margin-top: .25rem;
+    font-size: 0.875em;
+}
