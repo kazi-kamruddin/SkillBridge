@@ -22,16 +22,9 @@
     };
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+@section Styles {
     <style>
-        :root {
+        .explore-container {
             --primary-color: #4361ee;
             --secondary-color: #3f37c9;
             --accent-color: #4cc9f0;
@@ -352,10 +345,7 @@
 
         
     </style>
-</head>
-
-
-<body>
+}
     <div class="explore-container">
         <!-- Page Header -->
         @*<div class="page-header">
@@ -363,6 +353,7 @@
         </div>*@
 
         <!-- Filters Section -->
+        <p><a href="@Url.Action("Skills", "Explore")">Search the skills directory by topic or goal</a></p>
         <div class="filter-section">
             <h3 class="filter-title"><i class="fas fa-filter"></i>Filter Results</h3>
             <div class="filter-row">
@@ -433,6 +424,7 @@
                                     </div>
 
                                     <div class="skills-section">
+                                        <div class="small mb-3"><strong>Why this match:</strong> They can teach you @person.YouCanLearn. You can teach them @person.TheyCanLearn.</div>
                                         <div class="mb-3">
                                             <div class="skills-title">
                                                 <i class="fas fa-gift"></i>Offers to Teach
@@ -481,7 +473,7 @@
                 <div class="no-results">
                     <i class="fas fa-users"></i>
                     <h4>No Match Results Found</h4>
-                    <p>Try adjusting your filters to see more results</p>
+                    <p>Try adjusting your filters or <a href="@Url.Action("UpdateProfile", "Profile")">update your learning skills</a> to find partners.</p>
                 </div>
             </div>
         }
@@ -518,6 +510,7 @@
                                     </div>
 
                                     <div class="skills-section">
+                                        <div class="small mb-3"><strong>Why this match:</strong> They can teach you @person.YouCanLearn. Your skills do not yet match what they want to learn.</div>
                                         <div>
                                             <div class="skills-title">
                                                 <i class="fas fa-gift"></i>Offers to Teach
@@ -554,14 +547,15 @@
                 <div class="no-results">
                     <i class="fas fa-user-friends"></i>
                     <h4>No Match Results Found</h4>
-                    <p>Try adjusting your filters to see more results</p>
+                    <p>Try adjusting your filters or <a href="@Url.Action("UpdateProfile", "Profile")">update your learning skills</a> to find partners.</p>
                 </div>
             </div>
         }
 
 
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    </div>
+
+@section Scripts {
         <script>
             function applyFilters() {
                 var selectedSkill = document.getElementById("skillFilter").value;
@@ -671,5 +665,4 @@
                 applyFilters();
             });
         </script>
-</body>
-</html>
+}

@@ -29,6 +29,9 @@ namespace SkillBridge.Models
         [StringLength(500)]
         public string Bio { get; set; }
 
+        public bool IsPublic { get; set; }
+        public bool IsHidden { get; set; }
+
         public virtual ApplicationUser User { get; set; }
     }
 

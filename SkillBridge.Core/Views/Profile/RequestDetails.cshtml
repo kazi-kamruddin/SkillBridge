@@ -1,0 +1,17 @@
+@model SkillBridge.Models.SkillRequest
+@{
+    ViewBag.Title = "Exchange Proposal";
+}
+<main class="container my-5" style="max-width: 750px;">
+    <h1 class="h2 mb-3">Exchange proposal</h1>
+    <p><strong>Skill requested:</strong> @Model.Skill.Name</p>
+    <p><strong>From:</strong> @Model.Requester.UserName</p>
+    <p><strong>To:</strong> @Model.Receiver.UserName</p>
+    <p><strong>Status:</strong> @Model.Status</p>
+    <dl class="row">
+        <dt class="col-sm-4">Goal</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Goal) ? "No goal was provided for this earlier request." : Model.Goal)</dd>
+        <dt class="col-sm-4">Pace</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Pace) ? "Not specified" : Model.Pace)</dd>
+        <dt class="col-sm-4">First meeting idea</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.FirstMeetingIdea) ? "Not specified" : Model.FirstMeetingIdea)</dd>
+    </dl>
+    <a href="@Url.Action("Requests", "Profile")">All proposals</a>
+</main>

@@ -35,6 +35,9 @@ namespace SkillBridge.Models
         public string Status { get; set; } = "Pending";
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+        [StringLength(500)] public string EndReason { get; set; }
+        public string EndedByUserId { get; set; }
+        public DateTime? EndedAt { get; set; }
 
         public virtual ICollection<InteractionSession> Sessions { get; set; }
         public virtual ICollection<Rating> Ratings { get; set; }

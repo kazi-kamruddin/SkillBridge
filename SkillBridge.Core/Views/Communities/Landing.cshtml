@@ -19,14 +19,24 @@
                 <i class="fas fa-plus me-2"></i> Create Post
             </a>
         }
+        else if (!User.Identity.IsAuthenticated)
+        {
+            <a class="btn btn-outline-primary" href="@Url.Action("Register", "Account")">Join to post</a>
+        }
     </div>
+
+    <form method="get" action="@Url.Action("Landing", "Communities", new { id = Model.CommunityId })" class="row g-2 mb-4" role="search">
+        <div class="col-sm-7"><label for="post-search" class="form-label">Search posts</label><input id="post-search" name="q" value="@Model.SearchQuery" maxlength="100" class="form-control" placeholder="Title or content" /></div>
+        <div class="col-sm-3"><label for="post-sort" class="form-label">Sort posts</label><select id="post-sort" name="sort" class="form-select"><option value="newest" selected="@(Model.Sort == "newest")">Newest</option><option value="active" selected="@(Model.Sort == "active")">Most active</option></select></div>
+        <div class="col-sm-2 align-self-end"><button class="btn btn-outline-primary w-100" type="submit">Apply</button></div>
+    </form>
 
     <!-- Posts -->
     <section class="posts-section">
         @if (Model.Posts.Any())
         {
             <div class="post-list">
-                @foreach (var post in Model.Posts.OrderByDescending(p => p.CreatedAt))
+                @foreach (var post in Model.Posts)
                 {
                     <a href="@Url.Action("PostDetails", "Communities", new { id = post.PostId })"
                        class="post-card d-block p-3 mb-3 rounded text-decoration-none">
@@ -34,9 +44,9 @@
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">
                                 by <strong>@post.CreatedByFullName</strong>
-                                � @post.CreatedAt.ToString("MMM dd, yyyy")
+                                posted @post.CreatedAt.ToString("MMM dd, yyyy")
                             </small>
-                            <span class="badge bg-light text-dark">View</span>
+                            <span class="badge bg-light text-dark">@post.CommentCount comment@(post.CommentCount == 1 ? "" : "s")</span>
                         </div>
                     </a>
                 }
@@ -45,7 +55,7 @@
         else
         {
             <div class="alert alert-info">
-                No posts yet. Be the first to post!
+                @(string.IsNullOrEmpty(Model.SearchQuery) ? (Model.IsMember ? "No posts yet. Be the first to post!" : "No posts yet. Check back soon.") : "No posts match that search.")
             </div>
         }
     </section>

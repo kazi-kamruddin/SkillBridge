@@ -1,5 +1,5 @@
 @model SkillBridge.Models.UpdateProfileViewModel
-@using Newtonsoft.Json;
+@using System.Text.Json;
 @using System.Collections.Generic;
 @{
     ViewBag.Title = "Update Profile";
@@ -11,7 +11,7 @@
         s => s.SkillStages.Select(st => new { id = st.StageNumber, name = st.Description }).ToList()
     );
 
-    var skillStagesDataJson = JsonConvert.SerializeObject(skillStagesDict);
+    var skillStagesDataJson = JsonSerializer.Serialize(skillStagesDict);
 
     var knownSkillIds = new HashSet<int>(Model.SkillsIKnow.Select(s => s.SkillId));
     var toLearnSkillIds = new HashSet<int>(Model.SkillsToLearn);
@@ -42,6 +42,12 @@
         <div class="mb-3">
             @Html.LabelFor(m => m.Bio, new { @class = "form-label" })
             @Html.TextAreaFor(m => m.Bio, new { @class = "form-control", rows = 3 })
+        </div>
+
+        <div class="form-check mb-3">
+            @Html.CheckBoxFor(m => m.IsPublic, new { @class = "form-check-input" })
+            @Html.LabelFor(m => m.IsPublic, "Allow signed-out visitors to view my profile", new { @class = "form-check-label" })
+            <div class="form-text">Your name, location, profession, bio, skills and ratings will be public. Your email and age stay private.</div>
         </div>
 
         <div class="mb-3">
@@ -132,10 +138,7 @@
         <div class="mt-4">
             <button type="submit" class="btn btn-success">Save Changes</button>
             <a href="@Url.Action("Index", "Profile")" class="btn btn-secondary ms-2">Cancel</a>
-            <button type="button" class="btn btn-info ms-2" id="debugButton">Debug Print</button>
         </div>
-
-        <div id="debugOutput" class="mt-3 text-monospace"></div>
     }
 </main>
 
@@ -149,7 +152,7 @@
             var $form = $("#updateProfileForm");
             var skillStagesData = @Html.Raw(skillStagesDataJson);
 
-            var selectedSkillsToLearn = new Set(@Html.Raw(JsonConvert.SerializeObject(Model.SkillsToLearn.Select(id => id.ToString()).ToList())));
+            var selectedSkillsToLearn = new Set(@Html.Raw(JsonSerializer.Serialize(Model.SkillsToLearn.Select(id => id.ToString()).ToList())));
             var selectedSkillsIKnow = {};
             @foreach (var sk in Model.SkillsIKnow) {
                 <text>selectedSkillsIKnow['@sk.SkillId'] = @sk.KnownUpToStage;</text>
@@ -223,19 +226,6 @@
                 if ($knownInput.length) $knownInput.val(stage);
                 else refreshSkillsIKnowHiddenInputs();
             });
-
-            // ----- Debug Button -----
-            $("#debugButton").click(function () {
-                var debugData = {};
-                $form.find("input, select, textarea").each(function () {
-                    var $el = $(this), name = $el.attr("name"), value = $el.val();
-                    if (!name) return;
-                    if (debugData[name]) { if (!Array.isArray(debugData[name])) debugData[name] = [debugData[name]]; debugData[name].push(value); }
-                    else { debugData[name] = value; }
-                });
-                $("#debugOutput").html("<pre>" + JSON.stringify(debugData, null, 4) + "</pre>");
-            });
-
 
             // ----- Client-side Validation Before Submit -----
             $form.submit(function (e) {

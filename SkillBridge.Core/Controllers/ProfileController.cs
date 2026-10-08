@@ -2,6 +2,7 @@
 
 using SkillBridge.Helpers;
 using SkillBridge.Models;
+using SkillBridge.Services;
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace SkillBridge.Controllers
 {
@@ -71,6 +73,8 @@ namespace SkillBridge.Controllers
                 Profession = userInfo?.Profession ?? "",
                 Location = userInfo?.Location ?? "",
                 Age = userInfo?.Age ?? 0,
+                IsPublic = userInfo?.IsPublic ?? false,
+                IsHidden = userInfo?.IsHidden ?? false,
                 TeachingSkills = teachingSkills,
                 LearningSkills = learningSkills,
                 AverageRating = averageRating,
@@ -109,6 +113,7 @@ namespace SkillBridge.Controllers
                 Profession = userInfo.Profession,
                 Location = userInfo.Location,
                 Age = userInfo.Age,
+                IsPublic = userInfo.IsPublic,
                 SkillsToLearn = userSkills.Where(s => s.Status == "Learning").Select(s => s.SkillId).ToList(),
                 SkillsIKnow = userSkills.Where(s => s.Status == "Teaching").Select(s => new UpdateProfileViewModel.UserKnownSkill
                 {
@@ -157,11 +162,12 @@ namespace SkillBridge.Controllers
                 return View(model);
             }
 
-            userInfo.FullName = model.FullName;
-            userInfo.Bio = model.Bio;
-            userInfo.Profession = model.Profession;
-            userInfo.Location = model.Location;
+            userInfo.FullName = model.FullName.Trim();
+            userInfo.Bio = model.Bio.Trim();
+            userInfo.Profession = model.Profession.Trim();
+            userInfo.Location = model.Location.Trim();
             userInfo.Age = model.Age;
+            userInfo.IsPublic = model.IsPublic;
 
             var existingSkills = db.UserSkills.Where(us => us.UserId == userId).ToList();
             using (var transaction = db.Database.BeginTransaction())
@@ -233,6 +239,7 @@ namespace SkillBridge.Controllers
         //////////////////////////////////////////////////////////////////
         //////////////////////////////////////////////////////////////////
         // GET: /Profile/PublicProfile
+        [AllowAnonymous]
         public ActionResult PublicProfile(string id)
         {
             if (id == null) return NotFound();
@@ -241,10 +248,16 @@ namespace SkillBridge.Controllers
             if (user == null) return NotFound();
 
             var userInfo = db.UserInformations.FirstOrDefault(ui => ui.UserId == id);
+            if (userInfo == null || (userInfo.IsHidden && id != User.Identity.GetUserId()) ||
+                (!User.Identity.IsAuthenticated && !userInfo.IsPublic))
+                return NotFound();
             var currentUserId = User.Identity.GetUserId();
+            if (User.Identity.IsAuthenticated && id != currentUserId &&
+                BlockRules.EitherBlocked(db, currentUserId, id)) return StatusCode(403);
 
             var userSkills = db.UserSkills
                 .Include(us => us.Skill.SkillCategory)
+                .Include(us => us.Skill.SkillStages)
                 .Where(us => us.UserId == id)
                 .ToList();
 
@@ -271,9 +284,11 @@ namespace SkillBridge.Controllers
                     SkillId = skill.SkillId,
                     SkillName = skill.Skill.Name,
                     Stage = skill.KnownUpToStage ?? 1,
+                    TotalStages = skill.Skill.SkillStages.Count,
                     RequestStatus = visitorWantsThisSkill
                         ? (existingRequest != null
-                            ? (existingRequest.Status == "Pending" ? "Pending" : "Declined")
+                            ? (existingRequest.Status == "Pending" ? "Pending" :
+                               existingRequest.Status == "Accepted" ? "Accepted" : "Declined")
                             : "None")
                         : "Hidden"
                 });
@@ -320,11 +335,19 @@ namespace SkillBridge.Controllers
         // POST: /Profile/SendSkillRequest
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public JsonResult SendSkillRequest(int userSkillId, string profileId)
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public JsonResult SendSkillRequest(int userSkillId, string profileId, string goal, string pace, string firstMeetingIdea)
         {
             var currentUserId = User.Identity.GetUserId();
             if (currentUserId == null)
                 return Json(new { success = false, message = "You must be logged in." });
+            goal = (goal ?? "").Trim();
+            pace = (pace ?? "").Trim();
+            firstMeetingIdea = (firstMeetingIdea ?? "").Trim();
+            if (goal.Length is < 1 or > 500 || pace.Length is < 1 or > 100 || firstMeetingIdea.Length > 300)
+                return Json(new { success = false, message = "Add a goal and pace; keep each field within its limit." });
+            if (BlockRules.EitherBlocked(db, currentUserId, profileId))
+                return Json(new { success = false, message = "You cannot send a request to this member." });
 
             var userSkill = db.UserSkills
                 .Include("Skill")
@@ -355,6 +378,9 @@ namespace SkillBridge.Controllers
                 RequesterId = currentUserId,
                 ReceiverId = userSkill.UserId,
                 Status = "Pending",
+                Goal = goal,
+                Pace = pace,
+                FirstMeetingIdea = firstMeetingIdea,
                 CreatedAt = DateTime.Now
             };
 
@@ -379,7 +405,97 @@ namespace SkillBridge.Controllers
                 transaction.Commit();
             }
 
-            return Json(new { success = true });
+            return Json(new { success = true, requestId = request.Id });
+        }
+
+        public ActionResult Requests()
+        {
+            var userId = User.Identity.GetUserId();
+            var requests = db.SkillRequests.Include(r => r.Skill).Include(r => r.Requester).Include(r => r.Receiver)
+                .Where(r => r.RequesterId == userId || r.ReceiverId == userId)
+                .OrderByDescending(r => r.CreatedAt).ToList();
+            return View(requests);
+        }
+
+        public ActionResult RequestDetails(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            var request = db.SkillRequests.Include(r => r.Skill).Include(r => r.Requester).Include(r => r.Receiver)
+                .FirstOrDefault(r => r.Id == id && (r.RequesterId == userId || r.ReceiverId == userId));
+            if (request == null) return NotFound();
+            return View(request);
+        }
+
+        public ActionResult BlockedMembers()
+        {
+            var userId = User.Identity.GetUserId();
+            var blocks = db.MemberBlocks.Where(b => b.BlockerId == userId).OrderByDescending(b => b.CreatedAt).ToList();
+            var blockedIds = blocks.Select(b => b.BlockedId).ToList();
+            var names = db.UserInformations.Where(info => blockedIds.Contains(info.UserId))
+                .ToDictionary(info => info.UserId, info => info.FullName);
+            ViewBag.Names = names;
+            return View(blocks);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult Block(string id)
+        {
+            var userId = User.Identity.GetUserId();
+            if (string.IsNullOrEmpty(id) || id == userId || !db.Users.Any(u => u.Id == id)) return NotFound();
+            if (!db.MemberBlocks.Any(b => b.BlockerId == userId && b.BlockedId == id))
+            {
+                db.MemberBlocks.Add(new MemberBlock { BlockerId = userId, BlockedId = id });
+                foreach (var request in db.SkillRequests.Where(r => r.Status == "Pending" &&
+                    ((r.RequesterId == userId && r.ReceiverId == id) ||
+                     (r.RequesterId == id && r.ReceiverId == userId)))) request.Status = "Declined";
+                foreach (var interaction in db.Interactions.Where(i => i.Status == "Ongoing" &&
+                    ((i.User1Id == userId && i.User2Id == id) ||
+                     (i.User1Id == id && i.User2Id == userId))))
+                {
+                    interaction.Status = "Ended";
+                    interaction.EndReason = "A member blocked further contact.";
+                    interaction.EndedByUserId = userId;
+                    interaction.EndedAt = DateTime.Now;
+                }
+                foreach (var notification in db.Notifications.Where(n => n.Type == "SkillRequest" &&
+                    (n.UserId == userId || n.UserId == id) && db.SkillRequests.Any(r => r.Id == n.ReferenceId &&
+                        ((r.RequesterId == userId && r.ReceiverId == id) ||
+                         (r.RequesterId == id && r.ReceiverId == userId)))))
+                {
+                    notification.Type = "Info";
+                    notification.Message = "This exchange request is no longer available.";
+                    notification.IsRead = true;
+                }
+                db.SaveChanges();
+            }
+            return RedirectToAction(nameof(BlockedMembers));
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public ActionResult Unblock(string id)
+        {
+            var userId = User.Identity.GetUserId();
+            var block = db.MemberBlocks.FirstOrDefault(b => b.BlockerId == userId && b.BlockedId == id);
+            if (block == null) return NotFound();
+            db.MemberBlocks.Remove(block);
+            db.SaveChanges();
+            return RedirectToAction(nameof(BlockedMembers));
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult ReportProfile(string id, string reason)
+        {
+            var userId = User.Identity.GetUserId();
+            if (string.IsNullOrEmpty(id) || id == userId || !db.Users.Any(u => u.Id == id)) return NotFound();
+            reason = (reason ?? "").Trim();
+            if (reason.Length is < 1 or > 500) return BadRequest("Give a reason of at most 500 characters.");
+            var report = db.ProfileReports.FirstOrDefault(r => r.ReporterId == userId && r.ReportedUserId == id);
+            if (report == null) db.ProfileReports.Add(new ProfileReport
+                { ReporterId = userId, ReportedUserId = id, Reason = reason });
+            else { report.Reason = reason; report.Status = "Pending"; report.CreatedAt = DateTime.Now; }
+            db.SaveChanges();
+            TempData["ProfileNotice"] = "Your report has been sent for review.";
+            return RedirectToAction(nameof(PublicProfile), new { id });
         }
 
 

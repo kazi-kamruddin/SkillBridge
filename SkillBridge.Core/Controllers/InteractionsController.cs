@@ -39,6 +39,7 @@ namespace SkillBridge.Controllers
             {
                 InteractionId = i.Id,
                 Status = i.Status,
+                EndReason = i.EndReason,
                 OtherUserName = i.User1Id == userId ? i.User2.UserName : i.User1.UserName,
 
                 SkillYouLearn = i.User1Id == userId ? i.SkillFromRequester.Name : i.SkillFromTeacher.Name,
@@ -141,6 +142,33 @@ namespace SkillBridge.Controllers
 
         ////////////////////////////////////////////////////////////////////////////
         // End Interaction
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult StopInteraction(int id, string reason)
+        {
+            var userId = User.Identity.GetUserId();
+            var interaction = db.Interactions.FirstOrDefault(i => i.Id == id &&
+                (i.User1Id == userId || i.User2Id == userId));
+            if (interaction == null) return NotFound();
+            if (interaction.Status != "Ongoing") return StatusCode(409);
+            reason = (reason ?? "").Trim();
+            if (reason.Length is < 1 or > 500) return BadRequest("Give a reason of at most 500 characters.");
+            interaction.Status = "Ended";
+            interaction.EndReason = reason;
+            interaction.EndedByUserId = userId;
+            interaction.EndedAt = DateTime.Now;
+            db.Notifications.Add(new Notification
+            {
+                UserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id,
+                Type = "Info",
+                ReferenceId = id,
+                Message = "The other member ended your exchange. Open Interactions to see the reason.",
+                CreatedAt = DateTime.Now
+            });
+            db.SaveChanges();
+            return RedirectToAction(nameof(Index));
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]

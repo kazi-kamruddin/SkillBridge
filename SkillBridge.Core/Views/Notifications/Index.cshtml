@@ -3,16 +3,9 @@
     ViewBag.Title = "Notifications";
 }
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewBag.Title</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+@section Styles {
     <style>
-        :root {
+        .notification-container {
             --primary-color: #4361ee;
             --secondary-color: #3f37c9;
             --success-color: #4cc9f0;
@@ -21,11 +14,6 @@
             --light-bg: #f8f9fa;
             --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             --transition: all 0.3s ease;
-        }
-
-        body {
-            background-color: #f5f7fb;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         .notification-container {
@@ -199,8 +187,7 @@
 
         
     </style>
-</head>
-<body>
+}
     @Html.AntiForgeryToken()
     <div class="notification-container">
         @if (!Model.Any())
@@ -236,8 +223,9 @@
                                 <i class="far fa-clock"></i>@n.CreatedAt.ToLocalTime().ToString("g")
                             </div>
 
-                            @if (n.Type == "SkillRequest" && !n.IsRead)
+                            @if (n.Type == "SkillRequest")
                             {
+                                <a href="@Url.Action("RequestDetails", "Profile", new { id = n.ReferenceId })" class="d-block mb-2">Read exchange proposal</a>
                                 <div class="skill-selection d-none" data-id="@n.Id">
                                     <label class="form-label fw-semibold">Select skill to learn from requester:</label>
                                     <select class="form-control form-control-modern skill-dropdown" data-id="@n.Id"></select>
@@ -249,7 +237,7 @@
                         </div>
 
                         <div class="notification-actions">
-                            @if (n.Type == "SkillRequest" && !n.IsRead)
+                            @if (n.Type == "SkillRequest")
                             {
                                 <div class="d-flex gap-2">
                                     <button class="btn btn-success-modern btn-sm-modern accept-btn" data-id="@n.Id">
@@ -284,8 +272,7 @@
         }
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+@section Scripts {
     <script>
         $(document).ready(function () {
             var verificationToken = $('input[name="__RequestVerificationToken"]').val();
@@ -329,7 +316,7 @@
                         dropdown.append('<option value="">No skills available</option>');
                     } else {
                         $.each(res.skills, function (i, skill) {
-                            dropdown.append($('<option>').val(skill.SkillId).text(skill.Name));
+                            dropdown.append($('<option>').val(skill.skillId).text(skill.name));
                         });
                     }
                     container.removeClass("d-none");
@@ -367,7 +354,7 @@
                 $.post("/Notifications/MarkAllAsRead", { __RequestVerificationToken: verificationToken }, function (res) {
                     if (res.success) {
                         $(".notification-item.unread").removeClass("unread");
-                        $(".notification-actions").html('');
+                        $(".notification-item:not(:has(.skill-selection)) .notification-actions").html('');
                         $("#markAllReadBtn").prop('disabled', true).html('<i class="fas fa-check me-2"></i>All Read');
                         updateNotificationCount();
                     } else {
@@ -388,5 +375,4 @@
             }
         });
     </script>
-</body>
-</html>
+}

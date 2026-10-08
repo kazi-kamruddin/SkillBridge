@@ -23,6 +23,9 @@ namespace SkillBridge.Models
         public string Status { get; set; } // "Pending", "Accepted", "Declined"
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [StringLength(500)] public string Goal { get; set; }
+        [StringLength(100)] public string Pace { get; set; }
+        [StringLength(300)] public string FirstMeetingIdea { get; set; }
 
         [ForeignKey("RequesterId")]
         public virtual ApplicationUser Requester { get; set; }

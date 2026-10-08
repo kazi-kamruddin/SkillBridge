@@ -7,6 +7,8 @@ namespace SkillBridge.Models
     public class IndexViewModel
     {
         public bool HasPassword { get; set; }
+        public bool IsPublic { get; set; }
+        public bool IsHidden { get; set; }
 
         // Personal info
         public string FullName { get; set; }
@@ -41,6 +43,7 @@ namespace SkillBridge.Models
 
     public class UpdateProfileViewModel
     {
+        public bool IsPublic { get; set; }
         // Personal info
         [Required]
         [StringLength(100)]
@@ -50,8 +53,10 @@ namespace SkillBridge.Models
         [StringLength(500)]
         public string Bio { get; set; }
         [Required]
+        [StringLength(100)]
         public string Profession { get; set; }
         [Required]
+        [StringLength(100)]
         public string Location { get; set; }
         [Range(1, 150)]
         public int Age { get; set; }

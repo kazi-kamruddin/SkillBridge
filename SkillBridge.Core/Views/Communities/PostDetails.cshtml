@@ -5,14 +5,31 @@
 }
 
 <main class="container my-5">
+    @if (TempData["CommunityNotice"] is string notice)
+    {
+        <div class="alert alert-info" role="status">@notice</div>
+    }
     <!-- Post Header -->
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
             <h2 class="fw-bold">@Model.Title</h2>
             <p class="text-muted mb-3">
-                by <strong>@Model.CreatedByUserName</strong> � @Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                by <strong>@Model.CreatedByUserName</strong> on @Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")
             </p>
             <p class="fs-5">@Model.Content</p>
+            @if (User.Identity.IsAuthenticated)
+            {
+                <details class="mt-3">
+                    <summary>Report this post</summary>
+                    <form action="@Url.Action("Report", "Communities")" method="post" class="mt-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="postId" value="@Model.PostId" />
+                        <label class="form-label" for="post-report-reason">Reason for report</label>
+                        <textarea id="post-report-reason" name="reason" class="form-control mb-2" maxlength="500" required></textarea>
+                        <button class="btn btn-outline-danger btn-sm" type="submit">Send report</button>
+                    </form>
+                </details>
+            }
         </div>
     </div>
 
@@ -30,7 +47,21 @@
                     </div>
                     <div class="comment-body flex-grow-1">
                         <p class="mb-1">@c.Content</p>
-                        <small class="text-muted">� @c.CreatedByFullName, @c.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                        <small class="text-muted">@c.CreatedByFullName, @c.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <details class="mt-2">
+                                <summary>Report comment</summary>
+                                <form action="@Url.Action("Report", "Communities")" method="post" class="mt-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="postId" value="@Model.PostId" />
+                                    <input type="hidden" name="commentId" value="@c.CommentId" />
+                                    <label class="form-label" for="comment-report-@c.CommentId">Reason for report</label>
+                                    <textarea id="comment-report-@c.CommentId" name="reason" class="form-control mb-2" maxlength="500" required></textarea>
+                                    <button class="btn btn-outline-danger btn-sm" type="submit">Send report</button>
+                                </form>
+                            </details>
+                        }
                     </div>
                 </div>
             }
@@ -46,6 +77,7 @@
     {
         <section class="comment-form mt-4">
             <h5 class="mb-3">Add a Comment</h5>
+            <p class="text-muted small">Comments can be read by signed-out visitors.</p>
 
             <form action="/Communities/CreateComment" method="post" class="card p-3 shadow-sm border-0">
                 @Html.AntiForgeryToken()
@@ -63,6 +95,14 @@
                 </div>
             </form>
         </section>
+    }
+    else if (!User.Identity.IsAuthenticated)
+    {
+        <p class="mt-4">Want to join the conversation? <a href="@Url.Action("Register", "Account")">Create an account</a> or <a href="@Url.Action("Login", "Account")">log in</a>.</p>
+    }
+    else
+    {
+        <p class="mt-4">Add this skill to your profile to post or comment in this community. <a href="@Url.Action("UpdateProfile", "Profile")">Update your skills</a>.</p>
     }
 </main>
 

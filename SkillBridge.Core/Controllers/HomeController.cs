@@ -36,12 +36,12 @@ namespace SkillBridge.Controllers
                     .ToList();
 
                 vm.MyLatestPost = db.CommunityPosts
-                    .Where(p => p.CreatedByUserId == userId)
+                    .Where(p => p.CreatedByUserId == userId && !p.IsHidden)
                     .OrderByDescending(p => p.CreatedAt)
                     .FirstOrDefault();
 
                 vm.OtherLatestPost = db.CommunityPosts
-                    .Where(p => p.CreatedByUserId != userId)
+                    .Where(p => p.CreatedByUserId != userId && !p.IsHidden)
                     .OrderByDescending(p => p.CreatedAt)
                     .FirstOrDefault();
 
@@ -106,6 +106,8 @@ namespace SkillBridge.Controllers
             ViewBag.SupportEmail = Environment.GetEnvironmentVariable("SKILLBRIDGE_SUPPORT_EMAIL");
             return View();
         }
+
+        public ActionResult HowItWorks() => View();
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public ActionResult Error() => View("~/Views/Shared/Error.cshtml");

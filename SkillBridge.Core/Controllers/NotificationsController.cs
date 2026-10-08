@@ -3,6 +3,7 @@ using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using SkillBridge.Models;
+using SkillBridge.Helpers;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -131,6 +132,8 @@ namespace SkillBridge.Controllers
                 .Include(r => r.Skill)
                 .FirstOrDefault(r => r.Id == notif.ReferenceId && r.Status == "Pending" && r.ReceiverId == userId);
             if (skillRequest == null) return Json(new { skills = new object[0] });
+            if (BlockRules.EitherBlocked(_context, userId, skillRequest.RequesterId))
+                return Json(new { skills = new object[0] });
 
             var requesterId = skillRequest.RequesterId;
             var receiverId = userId;
@@ -169,6 +172,8 @@ namespace SkillBridge.Controllers
                 .FirstOrDefault(r => r.Id == notif.ReferenceId && r.Status == "Pending" && r.ReceiverId == userId);
 
             if (skillRequest == null)
+                return Json(new { success = false });
+            if (BlockRules.EitherBlocked(_context, userId, skillRequest.RequesterId))
                 return Json(new { success = false });
 
             var requesterCanTeach = _context.UserSkills.Any(us => us.UserId == skillRequest.RequesterId &&

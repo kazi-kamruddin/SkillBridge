@@ -19,6 +19,8 @@ namespace SkillBridge.Models
         public int InteractionsCompleted { get; set; }
 
         public string ProfileImageUrl { get; set; }
+        public string YouCanLearn { get; set; } = "";
+        public string TheyCanLearn { get; set; } = "";
     }
 
     public class SkillViewModel
@@ -26,9 +28,29 @@ namespace SkillBridge.Models
         public int SkillId { get; set; }
         public string SkillName { get; set; }
         public int Stage { get; set; }
+        public int TotalStages { get; set; }
 
         public string RequestStatus { get; set; } = "None"; // None | Pending | Declined
 
         public int UserSkillId { get; set; }
+    }
+
+    public class GuestExploreViewModel
+    {
+        public string Query { get; set; } = "";
+        public List<GuestSkillViewModel> Skills { get; set; } = new();
+    }
+
+    public class GuestSkillViewModel
+    {
+        public string SkillName { get; set; }
+        public string CategoryName { get; set; }
+        public List<GuestTeacherViewModel> Teachers { get; set; } = new();
+    }
+
+    public class GuestTeacherViewModel
+    {
+        public string UserId { get; set; }
+        public string FullName { get; set; }
     }
 }

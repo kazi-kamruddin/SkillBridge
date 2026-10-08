@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 using SkillBridge.Helpers;
 using SkillBridge.Models;
+using SkillBridge.Services;
 
 namespace SkillBridge.Controllers
 {
@@ -32,6 +34,9 @@ namespace SkillBridge.Controllers
 
             var firstConversation = await db.Conversations
                 .Where(c => c.User1Id == userId || c.User2Id == userId)
+                .Where(c => !db.MemberBlocks.Any(b =>
+                    (b.BlockerId == c.User1Id && b.BlockedId == c.User2Id) ||
+                    (b.BlockerId == c.User2Id && b.BlockedId == c.User1Id)))
                 .OrderByDescending(c => c.LastMessageAt)
                 .FirstOrDefaultAsync();
 
@@ -57,6 +62,8 @@ namespace SkillBridge.Controllers
                                            (c.User1Id == userId || c.User2Id == userId));
 
             if (conversation == null) return NotFound();
+            var otherId = conversation.User1Id == userId ? conversation.User2Id : conversation.User1Id;
+            if (BlockRules.EitherBlocked(db, userId, otherId)) return StatusCode(403);
 
             var decryptedMessages = conversation.Messages
                 .OrderBy(m => m.CreatedAt)
@@ -78,6 +85,9 @@ namespace SkillBridge.Controllers
 
             var allConversations = await db.Conversations
                 .Where(c => c.User1Id == userId || c.User2Id == userId)
+                .Where(c => !db.MemberBlocks.Any(b =>
+                    (b.BlockerId == c.User1Id && b.BlockedId == c.User2Id) ||
+                    (b.BlockerId == c.User2Id && b.BlockedId == c.User1Id)))
                 .OrderByDescending(c => c.LastMessageAt)
                 .ToListAsync();
             ViewBag.AllConversations = allConversations;
@@ -105,6 +115,7 @@ namespace SkillBridge.Controllers
         // POST: /Messages/Send
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> Send(int conversationId, string messageText)
         {
             if (string.IsNullOrWhiteSpace(messageText) || messageText.Length > 4000)
@@ -119,6 +130,7 @@ namespace SkillBridge.Controllers
             if (conversation == null) return NotFound();
 
             var otherUserId = (conversation.User1Id == userId) ? conversation.User2Id : conversation.User1Id;
+            if (BlockRules.EitherBlocked(db, userId, otherUserId)) return StatusCode(403);
 
             var encrypted = MessageEncryptionService.Encrypt(messageText);
 
@@ -158,6 +170,7 @@ namespace SkillBridge.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> Knock(string targetUserId)
         {
             var currentUserId = User.Identity.GetUserId();
@@ -167,7 +180,8 @@ namespace SkillBridge.Controllers
                 return NotFound();
 
             if (targetUserId == currentUserId)
-                return RedirectToAction("Index"); 
+                return RedirectToAction("Index");
+            if (BlockRules.EitherBlocked(db, currentUserId, targetUserId)) return StatusCode(403);
 
             var conversation = await db.Conversations
                 .FirstOrDefaultAsync(c =>

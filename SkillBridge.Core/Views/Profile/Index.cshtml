@@ -20,6 +20,9 @@
     </div>
 
     <h3>@Model.FullName</h3>
+    @if (Model.IsHidden) { <div class="alert alert-warning">Your profile is currently hidden from discovery. Contact the site moderator if you believe this is a mistake.</div> }
+    <p class="small text-muted">Your profile is @(Model.IsPublic ? "visible to signed-out visitors" : "visible only to signed-in members"). <a href="@Url.Action("UpdateProfile", "Profile")">Change visibility</a></p>
+    <p><a href="@Url.Action("Requests", "Profile")">Exchange proposals</a> · <a href="@Url.Action("BlockedMembers", "Profile")">Blocked members</a></p>
 
     <p class="text-muted">@Model.Bio</p>
     <p><i class="bi bi-geo-alt"></i> @Model.Location</p>
@@ -56,14 +59,16 @@
         {
             foreach (var skill in Model.TeachingSkills)
             {
+                var percent = skill.TotalStages > 0
+                    ? Math.Min(100, skill.KnownUpToStage * 100 / skill.TotalStages) : 0;
                 <div class="mb-3 text-start">
                     <label><strong>@skill.SkillName (@skill.CategoryName)</strong> — Stage @skill.KnownUpToStage of @skill.TotalStages</label>
                     <div class="progress" style="height: 25px;">
                         <div class="progress-bar bg-danger" role="progressbar"
-                             style="width:@(skill.KnownUpToStage * 100 / skill.TotalStages)%;"
-                             aria-valuenow="@(skill.KnownUpToStage * 100 / skill.TotalStages)"
+                             style="width:@(percent)%;"
+                             aria-valuenow="@(percent)"
                              aria-valuemin="0" aria-valuemax="100">
-                            @(skill.KnownUpToStage * 100 / skill.TotalStages)%
+                            @(percent)%
                         </div>
                     </div>
                 </div>

@@ -1,11 +1,13 @@
 # SkillBridge ASP.NET Core deployment
 
-This is one ASP.NET Core 10 MVC app with Razor pages, C# controllers, Identity, and SignalR. Render builds the repository's `Dockerfile` on its servers; Docker Desktop does not need to run on the developer's PC. The public app uses one `onrender.com` URL and connects directly to the existing Supabase PostgreSQL project.
+This is one ASP.NET Core 10 MVC app with Razor views, C# controllers, Identity, and SignalR. Render builds the repository's `Dockerfile` on its servers; Docker Desktop does not need to run on the developer's PC. The public app uses one `onrender.com` URL and connects directly to the existing Supabase PostgreSQL project.
 
 ## Before deployment
 
 1. Export or back up the current Supabase database. The compatibility script keeps data, but its identity changes need an independent recovery copy before applying them.
 2. In the existing Supabase project's SQL Editor, review and run `database/postgres/003_aspnet_core_identity.sql` **once**. Do not rerun `001_initial.sql` on an existing database. The new script adds Core Identity fields, persistent cookie/reset-token keys, and required Identity tables. It does not recreate users or application data.
+   Before deploying the public-browsing update, also run `database/postgres/004_public_browsing_and_moderation.sql` once. It adds profile visibility, content moderation flags and reports. Existing profiles default to hidden from signed-out visitors. Review existing community content before publishing it to guests.
+   Before deploying the issue #36 update, run `database/postgres/005_discovery_exchanges_safety.sql` once after 004. It adds exchange proposal fields, profile reports and blocks, moderation hiding, and early exchange endings. Do not rerun 001.
 3. Keep the existing `SKILLBRIDGE_MESSAGE_KEY`. Changing it makes old encrypted chat messages unreadable.
 4. Publish and test the Core app locally against the updated database before pointing visitors to it. Existing ASP.NET Identity 2 password hashes can be verified by Core Identity; successful login may upgrade a hash, so a database backup also matters for rollback to MVC 5.
 
@@ -21,11 +23,18 @@ This is one ASP.NET Core 10 MVC app with Razor pages, C# controllers, Identity, 
    | `SKILLBRIDGE_MESSAGE_KEY` | The existing Base64 32-byte message key. |
    | `SKILLBRIDGE_PUBLIC_URL` | The final `https://<service>.onrender.com/` origin, with a trailing slash. |
    | `SKILLBRIDGE_SUPPORT_EMAIL` | Optional support address for Contact. |
+   | `SKILLBRIDGE_MODERATOR_EMAIL` | Email of an existing SkillBridge account that may review community and profile reports at `/Moderation`. No email delivery service is required for this setting. |
    | `SKILLBRIDGE_BREVO_API_KEY` | Brevo transactional email API key, when ready. |
    | `SKILLBRIDGE_BREVO_FROM` | Sender address configured and verified in Brevo, when ready. |
 
    `SKILLBRIDGE_DB_CA_CERT` is optional. Set it only if replacing the certificate bundled at `SkillBridge.Core/certs/prod-ca-2021.crt`. The certificate is a public trust anchor, not a credential.
 4. Let Render build and deploy. Open the assigned URL and test home, About, Contact, registration, login, profile, matching, a request, chat, stages, ratings, and logout. Test password reset after Brevo is configured and the sender works. Use two accounts for the connected flows.
+
+The `/health` endpoint checks that the web process responds; it does not query PostgreSQL. A passing Render health check therefore does not replace the member-flow checks above.
+
+Account submissions share an in-memory limit of 40 requests per minute; selected member write actions allow 40 requests per minute per signed-in account. Excess requests return HTTP 429 with `Retry-After: 60`. Limits reset when the Render instance restarts and are intended for this single-instance deployment. ASP.NET Core sends warnings and errors to Render's log stream, including throttled requests and moderation decisions; do not put passwords, reset tokens, message contents, or connection strings in logs. The Razor frontend and backend share one origin, so no CORS policy or extra service is required.
+
+Signed-out visitors can browse skills, public profiles whose owners opted in, and community posts. Creating posts, commenting, reporting, matching, requests, interactions, messages, notifications, and moderation require sign-in. Community posting and commenting additionally require that skill on the member's profile. Test a guest session and a member session after deploying the update. Reports require `SKILLBRIDGE_MODERATOR_EMAIL` to match an existing account; that account can dismiss a report, hide a reported post or comment, or hide a reported profile from discovery.
 
 The app's Data Protection keys are stored in the private `skillbridge."DataProtectionKeys"` database table. This keeps sign-in cookies and reset tokens valid across Render restarts. Render's local filesystem is ephemeral, so do not add user uploads to it without separate persistent storage.
 
