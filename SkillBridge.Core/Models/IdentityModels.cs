@@ -41,6 +41,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IDataPro
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.HasDefaultSchema("skillbridge");
+        // The MVC 5 database keys external logins by all three columns.
+        modelBuilder.Entity<IdentityUserLogin<string>>().HasKey(login =>
+            new { login.LoginProvider, login.ProviderKey, login.UserId });
         modelBuilder.Entity<DataProtectionKey>().ToTable("DataProtectionKeys");
 
         modelBuilder.Entity<Interaction>().HasOne(i => i.User1).WithMany()

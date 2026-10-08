@@ -8,6 +8,8 @@ using SkillBridge.Models;
 using SkillBridge.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
 
 var rawConnection = Environment.GetEnvironmentVariable("SKILLBRIDGE_DB_CONNECTION");
 if (string.IsNullOrWhiteSpace(rawConnection))
@@ -43,9 +45,11 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromHours(1));
-builder.Services.AddDataProtection()
-    .SetApplicationName("SkillBridge")
-    .PersistKeysToDbContext<ApplicationDbContext>();
+var dataProtection = builder.Services.AddDataProtection().SetApplicationName("SkillBridge");
+if (builder.Environment.IsDevelopment())
+    dataProtection.PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(AppContext.BaseDirectory, "keys")));
+else
+    dataProtection.PersistKeysToDbContext<ApplicationDbContext>();
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.LoginPath = "/Account/Login";
@@ -72,7 +76,8 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();

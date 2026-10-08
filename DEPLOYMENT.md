@@ -1,5 +1,7 @@
 # SkillBridge first deployment
 
+This guide documents the original MVC 5/Windows application. The ASP.NET Core 10/Render path is in [DEPLOYMENT_CORE.md](DEPLOYMENT_CORE.md).
+
 This is one ASP.NET MVC 5 application on .NET Framework 4.7.2. Razor pages, C# controllers, authentication, and SignalR chat are deployed together to a Windows/IIS website. Visitors use one HTTPS URL. The application connects directly to PostgreSQL on Supabase; it does not use Supabase Auth or the Supabase browser API.
 
 ## Host decision
@@ -12,7 +14,7 @@ As checked on 8 October 2026:
 - [Somee Free](https://www.somee.com/FreeAspNetHosting.aspx) is another Windows/MVC 5 candidate for a light application. It inserts advertisements, has 150 MB site storage and 5 GB monthly transfer, and requires manual renewal of its free HTTPS certificate. Its [free-hosting policy](https://www.somee.com/doka/Help/Article/142/Terms_%26_Policies_for_Free_Accounts) describes learning, testing, and light applications. Confirm that the intended public use is allowed, and that its free site can set process environment variables and connect to external PostgreSQL on port 5432. Those last two capabilities are not established from its published documentation.
 - Azure App Service F1 has a $0 app tier, but a new Azure Free Trial subscription must move to pay-as-you-go after the trial to keep services running. This does not satisfy a strict no-billing-exposure rule. See the [Azure account offer](https://azure.microsoft.com/en-us/pricing/purchase-options/pay-as-you-go).
 
-There is currently no verified free Windows host that meets every requirement for unrestricted public use with real user data. Host capability and terms are the remaining deployment decision, not a missing framework migration.
+There is currently no verified free Windows host that meets every requirement for unrestricted public use with real user data. This limitation applies to the legacy MVC 5 deployment path; the Core deployment path is documented separately.
 
 ## What to prepare on the chosen host
 
