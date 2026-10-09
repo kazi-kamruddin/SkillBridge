@@ -32,6 +32,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IDataPro
     public DbSet<ProfileReport> ProfileReports { get; set; }
     public DbSet<Conversation> Conversations { get; set; }
     public DbSet<Message> Messages { get; set; }
+    public DbSet<SavedProfile> SavedProfiles { get; set; }
+    public DbSet<InteractionSessionNote> InteractionSessionNotes { get; set; }
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -77,5 +79,15 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IDataPro
             .HasForeignKey(m => m.ToUserId).OnDelete(DeleteBehavior.NoAction);
         modelBuilder.Entity<UserRating>().HasOne(r => r.User).WithMany()
             .HasForeignKey(r => r.UserId).OnDelete(DeleteBehavior.NoAction);
+        modelBuilder.Entity<SavedProfile>().HasKey(s => new { s.UserId, s.TargetUserId });
+        modelBuilder.Entity<SavedProfile>().HasOne(s => s.User).WithMany()
+            .HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<SavedProfile>().HasOne(s => s.TargetUser).WithMany()
+            .HasForeignKey(s => s.TargetUserId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<InteractionSessionNote>().HasIndex(n => new { n.InteractionSessionId, n.UserId }).IsUnique();
+        modelBuilder.Entity<InteractionSessionNote>().HasOne(n => n.InteractionSession).WithMany()
+            .HasForeignKey(n => n.InteractionSessionId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<InteractionSessionNote>().HasOne(n => n.User).WithMany()
+            .HasForeignKey(n => n.UserId).OnDelete(DeleteBehavior.NoAction);
     }
 }

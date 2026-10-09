@@ -414,7 +414,8 @@
                     @if (User.Identity.IsAuthenticated)
                     {
                         <li class="nav-item">@Html.ActionLink("Interactions", "Index", "Interactions", new { area = "" }, new { @class = "nav-link" })</li>
-                        <li class="nav-item">@Html.ActionLink("Messages", "Index", "Messages", new { area = "" }, new { @class = "nav-link" })</li>
+                        <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Messages")">Messages <span id="messageBadge" class="badge bg-danger" style="display:none;"></span></a></li>
+                        <li class="nav-item">@Html.ActionLink("Saved", "Index", "SavedProfiles", new { area = "" }, new { @class = "nav-link" })</li>
                         @if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SKILLBRIDGE_MODERATOR_EMAIL")) &&
                              string.Equals(User.Identity.Name, Environment.GetEnvironmentVariable("SKILLBRIDGE_MODERATOR_EMAIL"), StringComparison.OrdinalIgnoreCase))
                         {
@@ -529,7 +530,18 @@
             }
 
             updateNotifBadge();
-            setInterval(updateNotifBadge, 1000);
+            setInterval(updateNotifBadge, 15000);
+            if ('@User.Identity.IsAuthenticated' === 'True') {
+                function updateMessageBadge() {
+                    $.get('@Url.Action("UnreadCount", "Messages")', function (data) {
+                        var badge = $('#messageBadge');
+                        if (data.count > 0) badge.text(data.count).show();
+                        else badge.hide();
+                    });
+                }
+                updateMessageBadge();
+                setInterval(updateMessageBadge, 15000);
+            }
         });
 
         $(function () {

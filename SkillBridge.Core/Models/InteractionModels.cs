@@ -39,6 +39,13 @@ namespace SkillBridge.Models
         public string EndedByUserId { get; set; }
         public DateTime? EndedAt { get; set; }
 
+        // Stored as UTC in PostgreSQL's timestamp-without-time-zone column.
+        public DateTime? MeetingStartUtc { get; set; }
+        [StringLength(20)] public string MeetingFormat { get; set; }
+        [StringLength(300)] public string MeetingNote { get; set; }
+        public string MeetingProposedByUserId { get; set; }
+        [StringLength(20)] public string MeetingStatus { get; set; }
+
         public virtual ICollection<InteractionSession> Sessions { get; set; }
         public virtual ICollection<Rating> Ratings { get; set; }
     }

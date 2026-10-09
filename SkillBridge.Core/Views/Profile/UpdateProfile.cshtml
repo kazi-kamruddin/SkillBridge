@@ -85,6 +85,16 @@
             @Html.TextBoxFor(m => m.Age, new { @class = "form-control", type = "number", min = "0" })
         </div>
 
+        <div class="mb-3">
+            @Html.LabelFor(m => m.AvailabilityNotes, new { @class = "form-label" })
+            @Html.TextAreaFor(m => m.AvailabilityNotes, new { @class = "form-control", rows = 2, maxlength = "300", placeholder = "For example, weekday evenings in Dhaka time" })
+            <div class="form-text">This appears on your profile, including to signed-out visitors when your profile is public.</div>
+        </div>
+        <div class="mb-3">
+            @Html.LabelFor(m => m.MeetingFormat, new { @class = "form-label" })
+            @Html.DropDownListFor(m => m.MeetingFormat, new SelectList(new[] { "Either", "Online", "In person" }, Model.MeetingFormat), new { @class = "form-select" })
+        </div>
+
         <hr />
 
         <h4>Skills You Want to Learn</h4>

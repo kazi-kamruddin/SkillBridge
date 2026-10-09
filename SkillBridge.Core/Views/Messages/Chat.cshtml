@@ -10,6 +10,8 @@
     var conversationId = Convert.ToString(ViewBag.ConversationId);
     var otherUserId = ViewBag.OtherUserId;
     var allConversations = ViewBag.AllConversations as IEnumerable<SkillBridge.Models.Conversation>;
+    var unreadByConversation = ViewBag.UnreadByConversation as Dictionary<int, int> ?? new Dictionary<int, int>();
+    var partnerNames = ViewBag.PartnerNames as Dictionary<string, string> ?? new Dictionary<string, string>();
     var currentUserId = User.Identity.GetUserId();
 
     var otherUserProfile = ViewBag.OtherUserProfile as ChatPartnerViewModel;
@@ -25,10 +27,12 @@
                 {
                     var partnerId = convo.User1Id == currentUserId ? convo.User2Id : convo.User1Id;
 
-                    <li class="list-group-item @(convo.Id == Model.Id ? "active" : "")">
+                    <li class="list-group-item @(convo.Id == Model.Id ? "active" : "")" data-conversation-id="@convo.Id">
                         <a class="d-block text-decoration-none text-dark @(convo.Id == Model.Id ? "text-white" : "")"
                            href="@Url.Action("Chat", "Messages", new { id = convo.Id })">
-                            With @partnerId
+                            With @(partnerNames.TryGetValue(partnerId, out var partnerName) ? partnerName : "Member")
+                            @if (unreadByConversation.TryGetValue(convo.Id, out var unread) && unread > 0)
+                            { <span class="badge bg-danger conversation-unread">@unread unread</span> }
                             <br />
                             <small class="text-muted">Last: @convo.LastMessageAt?.ToString("g")</small>
                         </a>
@@ -49,15 +53,15 @@
                         {
                             if (m.IsMine)
                             {
-                                <div class="text-end mb-2">
+                                <div class="text-end mb-2" data-message-id="@m.Id">
                                     <span class="badge bg-primary">@m.Text</span>
                                     <br />
-                                    <small class="text-muted">@m.CreatedAt</small>
+                                    <small class="text-muted">@m.CreatedAt · <span class="read-state">@(m.IsRead ? "Read" : "Sent")</span></small>
                                 </div>
                             }
                             else
                             {
-                                <div class="text-start mb-2">
+                                <div class="text-start mb-2" data-message-id="@m.Id">
                                     <span class="badge bg-secondary">@m.Text</span>
                                     <br />
                                     <small class="text-muted">@m.CreatedAt</small>
@@ -107,6 +111,15 @@
     <script>
         $(function () {
             var conversationId = @Model.Id;
+            var myId = '@User.Identity.GetUserId()';
+            var token = $('#sendMessageForm input[name="__RequestVerificationToken"]').val();
+            function markRead() {
+                $.post('@Url.Action("MarkRead", "Messages")',
+                    { conversationId: conversationId, __RequestVerificationToken: token })
+                    .done(function () {
+                        $('[data-conversation-id="' + conversationId + '"] .conversation-unread').remove();
+                    });
+            }
             const connection = new signalR.HubConnectionBuilder()
                 .withUrl('/chatHub')
                 .withAutomaticReconnect()
@@ -115,16 +128,18 @@
             connection.on('receiveMessage', function (msg) {
                 if (String(msg.conversationId) !== String(conversationId)) return;
 
-                var mine = msg.fromUserId === '@User.Identity.GetUserId()';
+                var mine = msg.fromUserId === myId;
                 var css = mine ? 'text-end' : 'text-start';
                 var badge = mine ? 'bg-primary' : 'bg-secondary';
 
-                var row = $("<div>").addClass(css + " mb-2");
+                var row = $("<div>").addClass(css + " mb-2").attr("data-message-id", msg.id);
                 $("<span>").addClass("badge " + badge).text(msg.text).appendTo(row);
                 row.append($("<br>"));
-                $("<small>").addClass("text-muted")
-                    .text(new Date(msg.sentAt).toLocaleString()).appendTo(row);
+                var meta = $("<small>").addClass("text-muted").text(new Date(msg.sentAt).toLocaleString());
+                if (mine) meta.append(' · ').append($("<span>").addClass("read-state").text("Sent"));
+                row.append(meta);
                 $("#messageList").append(row);
+                if (!mine) markRead();
 
                 var pane = $("#messagePane");
                 pane.scrollTop(pane.prop("scrollHeight"));
@@ -132,12 +147,21 @@
 
             connection.start().then(function () {
                 return connection.invoke('JoinConversation', conversationId);
+            }).then(function () {
+                markRead();
             }).catch(function (error) {
                 console.error('Could not connect to chat:', error);
             });
 
             connection.onreconnected(function () {
-                connection.invoke('JoinConversation', conversationId).catch(console.error);
+                connection.invoke('JoinConversation', conversationId).then(markRead).catch(console.error);
+            });
+
+            connection.on('messagesRead', function (event) {
+                if (Number(event.conversationId) !== conversationId || event.readerId === myId) return;
+                event.messageIds.forEach(function (id) {
+                    $('#messageList [data-message-id="' + id + '"] .read-state').text('Read');
+                });
             });
 
             $("#sendMessageForm").submit(function (e) {

@@ -11,6 +11,7 @@
 <main class="container text-center mt-5" aria-labelledby="title">
 
     <p class="text-success">@ViewBag.StatusMessage</p>
+    @if (TempData["AccountNotice"] is string accountNotice) { <div class="alert alert-info" role="status">@accountNotice</div> }
 
     <div class="mb-3 text-center">
         <img src="@Model.ProfileImageUrl"
@@ -22,7 +23,16 @@
     <h3>@Model.FullName</h3>
     @if (Model.IsHidden) { <div class="alert alert-warning">Your profile is currently hidden from discovery. Contact the site moderator if you believe this is a mistake.</div> }
     <p class="small text-muted">Your profile is @(Model.IsPublic ? "visible to signed-out visitors" : "visible only to signed-in members"). <a href="@Url.Action("UpdateProfile", "Profile")">Change visibility</a></p>
-    <p><a href="@Url.Action("Requests", "Profile")">Exchange proposals</a> · <a href="@Url.Action("BlockedMembers", "Profile")">Blocked members</a></p>
+    <p><a href="@Url.Action("Requests", "Profile")">Exchange proposals</a> · <a href="@Url.Action("BlockedMembers", "Profile")">Blocked members</a> · <a href="@Url.Action("Index", "SavedProfiles")">Saved members</a></p>
+    @if (Model.GoogleEnabled && !Model.GoogleLinked)
+    {
+        <form method="post" action="@Url.Action("LinkGoogle", "Account")">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn btn-outline-primary btn-sm">Link Google sign-in</button>
+        </form>
+    }
+    else if (Model.GoogleLinked) { <p class="small">Google sign-in linked.</p> }
+    <p class="small">Email @(Model.EmailConfirmed ? "confirmed" : "not confirmed")</p>
 
     <p class="text-muted">@Model.Bio</p>
     <p><i class="bi bi-geo-alt"></i> @Model.Location</p>
@@ -38,6 +48,10 @@
 
             <dt class="col-sm-4">Age:</dt>
             <dd class="col-sm-8">@Model.Age</dd>
+            <dt class="col-sm-4">Availability:</dt>
+            <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.AvailabilityNotes) ? "Not set" : Model.AvailabilityNotes)</dd>
+            <dt class="col-sm-4">Meeting format:</dt>
+            <dd class="col-sm-8">@Model.MeetingFormat</dd>
 
             <dt class="col-sm-4">Average Rating:</dt>
             <dd class="col-sm-8">
@@ -104,7 +118,7 @@
 
     <!-- Action Buttons -->
     <div class="mt-4 d-flex justify-content-center gap-2 flex-wrap">
-        <a class="btn btn-outline-primary" href="@Url.Action("ChangePassword", "Profile")">Change Password</a>
+        <a class="btn btn-outline-primary" href="@Url.Action(Model.HasPassword ? "ChangePassword" : "SetPassword", "Profile")">@(Model.HasPassword ? "Change Password" : "Set Password")</a>
         <a class="btn btn-outline-success" href="@Url.Action("UpdateProfile", "Profile")">Update Profile</a>
     </div>
 </main>

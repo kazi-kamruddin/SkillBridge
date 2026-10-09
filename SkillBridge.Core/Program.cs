@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
@@ -36,6 +37,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     {
         options.User.RequireUniqueEmail = true;
+        options.SignIn.RequireConfirmedEmail = true;
         options.Password.RequiredLength = 6;
         options.Password.RequireNonAlphanumeric = true;
         options.Password.RequireDigit = true;
@@ -47,6 +49,19 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+var googleClientId = Environment.GetEnvironmentVariable("SKILLBRIDGE_GOOGLE_CLIENT_ID");
+var googleClientSecret = Environment.GetEnvironmentVariable("SKILLBRIDGE_GOOGLE_CLIENT_SECRET");
+if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
+    builder.Services.AddAuthentication().AddGoogle(options =>
+    {
+        options.ClientId = googleClientId;
+        options.ClientSecret = googleClientSecret;
+        options.Scope.Add("openid");
+        options.UserInformationEndpoint = "https://openidconnect.googleapis.com/v1/userinfo";
+        options.ClaimActions.MapJsonKey(ClaimTypes.NameIdentifier, "sub");
+        options.ClaimActions.MapJsonKey("email_verified", "email_verified");
+    });
 
 builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
     options.TokenLifespan = TimeSpan.FromHours(1));

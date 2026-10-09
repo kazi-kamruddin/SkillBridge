@@ -1,6 +1,6 @@
 # SkillBridge
 
-SkillBridge is a peer-to-peer skill exchange website. Members list skills they can teach and learn, find reciprocal matches, request exchanges, confirm seven learning stages, rate completed exchanges, message one another, and post in skill communities.
+SkillBridge is a peer-to-peer skill exchange website. Members list skills they can teach and learn, find reciprocal matches, request exchanges, plan meeting times, record learning-stage notes, rate completed exchanges, message one another, save member profiles, and post in skill communities.
 
 ## Current application
 
@@ -17,6 +17,7 @@ The original ASP.NET MVC 5/.NET Framework 4.7.2 application remains at the repos
 5. For password reset, set `SKILLBRIDGE_PUBLIC_URL`, `SKILLBRIDGE_BREVO_API_KEY`, and `SKILLBRIDGE_BREVO_FROM`. Until configured, the reset form accurately reports that delivery is unavailable. `SKILLBRIDGE_SUPPORT_EMAIL` is optional for the Contact page.
 6. Before deploying the guest browsing and moderation update, run `database/postgres/004_public_browsing_and_moderation.sql` in Supabase. Set `SKILLBRIDGE_MODERATOR_EMAIL` in Render to an existing member's login email so that account can review reports at `/Moderation`. Existing profiles remain private to guests until their owners opt in.
 7. Before deploying the issue #36 discovery and safety update, run `database/postgres/005_discovery_exchanges_safety.sql` once, after 004. It adds proposal details, blocking and profile reports, profile discovery hiding, and early exchange ending. Skill search uses a curated intent map for the current catalog; it does not call an AI API or require another service.
+8. Before deploying Google sign-in, email verification, planning and saved members, run `database/postgres/006_member_access_and_planning.sql` once, after 005. Existing accounts keep sign-in access; new email/password accounts must confirm their email. Configure Brevo and `SKILLBRIDGE_PUBLIC_URL` **before** deploying this release, because new email/password registration waits for a confirmation message. Set `SKILLBRIDGE_GOOGLE_CLIENT_ID` and `SKILLBRIDGE_GOOGLE_CLIENT_SECRET` to enable Google sign-in; existing members link Google from their profile after signing in. Google OAuth's authorized redirect URI is `https://<your-render-service>.onrender.com/signin-google`.
 
 The database schema is managed by the numbered SQL files in `database/postgres/`. The application does not run schema migrations at startup. The Core compatibility script preserves existing accounts, password hashes, messages, and application records. The message encryption format is unchanged, so the original message key must be kept.
 

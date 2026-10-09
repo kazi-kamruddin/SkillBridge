@@ -8,6 +8,7 @@ This is one ASP.NET Core 10 MVC app with Razor views, C# controllers, Identity, 
 2. In the existing Supabase project's SQL Editor, review and run `database/postgres/003_aspnet_core_identity.sql` **once**. Do not rerun `001_initial.sql` on an existing database. The new script adds Core Identity fields, persistent cookie/reset-token keys, and required Identity tables. It does not recreate users or application data.
    Before deploying the public-browsing update, also run `database/postgres/004_public_browsing_and_moderation.sql` once. It adds profile visibility, content moderation flags and reports. Existing profiles default to hidden from signed-out visitors. Review existing community content before publishing it to guests.
    Before deploying the issue #36 update, run `database/postgres/005_discovery_exchanges_safety.sql` once after 004. It adds exchange proposal fields, profile reports and blocks, moderation hiding, and early exchange endings. Do not rerun 001.
+   Before deploying Google sign-in and exchange planning, run `database/postgres/006_member_access_and_planning.sql` once after 005. It adds availability, meeting proposals, stage notes and saved profiles. It confirms pre-existing accounts once so their logins keep working when email confirmation becomes required. Back up the database first; do not deploy the new code before this script succeeds.
 3. Keep the existing `SKILLBRIDGE_MESSAGE_KEY`. Changing it makes old encrypted chat messages unreadable.
 4. Publish and test the Core app locally against the updated database before pointing visitors to it. Existing ASP.NET Identity 2 password hashes can be verified by Core Identity; successful login may upgrade a hash, so a database backup also matters for rollback to MVC 5.
 
@@ -24,11 +25,16 @@ This is one ASP.NET Core 10 MVC app with Razor views, C# controllers, Identity, 
    | `SKILLBRIDGE_PUBLIC_URL` | The final `https://<service>.onrender.com/` origin, with a trailing slash. |
    | `SKILLBRIDGE_SUPPORT_EMAIL` | Optional support address for Contact. |
    | `SKILLBRIDGE_MODERATOR_EMAIL` | Email of an existing SkillBridge account that may review community and profile reports at `/Moderation`. No email delivery service is required for this setting. |
-   | `SKILLBRIDGE_BREVO_API_KEY` | Brevo transactional email API key, when ready. |
-   | `SKILLBRIDGE_BREVO_FROM` | Sender address configured and verified in Brevo, when ready. |
+   | `SKILLBRIDGE_BREVO_API_KEY` | Brevo transactional email API key; required for new email/password registration in this release. |
+   | `SKILLBRIDGE_BREVO_FROM` | Sender address configured and verified in Brevo; required for new email/password registration in this release. |
+   | `SKILLBRIDGE_GOOGLE_CLIENT_ID` | Google web OAuth client ID, when Google sign-in is ready. |
+   | `SKILLBRIDGE_GOOGLE_CLIENT_SECRET` | Matching Google web OAuth client secret, when Google sign-in is ready. |
 
    `SKILLBRIDGE_DB_CA_CERT` is optional. Set it only if replacing the certificate bundled at `SkillBridge.Core/certs/prod-ca-2021.crt`. The certificate is a public trust anchor, not a credential.
+   For this release, **Brevo API key, verified sender and public URL are required for new email/password sign-ups**. New accounts cannot use member features before confirming their email. If Brevo is not configured, the registration form stays unavailable instead of creating accounts that cannot sign in. Password reset also uses Brevo. Google sign-in is optional; the Google buttons appear only when both Google variables are present. In Google Cloud, create a Web OAuth client and set the authorized redirect URI to `https://<your-render-service>.onrender.com/signin-google` (for this Render service: `https://skillbridge-08v4.onrender.com/signin-google`). Request only `openid`, `email` and `profile`. Keep its client secret in Render, never in Git.
+   Existing members must sign in with their existing password first and use **Link Google sign-in** on their own profile. The app does not automatically merge accounts merely because Google returns a matching email. New Google accounts are created only when Google supplies a verified email and continue to profile setup. Google-only members can add a password from their profile later.
 4. Let Render build and deploy. Open the assigned URL and test home, About, Contact, registration, login, profile, matching, a request, chat, stages, ratings, and logout. Test password reset after Brevo is configured and the sender works. Use two accounts for the connected flows.
+   For this release, also test confirmation email, resend, Google sign-in and linking, saved profiles, meeting proposal/accept/decline/cancel, both members' stage notes, and unread/read messages. Run 006 on Supabase **before** merging this code into Render's source branch.
 
 The `/health` endpoint checks that the web process responds; it does not query PostgreSQL. A passing Render health check therefore does not replace the member-flow checks above.
 

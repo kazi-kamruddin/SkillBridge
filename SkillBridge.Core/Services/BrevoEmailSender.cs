@@ -27,7 +27,7 @@ public sealed class BrevoEmailSender : IEmailSender
     public async Task SendAsync(string destination, string subject, string body)
     {
         if (!IsConfigured)
-            throw new InvalidOperationException("Password-reset email is not configured.");
+            throw new InvalidOperationException("Email delivery is not configured.");
 
         using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.brevo.com/v3/smtp/email");
         request.Headers.TryAddWithoutValidation("api-key", apiKey);

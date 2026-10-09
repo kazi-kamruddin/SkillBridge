@@ -32,6 +32,12 @@ namespace SkillBridge.Models
         public bool IsPublic { get; set; }
         public bool IsHidden { get; set; }
 
+        [StringLength(300)]
+        public string AvailabilityNotes { get; set; }
+
+        [StringLength(20)]
+        public string MeetingFormat { get; set; } = "Either";
+
         public virtual ApplicationUser User { get; set; }
     }
 

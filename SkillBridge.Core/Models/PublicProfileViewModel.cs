@@ -9,6 +9,9 @@ namespace SkillBridge.Models
         public string Profession { get; set; }
         public string Location { get; set; }
         public string Bio { get; set; }
+        public string AvailabilityNotes { get; set; }
+        public string MeetingFormat { get; set; }
+        public bool IsSaved { get; set; }
 
         public List<SkillViewModel> SkillsToTeach { get; set; }
         public List<SkillViewModel> SkillsToLearn { get; set; }
@@ -52,5 +55,13 @@ namespace SkillBridge.Models
     {
         public string UserId { get; set; }
         public string FullName { get; set; }
+    }
+
+    public class SavedProfileItemViewModel
+    {
+        public string UserId { get; set; }
+        public string FullName { get; set; }
+        public string Profession { get; set; }
+        public bool CanView { get; set; }
     }
 }

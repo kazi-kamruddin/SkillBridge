@@ -39,6 +39,7 @@ namespace SkillBridge.Controllers
             var userId = User.Identity.GetUserId();
             var user = await UserManager.FindByIdAsync(userId);
             var hasPassword = await UserManager.HasPasswordAsync(user);
+            var googleLinked = (await UserManager.GetLoginsAsync(user)).Any(login => login.LoginProvider == "Google");
             var userInfo = db.UserInformations.FirstOrDefault(u => u.UserId == userId);
 
             var userSkills = db.UserSkills
@@ -67,6 +68,12 @@ namespace SkillBridge.Controllers
             var model = new IndexViewModel
             {
                 HasPassword = hasPassword,
+                EmailConfirmed = user.EmailConfirmed,
+                GoogleEnabled = !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SKILLBRIDGE_GOOGLE_CLIENT_ID")) &&
+                    !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SKILLBRIDGE_GOOGLE_CLIENT_SECRET")),
+                GoogleLinked = googleLinked,
+                AvailabilityNotes = userInfo?.AvailabilityNotes,
+                MeetingFormat = userInfo?.MeetingFormat ?? "Either",
                 FullName = userInfo?.FullName ?? "",
                 Email = user.Email,
                 Bio = userInfo?.Bio ?? "",
@@ -114,6 +121,8 @@ namespace SkillBridge.Controllers
                 Location = userInfo.Location,
                 Age = userInfo.Age,
                 IsPublic = userInfo.IsPublic,
+                AvailabilityNotes = userInfo.AvailabilityNotes,
+                MeetingFormat = userInfo.MeetingFormat ?? "Either",
                 SkillsToLearn = userSkills.Where(s => s.Status == "Learning").Select(s => s.SkillId).ToList(),
                 SkillsIKnow = userSkills.Where(s => s.Status == "Teaching").Select(s => new UpdateProfileViewModel.UserKnownSkill
                 {
@@ -155,6 +164,8 @@ namespace SkillBridge.Controllers
             if (teachingSkills.Select(s => s.SkillId).Distinct().Count() != teachingSkills.Count ||
                 teachingSkills.Any(s => learningIds.Contains(s.SkillId)))
                 ModelState.AddModelError("", "A skill cannot appear twice or be both taught and learned.");
+            if (model.MeetingFormat != "Online" && model.MeetingFormat != "In person" && model.MeetingFormat != "Either")
+                ModelState.AddModelError(nameof(model.MeetingFormat), "Choose a meeting format.");
 
             if (!ModelState.IsValid)
             {
@@ -168,6 +179,8 @@ namespace SkillBridge.Controllers
             userInfo.Location = model.Location.Trim();
             userInfo.Age = model.Age;
             userInfo.IsPublic = model.IsPublic;
+            userInfo.AvailabilityNotes = model.AvailabilityNotes?.Trim();
+            userInfo.MeetingFormat = model.MeetingFormat;
 
             var existingSkills = db.UserSkills.Where(us => us.UserId == userId).ToList();
             using (var transaction = db.Database.BeginTransaction())
@@ -207,6 +220,30 @@ namespace SkillBridge.Controllers
         ////////////////////////////////////////////////////////////////////////////
         // GET: /Profile/ChangePassword
         public ActionResult ChangePassword() => View();
+
+        public async Task<ActionResult> SetPassword()
+        {
+            var user = await UserManager.GetUserAsync(User);
+            if (user == null || await UserManager.HasPasswordAsync(user)) return RedirectToAction(nameof(Index));
+            return View();
+        }
+
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<ActionResult> SetPassword(SetPasswordViewModel model)
+        {
+            var user = await UserManager.GetUserAsync(User);
+            if (user == null || await UserManager.HasPasswordAsync(user)) return RedirectToAction(nameof(Index));
+            if (!ModelState.IsValid) return View(model);
+            var result = await UserManager.AddPasswordAsync(user, model.NewPassword);
+            if (!result.Succeeded)
+            {
+                foreach (var error in result.Errors) ModelState.AddModelError("", error.Description);
+                return View(model);
+            }
+            await SignInManager.RefreshSignInAsync(user);
+            TempData["AccountNotice"] = "Password added. You can now use email and password to sign in.";
+            return RedirectToAction(nameof(Index));
+        }
 
 
 
@@ -310,6 +347,9 @@ namespace SkillBridge.Controllers
                 Profession = userInfo?.Profession ?? "",
                 Location = userInfo?.Location ?? "",
                 Bio = userInfo?.Bio ?? "",
+                AvailabilityNotes = userInfo.AvailabilityNotes,
+                MeetingFormat = userInfo.MeetingFormat ?? "Either",
+                IsSaved = currentUserId != null && db.SavedProfiles.Any(s => s.UserId == currentUserId && s.TargetUserId == id),
                 SkillsToTeach = skillsToTeachVm,
                 SkillsToLearn = userSkills
                     .Where(us => us.Status == "Learning")
