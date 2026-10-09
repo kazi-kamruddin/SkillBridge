@@ -1,4 +1,3 @@
-sessions
 @model SkillBridge.Models.InteractionSessionsViewModel
 
 @section Styles {
@@ -13,8 +12,8 @@ sessions
         .stage {
             flex: 1 1 calc(33.333% - 16px); /* 3 per row on desktop */
             min-width: 220px;
-            max-width: 280px;
-            height: 160px; /* ?? fixed height for uniform size */
+            max-width: 350px;
+            min-height: 160px;
 
             display: flex;
             flex-direction: column;
@@ -28,6 +27,9 @@ sessions
             color: #fff;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+        .stage details { width: 100%; text-align: left; font-weight: 400; }
+        .stage details summary { cursor: pointer; }
+        .stage textarea { color: #222; }
 
             .stage span {
                 display: block;
@@ -107,6 +109,50 @@ sessions
     @Html.AntiForgeryToken()
     <h2 class="mb-4">Interaction Stages</h2>
 
+    <section class="card p-3 mb-4" aria-labelledby="meeting-heading">
+        <h3 id="meeting-heading" class="h5">Plan your next meeting</h3>
+        @if (Model.MeetingStartUtc.HasValue && Model.MeetingStatus != "Cancelled")
+        {
+            <p class="mb-1"><strong>Status:</strong> @Model.MeetingStatus · <strong>Format:</strong> @Model.MeetingFormat</p>
+            <p class="mb-1"><strong>Time:</strong> <time class="meeting-time" data-utc="@Model.MeetingStartUtc.Value.ToString("yyyy-MM-ddTHH:mm:ssZ")">@Model.MeetingStartUtc.Value.ToString("yyyy-MM-dd HH:mm") UTC</time></p>
+            @if (!string.IsNullOrWhiteSpace(Model.MeetingNote)) { <p class="mb-2"><strong>Place or link:</strong> @Model.MeetingNote</p> }
+            @if (Model.CanRespondToMeeting)
+            {
+                <form method="post" action="@Url.Action("RespondToMeeting", "Interactions")" class="d-flex gap-2 mb-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.InteractionId" />
+                    <button type="submit" name="decision" value="Accept" class="btn btn-success btn-sm">Accept time</button>
+                    <button type="submit" name="decision" value="Decline" class="btn btn-outline-secondary btn-sm">Decline</button>
+                </form>
+            }
+            @if (Model.MeetingStatus == "Confirmed" || Model.MeetingStatus == "Proposed")
+            {
+                <form method="post" action="@Url.Action("CancelMeeting", "Interactions")" class="mb-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.InteractionId" />
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Cancel meeting</button>
+                </form>
+            }
+        }
+        else if (Model.MeetingStatus == "Cancelled" || Model.MeetingStatus == "Declined")
+        { <p>The previous time was @Model.MeetingStatus.ToLowerInvariant(). You can propose another.</p> }
+        <details>
+            <summary>Propose a meeting time</summary>
+            <form id="meetingForm" method="post" action="@Url.Action("ProposeMeeting", "Interactions")" class="mt-3" style="max-width: 550px;">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@Model.InteractionId" />
+                <input type="hidden" name="startsAtUtc" id="startsAtUtc" />
+                <label for="meetingLocal" class="form-label">Time in your local time zone</label>
+                <input id="meetingLocal" type="datetime-local" class="form-control mb-2" required />
+                <label for="meetingFormat" class="form-label">Format</label>
+                <select id="meetingFormat" name="format" class="form-select mb-2" required><option value="Online">Online</option><option value="In person">In person</option></select>
+                <label for="meetingNote" class="form-label">Meeting place or call link</label>
+                <input id="meetingNote" name="note" maxlength="300" class="form-control mb-2" placeholder="Required for an in-person meeting" />
+                <button type="submit" class="btn btn-primary btn-sm">Send proposal</button>
+            </form>
+        </details>
+    </section>
+
     <div class="skill-blocks">
         @foreach (var stage in Model.SkillBlocks)
         {
@@ -120,6 +166,23 @@ sessions
                         Mark Done
                     </button>
                 }
+                <details class="mt-2">
+                    <summary>Stage notes (@stage.Notes.Count)</summary>
+                    @foreach (var note in stage.Notes)
+                    {
+                        <div class="small mt-2"><strong>@(note.IsMine ? "You" : "Partner"):</strong> @note.WhatWeCovered</div>
+                        @if (!string.IsNullOrWhiteSpace(note.NextStep)) { <div class="small">Next: @note.NextStep</div> }
+                    }
+                    <form method="post" action="@Url.Action("SaveStageNote", "Interactions")" class="mt-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="sessionId" value="@stage.SessionId" />
+                        <label class="small" for="covered-@stage.SessionId">What you covered</label>
+                        <textarea id="covered-@stage.SessionId" name="whatWeCovered" maxlength="1000" required class="form-control form-control-sm mb-1">@stage.Notes.FirstOrDefault(n => n.IsMine)?.WhatWeCovered</textarea>
+                        <label class="small" for="next-@stage.SessionId">Your next step</label>
+                        <textarea id="next-@stage.SessionId" name="nextStep" maxlength="500" class="form-control form-control-sm mb-1">@stage.Notes.FirstOrDefault(n => n.IsMine)?.NextStep</textarea>
+                        <button type="submit" class="btn btn-light btn-sm">Save note</button>
+                    </form>
+                </details>
             </div>
         }
     </div>
@@ -144,6 +207,15 @@ sessions
 @section scripts {
     <script>
         $(document).ready(function () {
+            $(".meeting-time").each(function () {
+                var time = new Date($(this).data("utc"));
+                if (!isNaN(time.getTime())) $(this).text(time.toLocaleString());
+            });
+            $("#meetingForm").on("submit", function (event) {
+                var local = new Date($("#meetingLocal").val());
+                if (isNaN(local.getTime())) { event.preventDefault(); return; }
+                $("#startsAtUtc").val(local.toISOString());
+            });
             $(".mark-done").click(function () {
                 var button = $(this);
                 var stageNumber = button.data("stage");

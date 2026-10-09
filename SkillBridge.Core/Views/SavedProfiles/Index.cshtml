@@ -1,0 +1,31 @@
+@model List<SkillBridge.Models.SavedProfileItemViewModel>
+@{ ViewBag.Title = "Saved members"; }
+<main class="container mt-4">
+    <h2>Saved members</h2>
+    <p class="text-muted">Keep a shortlist while you decide who to contact.</p>
+    @if (!Model.Any())
+    {
+        <p>You have not saved anyone yet. <a href="@Url.Action("Index", "Explore")">Explore skills</a>.</p>
+    }
+    @foreach (var member in Model)
+    {
+        <div class="card p-3 mb-3">
+            <div class="d-flex justify-content-between align-items-center gap-2">
+                <div>
+                    @if (member.CanView)
+                    {
+                        <a href="@Url.Action("PublicProfile", "Profile", new { id = member.UserId })">@member.FullName</a>
+                        <div class="small text-muted">@member.Profession</div>
+                    }
+                    else { <span>This profile is currently unavailable.</span> }
+                </div>
+                <form method="post" action="@Url.Action("Remove", "SavedProfiles")">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@member.UserId" />
+                    <input type="hidden" name="fromList" value="true" />
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">Remove</button>
+                </form>
+            </div>
+        </div>
+    }
+</main>

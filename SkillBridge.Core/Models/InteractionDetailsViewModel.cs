@@ -15,12 +15,22 @@ namespace SkillBridge.Models
 
     public class SkillStageBlock
     {
+        public int SessionId { get; set; }
         public int StageNumber { get; set; }
         public int SkillId { get; set; }
         public string Description { get; set; }
         public string Status { get; set; } // Red, Yellow, Green
         public bool UserConfirmed { get; set; }
-        public bool IsLocked { get; set; } 
+        public bool IsLocked { get; set; }
+        public List<StageNoteViewModel> Notes { get; set; } = new();
+    }
+
+    public class StageNoteViewModel
+    {
+        public bool IsMine { get; set; }
+        public string WhatWeCovered { get; set; }
+        public string NextStep { get; set; }
+        public System.DateTime UpdatedAt { get; set; }
     }
 
 
@@ -29,6 +39,11 @@ namespace SkillBridge.Models
         public int InteractionId { get; set; }
         public string UserId { get; set; }
         public List<SkillStageBlock> SkillBlocks { get; set; }
+        public System.DateTime? MeetingStartUtc { get; set; }
+        public string MeetingFormat { get; set; }
+        public string MeetingNote { get; set; }
+        public string MeetingStatus { get; set; }
+        public bool CanRespondToMeeting { get; set; }
     }
 
     public class InteractionRatingViewModel

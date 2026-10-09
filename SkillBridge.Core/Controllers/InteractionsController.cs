@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
+using SkillBridge.Services;
 
 namespace SkillBridge.Controllers
 {
@@ -34,7 +36,7 @@ namespace SkillBridge.Controllers
                 .Include(i => i.SkillFromRequester)
                 .Include(i => i.SkillFromTeacher)
                 .ToList();
-            
+
             var model = interactions.Select(i => new InteractionIndexViewModel
             {
                 InteractionId = i.Id,
@@ -69,10 +71,106 @@ namespace SkillBridge.Controllers
             {
                 InteractionId = interaction.Id,
                 UserId = userId,
-                SkillBlocks = BuildSkillBlocks(interaction)
+                SkillBlocks = BuildSkillBlocks(interaction),
+                MeetingStartUtc = interaction.MeetingStartUtc,
+                MeetingFormat = interaction.MeetingFormat,
+                MeetingNote = interaction.MeetingNote,
+                MeetingStatus = interaction.MeetingStatus,
+                CanRespondToMeeting = interaction.MeetingStatus == "Proposed" && interaction.MeetingProposedByUserId != userId
             };
 
             return View(model);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult ProposeMeeting(int id, string startsAtUtc, string format, string note)
+        {
+            var userId = User.Identity.GetUserId();
+            var interaction = db.Interactions.FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
+                (i.User1Id == userId || i.User2Id == userId));
+            if (interaction == null) return NotFound();
+            if (!DateTimeOffset.TryParse(startsAtUtc, out var startsAt) ||
+                startsAt.UtcDateTime < DateTime.UtcNow.AddMinutes(30) ||
+                startsAt.UtcDateTime > DateTime.UtcNow.AddDays(180))
+                return BadRequest("Choose a future time within six months.");
+            if (format != "Online" && format != "In person") return BadRequest("Choose a meeting format.");
+            note = (note ?? "").Trim();
+            if (note.Length > 300 || (format == "In person" && note.Length == 0))
+                return BadRequest("Add a meeting place for an in-person session, within 300 characters.");
+            interaction.MeetingStartUtc = DateTime.SpecifyKind(startsAt.UtcDateTime, DateTimeKind.Unspecified);
+            interaction.MeetingFormat = format;
+            interaction.MeetingNote = note;
+            interaction.MeetingProposedByUserId = userId;
+            interaction.MeetingStatus = "Proposed";
+            NotifyOther(interaction, userId, "The other member proposed a meeting time. Open your exchange to respond.");
+            db.SaveChanges();
+            return RedirectToAction(nameof(Sessions), new { id });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult RespondToMeeting(int id, string decision)
+        {
+            var userId = User.Identity.GetUserId();
+            var interaction = db.Interactions.FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
+                (i.User1Id == userId || i.User2Id == userId));
+            if (interaction == null) return NotFound();
+            if (interaction.MeetingStatus != "Proposed" || interaction.MeetingProposedByUserId == userId)
+                return StatusCode(409);
+            if (decision != "Accept" && decision != "Decline") return BadRequest();
+            interaction.MeetingStatus = decision == "Accept" ? "Confirmed" : "Declined";
+            NotifyOther(interaction, userId, decision == "Accept" ?
+                "Your meeting time was accepted." : "Your meeting time was declined. You can propose another.");
+            db.SaveChanges();
+            return RedirectToAction(nameof(Sessions), new { id });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult CancelMeeting(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            var interaction = db.Interactions.FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
+                (i.User1Id == userId || i.User2Id == userId));
+            if (interaction == null) return NotFound();
+            if (interaction.MeetingStatus != "Confirmed" && interaction.MeetingStatus != "Proposed")
+                return StatusCode(409);
+            interaction.MeetingStatus = "Cancelled";
+            NotifyOther(interaction, userId, "The planned meeting was cancelled. Open your exchange to propose a new time.");
+            db.SaveChanges();
+            return RedirectToAction(nameof(Sessions), new { id });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult SaveStageNote(int sessionId, string whatWeCovered, string nextStep)
+        {
+            var userId = User.Identity.GetUserId();
+            var session = db.InteractionSessions.Include(s => s.Interaction)
+                .FirstOrDefault(s => s.Id == sessionId && s.Interaction.Status == "Ongoing" &&
+                    (s.Interaction.User1Id == userId || s.Interaction.User2Id == userId));
+            if (session == null) return NotFound();
+            whatWeCovered = (whatWeCovered ?? "").Trim();
+            nextStep = (nextStep ?? "").Trim();
+            if (whatWeCovered.Length is < 1 or > 1000 || nextStep.Length > 500)
+                return BadRequest("Keep your note within the field limits.");
+            var note = db.InteractionSessionNotes.FirstOrDefault(n => n.InteractionSessionId == sessionId && n.UserId == userId);
+            if (note == null)
+            {
+                note = new InteractionSessionNote { InteractionSessionId = sessionId, UserId = userId };
+                db.InteractionSessionNotes.Add(note);
+            }
+            note.WhatWeCovered = whatWeCovered;
+            note.NextStep = nextStep;
+            note.UpdatedAt = DateTime.Now;
+            db.SaveChanges();
+            return RedirectToAction(nameof(Sessions), new { id = session.InteractionId });
+        }
+
+        private void NotifyOther(Interaction interaction, string userId, string message)
+        {
+            db.Notifications.Add(new Notification
+            {
+                UserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id,
+                Type = "Info", ReferenceId = interaction.Id, Message = message, CreatedAt = DateTime.Now
+            });
         }
 
 
@@ -208,7 +306,7 @@ namespace SkillBridge.Controllers
 
         private void UpdateUserSkill(string userId, int skillId, Interaction interaction)
         {
-            if (skillId == 0) return; 
+            if (skillId == 0) return;
 
             var userSkill = db.UserSkills.FirstOrDefault(us => us.UserId == userId && us.SkillId == skillId);
 
@@ -347,6 +445,10 @@ namespace SkillBridge.Controllers
         {
             var userId = User.Identity.GetUserId();
             var blocks = new List<SkillStageBlock>();
+            var notes = db.InteractionSessionNotes
+                .Where(n => n.InteractionSession.InteractionId == interaction.Id)
+                .ToList().GroupBy(n => n.InteractionSessionId)
+                .ToDictionary(group => group.Key, group => group.ToList());
 
             var sessionsBySkill = interaction.Sessions
                 .OrderBy(s => s.StageNumber)
@@ -354,7 +456,7 @@ namespace SkillBridge.Controllers
 
             foreach (var skillGroup in sessionsBySkill)
             {
-                bool nextStagePending = true; 
+                bool nextStagePending = true;
                 foreach (var session in skillGroup)
                 {
                     var stageEntity = db.SkillStages
@@ -371,12 +473,12 @@ namespace SkillBridge.Controllers
                     if (session.User1Confirmed && session.User2Confirmed)
                     {
                         status = "Green";
-                        nextStagePending = true; 
+                        nextStagePending = true;
                     }
                     else if (nextStagePending)
                     {
                         status = "Yellow";
-                        nextStagePending = false; 
+                        nextStagePending = false;
                     }
                     else
                     {
@@ -386,12 +488,21 @@ namespace SkillBridge.Controllers
 
                     blocks.Add(new SkillStageBlock
                     {
+                        SessionId = session.Id,
                         StageNumber = session.StageNumber,
                         SkillId = session.SkillId,
                         Description = description,
                         Status = status,
                         UserConfirmed = confirmed,
-                        IsLocked = isLocked
+                        IsLocked = isLocked,
+                        Notes = notes.TryGetValue(session.Id, out var sessionNotes)
+                            ? sessionNotes.Select(n => new StageNoteViewModel
+                            {
+                                IsMine = n.UserId == userId,
+                                WhatWeCovered = n.WhatWeCovered,
+                                NextStep = n.NextStep,
+                                UpdatedAt = n.UpdatedAt
+                            }).ToList() : new List<StageNoteViewModel>()
                     });
                 }
             }

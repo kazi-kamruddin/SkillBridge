@@ -69,11 +69,13 @@ namespace SkillBridge.Controllers
                 .OrderBy(m => m.CreatedAt)
                 .Select(m => new ChatMessageViewModel
                 {
+                    Id = m.Id,
                     FromUserId = m.FromUserId,
                     ToUserId = m.ToUserId,
                     Text = MessageEncryptionService.Decrypt(m.Ciphertext, m.IV, m.Hmac),
                     CreatedAt = m.CreatedAt,
-                    IsMine = (m.FromUserId == userId)
+                    IsMine = (m.FromUserId == userId),
+                    IsRead = m.IsRead
                 })
                 .ToList();
 
@@ -91,6 +93,15 @@ namespace SkillBridge.Controllers
                 .OrderByDescending(c => c.LastMessageAt)
                 .ToListAsync();
             ViewBag.AllConversations = allConversations;
+            var conversationIds = allConversations.Select(c => c.Id).ToList();
+            ViewBag.UnreadByConversation = await db.Messages
+                .Where(m => conversationIds.Contains(m.ConversationId) && m.ToUserId == userId && !m.IsRead)
+                .GroupBy(m => m.ConversationId)
+                .Select(group => new { ConversationId = group.Key, Count = group.Count() })
+                .ToDictionaryAsync(x => x.ConversationId, x => x.Count);
+            var partnerIds = allConversations.Select(c => c.User1Id == userId ? c.User2Id : c.User1Id).Distinct().ToList();
+            ViewBag.PartnerNames = await db.UserInformations.Where(info => partnerIds.Contains(info.UserId))
+                .ToDictionaryAsync(info => info.UserId, info => info.FullName);
 
             var partnerId = conversation.User1Id == userId ? conversation.User2Id : conversation.User1Id;
             var profileInfo = await db.UserInformations.FirstOrDefaultAsync(u => u.UserId == partnerId);
@@ -154,6 +165,7 @@ namespace SkillBridge.Controllers
 
             await hubContext.Clients.Group(groupName).SendAsync("receiveMessage", new
             {
+                id = msg.Id,
                 conversationId = conversation.Id,
                 fromUserId = msg.FromUserId,
                 toUserId = msg.ToUserId,
@@ -161,7 +173,43 @@ namespace SkillBridge.Controllers
                 sentAt = msg.CreatedAt.ToString("o")
             });
 
-            return StatusCode(200); 
+            return StatusCode(200);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> UnreadCount()
+        {
+            var userId = User.Identity.GetUserId();
+            var count = await db.Messages.CountAsync(m => m.ToUserId == userId && !m.IsRead &&
+                !db.MemberBlocks.Any(b =>
+                    (b.BlockerId == m.FromUserId && b.BlockedId == userId) ||
+                    (b.BlockedId == m.FromUserId && b.BlockerId == userId)));
+            return Json(new { count });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public async Task<IActionResult> MarkRead(int conversationId)
+        {
+            var userId = User.Identity.GetUserId();
+            var conversation = await db.Conversations.FirstOrDefaultAsync(c => c.Id == conversationId &&
+                (c.User1Id == userId || c.User2Id == userId));
+            if (conversation == null) return NotFound();
+            var otherId = conversation.User1Id == userId ? conversation.User2Id : conversation.User1Id;
+            if (BlockRules.EitherBlocked(db, userId, otherId)) return StatusCode(403);
+            var unread = await db.Messages.Where(m => m.ConversationId == conversationId &&
+                m.ToUserId == userId && !m.IsRead).ToListAsync();
+            if (unread.Count > 0)
+            {
+                foreach (var message in unread) message.IsRead = true;
+                await db.SaveChangesAsync();
+                await hubContext.Clients.Group($"convo-{conversationId}").SendAsync("messagesRead", new
+                {
+                    conversationId,
+                    readerId = userId,
+                    messageIds = unread.Select(m => m.Id).ToArray()
+                });
+            }
+            return Json(new { count = unread.Count });
         }
 
 

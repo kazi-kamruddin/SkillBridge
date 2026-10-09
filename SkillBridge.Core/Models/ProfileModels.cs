@@ -9,6 +9,11 @@ namespace SkillBridge.Models
         public bool HasPassword { get; set; }
         public bool IsPublic { get; set; }
         public bool IsHidden { get; set; }
+        public bool EmailConfirmed { get; set; }
+        public bool GoogleEnabled { get; set; }
+        public bool GoogleLinked { get; set; }
+        public string AvailabilityNotes { get; set; }
+        public string MeetingFormat { get; set; }
 
         // Personal info
         public string FullName { get; set; }
@@ -44,6 +49,12 @@ namespace SkillBridge.Models
     public class UpdateProfileViewModel
     {
         public bool IsPublic { get; set; }
+        [StringLength(300)]
+        [Display(Name = "When are you usually available?")]
+        public string AvailabilityNotes { get; set; }
+        [Required, StringLength(20)]
+        [Display(Name = "Preferred meeting format")]
+        public string MeetingFormat { get; set; } = "Either";
         // Personal info
         [Required]
         [StringLength(100)]
@@ -94,6 +105,16 @@ namespace SkillBridge.Models
         [DataType(DataType.Password)]
         [Display(Name = "Confirm new password")]
         [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; }
+    }
+
+    public class SetPasswordViewModel
+    {
+        [Required, StringLength(100, MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        public string NewPassword { get; set; }
+
+        [Required, DataType(DataType.Password), Compare(nameof(NewPassword))]
         public string ConfirmPassword { get; set; }
     }
 }

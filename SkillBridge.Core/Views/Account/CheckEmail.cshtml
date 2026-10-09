@@ -1,0 +1,13 @@
+@{ ViewBag.Title = "Check your email"; }
+<main class="container mt-5" style="max-width: 650px;">
+    <h2>Check your email</h2>
+    @if (ViewBag.EmailDeliveryFailed == true)
+    {
+        <p class="alert alert-warning">We could not send the confirmation email right now. Your account was created; request a new link from the sign-in page later.</p>
+    }
+    else
+    {
+        <p>If the address belongs to an account awaiting confirmation, we have sent a link. Open it to activate your account. The link expires after one hour.</p>
+    }
+    <p>If it does not arrive, check spam or request another link from the <a href="@Url.Action("Login", "Account")">sign-in page</a>.</p>
+</main>
