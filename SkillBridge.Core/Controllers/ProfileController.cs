@@ -46,6 +46,8 @@ namespace SkillBridge.Controllers
             var hasPassword = await UserManager.HasPasswordAsync(user);
             var googleLinked = (await UserManager.GetLoginsAsync(user)).Any(login => login.LoginProvider == "Google");
             var userInfo = db.UserInformations.FirstOrDefault(u => u.UserId == userId);
+            if (userInfo == null)
+                return RedirectToAction("Index", "CompleteProfile");
 
             var userSkills = db.UserSkills
                 .Where(us => us.UserId == userId)
@@ -86,7 +88,7 @@ namespace SkillBridge.Controllers
                 Bio = userInfo?.Bio ?? "",
                 Profession = userInfo?.Profession ?? "",
                 Location = userInfo?.Location ?? "",
-                Age = userInfo?.Age ?? 0,
+                Age = userInfo?.Age,
                 IsPublic = userInfo?.IsPublic ?? false,
                 IsHidden = userInfo?.IsHidden ?? false,
                 TeachingSkills = teachingSkills,
@@ -367,9 +369,9 @@ namespace SkillBridge.Controllers
                     UserSkillId = skill.Id,
                     SkillId = skill.SkillId,
                     SkillName = skill.Skill.Name,
-                    Stage = skill.KnownUpToStage ?? 1,
+                    Stage = skill.KnownUpToStage ?? 0,
                     TotalStages = skill.Skill.SkillStages.Count,
-                    RequestStatus = visitorWantsThisSkill
+                    RequestStatus = skill.KnownUpToStage.GetValueOrDefault() < 1 ? "Hidden" : visitorWantsThisSkill
                         ? (existingRequest != null
                             ? (existingRequest.Status == "Pending" ? "Pending" :
                                existingRequest.Status == "Accepted" ? "Accepted" :
@@ -400,6 +402,11 @@ namespace SkillBridge.Controllers
                 TimeZoneId = userInfo.TimeZoneId,
                 MeetingFormat = userInfo.MeetingFormat ?? "Either",
                 IsSaved = currentUserId != null && db.SavedProfiles.Any(s => s.UserId == currentUserId && s.TargetUserId == id),
+                CanKnock = currentUserId != null &&
+                    db.UserSkills.Any(s => s.UserId == currentUserId && s.Status == "Teaching" && s.KnownUpToStage > 0) &&
+                    visitorLearningSkillIds.Any() &&
+                    userSkills.Any(s => s.Status == "Teaching" && s.KnownUpToStage > 0) &&
+                    userSkills.Any(s => s.Status == "Learning"),
                 SkillsToTeach = skillsToTeachVm,
                 SkillsToLearn = userSkills
                     .Where(us => us.Status == "Learning")
@@ -431,7 +438,7 @@ namespace SkillBridge.Controllers
             var currentUserId = User.Identity.GetUserId();
             if (currentUserId == null)
                 return Json(new { success = false, message = "You must be logged in." });
-            if (!db.UserSkills.Any(us => us.UserId == currentUserId && us.Status == "Teaching") ||
+            if (!db.UserSkills.Any(us => us.UserId == currentUserId && us.Status == "Teaching" && us.KnownUpToStage > 0) ||
                 !db.UserSkills.Any(us => us.UserId == currentUserId && us.Status == "Learning"))
                 return Json(new { success = false, message = "Add a skill to teach and a skill to learn before requesting an exchange." });
             goal = (goal ?? "").Trim();
@@ -441,6 +448,8 @@ namespace SkillBridge.Controllers
                 return Json(new { success = false, message = "Add a goal and pace; keep each field within its limit." });
             if (BlockRules.EitherBlocked(db, currentUserId, profileId))
                 return Json(new { success = false, message = "You cannot send a request to this member." });
+            if (!db.UserInformations.Any(info => info.UserId == profileId && !info.IsHidden))
+                return Json(new { success = false, message = "This member is not available for exchange requests." });
 
             var userSkill = db.UserSkills
                 .Include("Skill")
@@ -448,6 +457,8 @@ namespace SkillBridge.Controllers
 
             if (userSkill == null || userSkill.Status != "Teaching")
                 return Json(new { success = false, message = "Skill not found for this user." });
+            if (userSkill.KnownUpToStage.GetValueOrDefault() < 1)
+                return Json(new { success = false, message = "This member has not listed a teachable level for this skill." });
 
             if (userSkill.UserId == currentUserId)
                 return Json(new { success = false, message = "You cannot request your own skill." });
@@ -482,13 +493,12 @@ namespace SkillBridge.Controllers
                 db.SkillRequests.Add(request);
                 db.SaveChanges();
 
-                var requester = db.Users.Find(currentUserId);
                 var notification = new Notification
                 {
                     UserId = userSkill.UserId,
                     Type = "SkillRequest",
                     ReferenceId = request.Id,
-                    Message = $"{requester.UserName} requested your skill: {userSkill.Skill.Name}",
+                    Message = $"{MemberNames.Get(db, currentUserId)} requested your skill: {userSkill.Skill.Name}",
                     IsRead = false,
                     CreatedAt = DateTime.Now
                 };
@@ -507,6 +517,7 @@ namespace SkillBridge.Controllers
             var requests = db.SkillRequests.Include(r => r.Skill).Include(r => r.Requester).Include(r => r.Receiver)
                 .Where(r => r.RequesterId == userId || r.ReceiverId == userId)
                 .OrderByDescending(r => r.CreatedAt).ToList();
+            ViewBag.MemberNames = MemberNames.For(db, requests.SelectMany(r => new[] { r.RequesterId, r.ReceiverId }));
             return View(requests);
         }
 
@@ -542,6 +553,9 @@ namespace SkillBridge.Controllers
             var request = db.SkillRequests.Include(r => r.Skill).Include(r => r.Requester).Include(r => r.Receiver)
                 .FirstOrDefault(r => r.Id == id && (r.RequesterId == userId || r.ReceiverId == userId));
             if (request == null) return NotFound();
+            var names = MemberNames.For(db, new[] { request.RequesterId, request.ReceiverId });
+            ViewBag.RequesterName = MemberNames.Get(names, request.RequesterId);
+            ViewBag.ReceiverName = MemberNames.Get(names, request.ReceiverId);
             if (request.ReceiverId == userId && request.Status == "Pending")
             {
                 ViewBag.RequestNotificationId = db.Notifications

@@ -14,10 +14,25 @@ test('guest can open the home, login, and registration pages', async ({ page }) 
 });
 
 test('guest is redirected to login from protected pages', async ({ page }) => {
-  for (const path of ['/Interactions', '/Notifications', '/Messages', '/Profile', '/Moderation']) {
+  for (const path of ['/Interactions', '/Interactions/History', '/Notifications', '/Messages', '/Profile', '/Profile/Requests', '/Moderation']) {
     await page.goto(path);
     await expect(page).toHaveURL(/\/Account\/Login/i);
   }
+});
+
+test('guest can follow a skill into its detail and community pages', async ({ page }) => {
+  await page.goto('/Explore/Skills');
+  await expect(page.getByRole('heading', { name: 'Explore skills.' })).toBeVisible();
+  const skillLink = page.locator('a[href*="/Explore/Detail/"]').first();
+  await expect(skillLink).toBeVisible();
+  await skillLink.click();
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Learning stages' })).toBeVisible();
+  await page.getByRole('link', { name: 'Visit community' }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+
+  await page.goto('/Communities');
+  await expect(page.getByRole('heading', { name: 'Find your people.' })).toBeVisible();
 });
 
 test('guest navigation offers browsing and keeps private areas out of view', async ({ page }) => {

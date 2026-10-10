@@ -27,6 +27,8 @@ namespace SkillBridge.Controllers
             {
                 var userId = User.Identity.GetUserId();
                 var userInfo = db.UserInformations.FirstOrDefault(ui => ui.UserId == userId);
+                if (userInfo == null)
+                    return RedirectToAction("Index", "CompleteProfile");
                 vm.FullName = userInfo?.FullName ?? "";
                 vm.IsLoggedIn = true;
                 vm.MotivationalQuote = HomePageViewModel.GetRandomQuote();
@@ -96,8 +98,8 @@ namespace SkillBridge.Controllers
 
                     var otherUserInfo = db.UserInformations.FirstOrDefault(ui => ui.UserId == otherUser.Id);
 
-                    vm.LatestInteractionOtherUser = otherUser.UserName;
-                    vm.LatestInteractionOtherUserFullName = otherUserInfo?.FullName ?? otherUser.UserName;
+                    vm.LatestInteractionOtherUser = otherUserInfo?.FullName ?? "SkillBridge member";
+                    vm.LatestInteractionOtherUserFullName = vm.LatestInteractionOtherUser;
                     vm.LatestInteractionOtherUserProfileImage = ProfileImageHelper.GetProfileImage(otherUserInfo?.ProfileImageUrl, otherUserInfo?.FullName);
 
                     vm.LatestInteractionSkillYouLearn =

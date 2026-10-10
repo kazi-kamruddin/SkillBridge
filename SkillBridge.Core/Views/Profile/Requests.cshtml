@@ -2,6 +2,7 @@
 @{
     ViewBag.Title = "Exchange Proposals";
     var myId = User.Identity.GetUserId();
+    var memberNames = ViewBag.MemberNames as Dictionary<string, string> ?? new Dictionary<string, string>();
 }
 <main class="container my-5">
     <h1 class="h2 mb-4">Exchange proposals</h1>
@@ -10,7 +11,8 @@
     {
         <article class="card mb-3"><div class="card-body">
             <h2 class="h5">@request.Skill.Name</h2>
-            <p class="mb-1">@(request.RequesterId == myId ? "Sent to" : "Received from") @(request.RequesterId == myId ? request.Receiver.UserName : request.Requester.UserName)</p>
+            @{ var otherId = request.RequesterId == myId ? request.ReceiverId : request.RequesterId; }
+            <p class="mb-1">@(request.RequesterId == myId ? "Sent to" : "Received from") @MemberNames.Get(memberNames, otherId)</p>
             <p class="mb-1">Status: @request.Status</p>
             <a href="@Url.Action("RequestDetails", "Profile", new { id = request.Id })">View proposal</a>
             @if (request.RequesterId == myId && request.Status == "Pending")

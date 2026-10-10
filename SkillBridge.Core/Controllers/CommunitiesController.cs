@@ -187,7 +187,7 @@ namespace SkillBridge.Controllers
                 Title = model.Title.Trim(),
                 Content = model.Content?.Trim() ?? "",
                 ImageUrl = uploaded?.Url,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             db.CommunityPosts.Add(post);
@@ -290,7 +290,7 @@ namespace SkillBridge.Controllers
                 CreatedByUserId = currentUserId,
                 Content = model.Content?.Trim() ?? "",
                 ImageUrl = uploaded?.Url,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             db.CommunityComments.Add(comment);
@@ -312,7 +312,7 @@ namespace SkillBridge.Controllers
                 return BadRequest("Add a title and content or an image, within the field limits.");
             post.Title = title;
             post.Content = content;
-            post.UpdatedAt = DateTime.UtcNow;
+            post.UpdatedAt = DateTime.Now;
             db.SaveChanges();
             TempData["CommunityNotice"] = "Post updated.";
             return RedirectToAction(nameof(PostDetails), new { id = postId });

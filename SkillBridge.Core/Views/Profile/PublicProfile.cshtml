@@ -33,7 +33,7 @@
                 <input type="hidden" name="id" value="@Model.UserId" />
                 <button type="submit" class="btn btn-outline-primary btn-sm">@(Model.IsSaved ? "Remove from saved" : "Save member")</button>
             </form>
-            @if (Model.SkillsToTeach.Any() && Model.SkillsToLearn.Any())
+            @if (Model.CanKnock)
             {
                 using (Html.BeginForm("Knock", "Messages", FormMethod.Post))
                 {

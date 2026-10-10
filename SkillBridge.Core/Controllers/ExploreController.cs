@@ -96,6 +96,8 @@ namespace SkillBridge.Controllers
                     TimeZoneId = userInfo?.TimeZoneId,
                     MeetingFormat = userInfo?.MeetingFormat ?? "Either",
                     AverageRating = averageRating,
+                    CanKnock = currentUserSkills.Any(s => s.Status == "Teaching" && s.KnownUpToStage > 0) &&
+                        learningSkills.Any() && userTeachingSkills.Any() && userLearningSkills.Any(),
                     ProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo?.ProfileImageUrl, userInfo?.FullName),
                     YouCanLearn = string.Join(", ", userTeachingSkills
                         .Where(us => learningSkills.Any(ls => ls.SkillId == us.SkillId))
@@ -150,7 +152,7 @@ namespace SkillBridge.Controllers
 
             var model = new ExploreViewModel
             {
-                MaxCatalogStage = db.SkillStages.Select(s => s.StageNumber).DefaultIfEmpty(7).Max(),
+                MaxCatalogStage = db.SkillStages.Max(s => (int?)s.StageNumber) ?? 7,
                 TimeZones = bestMatches.Concat(partialMatches)
                     .Select(m => m.TimeZoneId).Where(zone => !string.IsNullOrWhiteSpace(zone))
                     .Distinct().OrderBy(zone => zone).ToList(),

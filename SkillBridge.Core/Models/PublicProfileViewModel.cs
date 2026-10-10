@@ -14,6 +14,7 @@ namespace SkillBridge.Models
         public string TimeZoneId { get; set; }
         public string MeetingFormat { get; set; }
         public bool IsSaved { get; set; }
+        public bool CanKnock { get; set; }
 
         public List<SkillViewModel> SkillsToTeach { get; set; }
         public List<SkillViewModel> SkillsToLearn { get; set; }
