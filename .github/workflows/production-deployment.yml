@@ -1,0 +1,22 @@
+name: Record production deployment
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    environment:
+      name: production
+      url: https://skillbridge-08v4.onrender.com
+    steps:
+      - name: Check the live SkillBridge site
+        run: >-
+          curl --fail --location --show-error --silent
+          --retry 6 --retry-delay 10 --max-time 30
+          https://skillbridge-08v4.onrender.com/health
