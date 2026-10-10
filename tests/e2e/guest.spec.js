@@ -49,7 +49,7 @@ test('floating navigation centers the brand and opens on mobile', async ({ page 
 
 test('public help pages provide working destinations', async ({ page }) => {
   await page.goto('/Home/Contact');
-  await expect(page.getByRole('heading', { name: 'Contact SkillBridge' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: "Let's sort it out." })).toBeVisible();
   await page.getByRole('link', { name: 'Request a reset link' }).click();
   await expect(page.getByRole('heading', { name: /Forgot your password/i })).toBeVisible();
   await expect(page.locator('input[name="__RequestVerificationToken"]')).toHaveCount(1);
@@ -57,6 +57,6 @@ test('public help pages provide working destinations', async ({ page }) => {
 
 test('guest can read the exchange guide', async ({ page }) => {
   await page.goto('/Home/HowItWorks');
-  await expect(page.getByRole('heading', { name: 'How an exchange works' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Teach one thing.*Learn another/i })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Browse skills' })).toHaveAttribute('href', /Explore\/Skills/i);
 });

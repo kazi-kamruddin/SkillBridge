@@ -1,116 +1,62 @@
-
 @model SkillBridge.Models.CommunityIndexViewModel
 @{
     ViewBag.Title = "Communities";
 }
-
-<main class="container my-5">
-    <div class="text-center mb-5">
-        <h2 class="fw-bold">@ViewBag.Title</h2>
-        <p class="text-muted">Join communities to learn, share, and grow your skills.</p>
+<main class="container my-5 sb-community-directory">
+    <header class="sb-page-heading sb-community-hero">
+        <span class="sb-eyebrow">Learn out loud</span>
+        <h1>Find your people.</h1>
+        <p>Every skill has a conversation. Explore ideas, ask questions, and grow alongside people learning the same thing.</p>
         @if (Model.IsGuest)
         {
-            <p class="text-muted">Read discussions freely. Create an account and add a skill to your profile to participate.</p>
-            <a class="btn btn-primary" href="@Url.Action("Register", "Account")">Join SkillBridge</a>
+            <div class="sb-hero-actions">
+                <a class="btn btn-primary" href="@Url.Action("Register", "Account")">Join SkillBridge</a>
+                <span class="sb-community-hint">Read freely. Add a skill to your profile to join in.</span>
+            </div>
         }
-    </div>
-
-    <form method="get" action="@Url.Action("Index", "Communities")" class="row g-2 mb-4" role="search">
-        <div class="col-sm-9"><label for="community-search" class="form-label">Search communities</label><input id="community-search" class="form-control" name="q" value="@Model.SearchQuery" maxlength="100" placeholder="Skill or category" /></div>
-        <div class="col-sm-3 align-self-end"><button class="btn btn-outline-primary w-100" type="submit">Search</button></div>
+    </header>
+    <form method="get" action="@Url.Action("Index", "Communities")" class="sb-directory-search" role="search">
+        <div><label for="community-search" class="form-label fw-bold">Search communities</label><input id="community-search" class="form-control" name="q" value="@Model.SearchQuery" maxlength="100" placeholder="Try a skill or category" /></div>
+        <button class="btn btn-primary" type="submit">Search</button>
     </form>
-
     @if (!Model.SkillsYouKnow.Any() && !Model.SkillsYouWantToLearn.Any() && !Model.OtherCommunities.Any())
     {
         <div class="alert alert-info">@(string.IsNullOrEmpty(Model.SearchQuery) ? "Communities are being prepared." : "No communities match that search.") <a href="@Url.Action("Skills", "Explore")">Browse skills</a>.</div>
     }
-    <div class="row g-4">
-        <!-- Skills You Know -->
-        @if (Model.SkillsYouKnow.Any())
-        {
-            <div class="col-12">
-                <section class="community-section">
-                    <h4 class="mb-3 text-primary fw-semibold">Skills You Know</h4>
-                    <div class="community-grid">
-                        @foreach (var c in Model.SkillsYouKnow)
-                        {
-                            <a href="@Url.Action("Landing", "Communities", new { id = c.CommunityId })"
-                               class="community-card bg-primary text-white">
-                                <span>@c.SkillName</span>
-                            </a>
-                        }
-                    </div>
-                </section>
+    @if (Model.SkillsYouKnow.Any())
+    {
+        <section class="sb-community-section" aria-labelledby="known-heading">
+            <div class="sb-section-heading"><span class="sb-section-number">01</span><h2 id="known-heading">Skills you know</h2></div>
+            <div class="sb-community-grid">
+                @foreach (var c in Model.SkillsYouKnow)
+                {
+                    <a href="@Url.Action("Landing", "Communities", new { id = c.CommunityId })" class="sb-community-card sb-community-card-known"><span class="sb-community-card-label">SHARE WHAT YOU KNOW</span><strong>@c.SkillName</strong><span aria-hidden="true" class="sb-community-arrow">↗</span></a>
+                }
             </div>
-        }
-
-        <!-- Skills You Want to Learn -->
-        @if (Model.SkillsYouWantToLearn.Any())
-        {
-            <div class="col-12">
-                <section class="community-section mt-4">
-                    <h4 class="mb-3 text-success fw-semibold">Skills You Want to Learn</h4>
-                    <div class="community-grid">
-                        @foreach (var c in Model.SkillsYouWantToLearn)
-                        {
-                            <a href="@Url.Action("Landing", "Communities", new { id = c.CommunityId })"
-                               class="community-card bg-success text-white">
-                                <span>@c.SkillName</span>
-                            </a>
-                        }
-                    </div>
-                </section>
+        </section>
+    }
+    @if (Model.SkillsYouWantToLearn.Any())
+    {
+        <section class="sb-community-section" aria-labelledby="learning-heading">
+            <div class="sb-section-heading"><span class="sb-section-number">02</span><h2 id="learning-heading">Skills you want to learn</h2></div>
+            <div class="sb-community-grid">
+                @foreach (var c in Model.SkillsYouWantToLearn)
+                {
+                    <a href="@Url.Action("Landing", "Communities", new { id = c.CommunityId })" class="sb-community-card sb-community-card-learning"><span class="sb-community-card-label">KEEP GETTING BETTER</span><strong>@c.SkillName</strong><span aria-hidden="true" class="sb-community-arrow">↗</span></a>
+                }
             </div>
-        }
-
-        <!-- Other Communities -->
-        @if (Model.OtherCommunities.Any())
-        {
-            <div class="col-12">
-                <section class="community-section mt-4">
-                    <h4 class="mb-3 text-secondary fw-semibold">@(Model.IsGuest ? "Browse Communities" : "Other Communities")</h4>
-                    <div class="community-grid">
-                        @foreach (var c in Model.OtherCommunities)
-                        {
-                            <a href="@Url.Action("Landing", "Communities", new { id = c.CommunityId })"
-                               class="community-card bg-light border text-dark">
-                                <span>@c.SkillName</span>
-                            </a>
-                        }
-                    </div>
-                </section>
+        </section>
+    }
+    @if (Model.OtherCommunities.Any())
+    {
+        <section class="sb-community-section" aria-labelledby="other-heading">
+            <div class="sb-section-heading"><span class="sb-section-number">@(Model.IsGuest ? "01" : "03")</span><h2 id="other-heading">@(Model.IsGuest ? "Browse communities" : "More communities")</h2></div>
+            <div class="sb-community-grid">
+                @foreach (var c in Model.OtherCommunities)
+                {
+                    <a href="@Url.Action("Landing", "Communities", new { id = c.CommunityId })" class="sb-community-card"><span class="sb-community-card-label">EXPLORE THE CONVERSATION</span><strong>@c.SkillName</strong><span aria-hidden="true" class="sb-community-arrow">↗</span></a>
+                }
             </div>
-        }
-    </div>
+        </section>
+    }
 </main>
-
-<style>
-    .community-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 16px;
-    }
-
-    .community-card {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 18px;
-        border-radius: 10px;
-        font-weight: 500;
-        font-size: 1rem;
-        text-decoration: none;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-        .community-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.15);
-            text-decoration: none;
-        }
-
-    .community-section h4 {
-        border-left: 4px solid currentColor;
-        padding-left: 8px;
-    }
-</style>

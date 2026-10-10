@@ -4,12 +4,13 @@
     ViewBag.Title = Model.CommunityName + " - Community";
 }
 
-<main class="container my-5">
+<main class="container my-5 sb-community-landing">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <header class="sb-page-heading sb-community-landing-hero d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold">@Model.CommunityName</h2>
-            <p class="text-muted">Skill: @Model.SkillName</p>
+            <span class="sb-eyebrow">Skill community</span>
+            <h1>@Model.CommunityName</h1>
+            <p>Learn together through questions, ideas, and shared experience in @Model.SkillName.</p>
         </div>
 
         @if (Model.IsMember)
@@ -23,9 +24,9 @@
         {
             <a class="btn btn-outline-primary" href="@Url.Action("Register", "Account")">Join to post</a>
         }
-    </div>
+    </header>
 
-    <form method="get" action="@Url.Action("Landing", "Communities", new { id = Model.CommunityId })" class="row g-2 mb-4" role="search">
+    <form method="get" action="@Url.Action("Landing", "Communities", new { id = Model.CommunityId })" class="row g-2 mb-4 sb-community-post-search" role="search">
         <div class="col-sm-7"><label for="post-search" class="form-label">Search posts</label><input id="post-search" name="q" value="@Model.SearchQuery" maxlength="100" class="form-control" placeholder="Title or content" /></div>
         <div class="col-sm-3"><label for="post-sort" class="form-label">Sort posts</label><select id="post-sort" name="sort" class="form-select"><option value="newest" selected="@(Model.Sort == "newest")">Newest</option><option value="active" selected="@(Model.Sort == "active")">Most active</option></select></div>
         <div class="col-sm-2 align-self-end"><button class="btn btn-outline-primary w-100" type="submit">Apply</button></div>
@@ -54,8 +55,12 @@
         }
         else
         {
-            <div class="alert alert-info">
+            <div class="sb-community-empty">
+                <span aria-hidden="true">✳</span>
+                <h2>Start the conversation.</h2>
+                <p>
                 @(string.IsNullOrEmpty(Model.SearchQuery) ? (Model.IsMember ? "No posts yet. Be the first to post!" : "No posts yet. Check back soon.") : "No posts match that search.")
+                </p>
             </div>
         }
     </section>
