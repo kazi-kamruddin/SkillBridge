@@ -11,6 +11,8 @@ namespace SkillBridge.Models
         public string SkillYouLearn { get; set; }
         public string Status { get; set; }
         public string EndReason { get; set; }
+        public System.DateTime CreatedAt { get; set; }
+        public System.DateTime? EndedAt { get; set; }
     }
 
     public class SkillStageBlock
@@ -47,6 +49,40 @@ namespace SkillBridge.Models
         public string MeetingStatus { get; set; }
         public bool CanRespondToMeeting { get; set; }
         public List<ExchangePlanProposalViewModel> PlanProposals { get; set; } = new();
+        public List<MeetingEventViewModel> MeetingHistory { get; set; } = new();
+    }
+
+    public class MeetingEventViewModel
+    {
+        public string EventType { get; set; }
+        public System.DateTime StartsAtUtc { get; set; }
+        public string Format { get; set; }
+        public string Note { get; set; }
+        public bool IsMine { get; set; }
+        public System.DateTime CreatedAt { get; set; }
+    }
+
+    public class InteractionHistoryViewModel
+    {
+        public int InteractionId { get; set; }
+        public string Status { get; set; }
+        public string OtherUserName { get; set; }
+        public string SkillYouTeach { get; set; }
+        public string SkillYouLearn { get; set; }
+        public string EndReason { get; set; }
+        public System.DateTime CreatedAt { get; set; }
+        public System.DateTime? EndedAt { get; set; }
+        public List<SkillStageBlock> SkillBlocks { get; set; } = new();
+        public List<MeetingEventViewModel> MeetingHistory { get; set; } = new();
+        public List<HistoryRatingViewModel> Ratings { get; set; } = new();
+        public bool CanRate { get; set; }
+    }
+
+    public class HistoryRatingViewModel
+    {
+        public bool IsMine { get; set; }
+        public int Value { get; set; }
+        public string Comment { get; set; }
     }
 
     public class ExchangePlanProposalViewModel

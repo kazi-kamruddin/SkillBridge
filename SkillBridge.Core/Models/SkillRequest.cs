@@ -20,7 +20,7 @@ namespace SkillBridge.Models
 
         [Required]
         [MaxLength(20)]
-        public string Status { get; set; } // "Pending", "Accepted", "Declined"
+        public string Status { get; set; } // "Pending", "Accepted", "Declined", "Withdrawn"
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         [StringLength(500)] public string Goal { get; set; }

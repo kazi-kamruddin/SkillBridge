@@ -15,6 +15,14 @@
         <dt class="col-sm-4">Pace</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Pace) ? "Not specified" : Model.Pace)</dd>
         <dt class="col-sm-4">First meeting idea</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.FirstMeetingIdea) ? "Not specified" : Model.FirstMeetingIdea)</dd>
     </dl>
+    @if (Model.RequesterId == User.Identity.GetUserId() && Model.Status == "Pending")
+    {
+        <form method="post" action="@Url.Action("WithdrawSkillRequest", "Profile")" class="mb-3">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn btn-outline-danger">Withdraw request</button>
+        </form>
+    }
     @if (Model.ReceiverId == User.Identity.GetUserId() && Model.Status == "Pending")
     {
         if (notificationId > 0)

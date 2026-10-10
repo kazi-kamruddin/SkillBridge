@@ -54,6 +54,60 @@ namespace SkillBridge.Controllers
 
 
         ////////////////////////////////////////////////////////////////////////////
+        public ActionResult History()
+        {
+            var userId = User.Identity.GetUserId();
+            var exchanges = db.Interactions
+                .Where(i => (i.User1Id == userId || i.User2Id == userId) && i.Status == "Completed")
+                .Include(i => i.User1).Include(i => i.User2)
+                .Include(i => i.SkillFromRequester).Include(i => i.SkillFromTeacher)
+                .OrderByDescending(i => i.EndedAt ?? i.CreatedAt)
+                .ToList();
+            return View(exchanges.Select(i => new InteractionIndexViewModel
+            {
+                InteractionId = i.Id,
+                OtherUserName = i.User1Id == userId ? i.User2.UserName : i.User1.UserName,
+                SkillYouLearn = i.User1Id == userId ? i.SkillFromRequester.Name : i.SkillFromTeacher.Name,
+                SkillYouTeach = i.User1Id == userId ? i.SkillFromTeacher.Name : i.SkillFromRequester.Name,
+                Status = i.Status,
+                CreatedAt = i.CreatedAt,
+                EndedAt = i.EndedAt
+            }).ToList());
+        }
+
+        public ActionResult Details(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            var interaction = db.Interactions
+                .Include(i => i.User1).Include(i => i.User2)
+                .Include(i => i.SkillFromRequester).Include(i => i.SkillFromTeacher)
+                .Include(i => i.Sessions.Select(s => s.Skill))
+                .FirstOrDefault(i => i.Id == id && (i.User1Id == userId || i.User2Id == userId));
+            if (interaction == null) return NotFound();
+            if (interaction.Status == "Ongoing") return RedirectToAction(nameof(Sessions), new { id });
+            var ratings = db.Ratings.Where(r => r.InteractionId == id).ToList();
+            return View(new InteractionHistoryViewModel
+            {
+                InteractionId = id,
+                Status = interaction.Status,
+                OtherUserName = interaction.User1Id == userId ? interaction.User2.UserName : interaction.User1.UserName,
+                SkillYouLearn = interaction.User1Id == userId ? interaction.SkillFromRequester.Name : interaction.SkillFromTeacher.Name,
+                SkillYouTeach = interaction.User1Id == userId ? interaction.SkillFromTeacher.Name : interaction.SkillFromRequester.Name,
+                EndReason = interaction.EndReason,
+                CreatedAt = interaction.CreatedAt,
+                EndedAt = interaction.EndedAt,
+                SkillBlocks = BuildSkillBlocks(interaction),
+                MeetingHistory = MeetingEvents(id, userId),
+                Ratings = ratings.Select(r => new HistoryRatingViewModel
+                {
+                    IsMine = r.FromUserId == userId,
+                    Value = r.RatingValue,
+                    Comment = r.Comment
+                }).ToList(),
+                CanRate = interaction.Status == "Completed" && ratings.All(r => r.FromUserId != userId)
+            });
+        }
+
         // Interaction Sessions Page
 
         public ActionResult Sessions(int id)
@@ -78,6 +132,7 @@ namespace SkillBridge.Controllers
                 MeetingNote = interaction.MeetingNote,
                 MeetingStatus = interaction.MeetingStatus,
                 CanRespondToMeeting = interaction.MeetingStatus == "Proposed" && interaction.MeetingProposedByUserId != userId,
+                MeetingHistory = MeetingEvents(id, userId),
                 PlanProposals = db.InteractionPlanProposals
                     .Where(p => p.InteractionId == id).ToList()
                     .Select(p => new ExchangePlanProposalViewModel
@@ -111,6 +166,7 @@ namespace SkillBridge.Controllers
             interaction.MeetingNote = note;
             interaction.MeetingProposedByUserId = userId;
             interaction.MeetingStatus = "Proposed";
+            RecordMeeting(interaction, userId, "Proposed");
             NotifyOther(interaction, userId, "The other member proposed a meeting time. Open your exchange to respond.");
             db.SaveChanges();
             return RedirectToAction(nameof(Sessions), new { id });
@@ -127,6 +183,7 @@ namespace SkillBridge.Controllers
                 return StatusCode(409);
             if (decision != "Accept" && decision != "Decline") return BadRequest();
             interaction.MeetingStatus = decision == "Accept" ? "Confirmed" : "Declined";
+            RecordMeeting(interaction, userId, interaction.MeetingStatus);
             NotifyOther(interaction, userId, decision == "Accept" ?
                 "Your meeting time was accepted." : "Your meeting time was declined. You can propose another.");
             db.SaveChanges();
@@ -143,7 +200,25 @@ namespace SkillBridge.Controllers
             if (interaction.MeetingStatus != "Confirmed" && interaction.MeetingStatus != "Proposed")
                 return StatusCode(409);
             interaction.MeetingStatus = "Cancelled";
+            RecordMeeting(interaction, userId, "Cancelled");
             NotifyOther(interaction, userId, "The planned meeting was cancelled. Open your exchange to propose a new time.");
+            db.SaveChanges();
+            return RedirectToAction(nameof(Sessions), new { id });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult CompleteMeeting(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            var interaction = db.Interactions.FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
+                (i.User1Id == userId || i.User2Id == userId));
+            if (interaction == null) return NotFound();
+            if (interaction.MeetingStatus != "Confirmed" || !interaction.MeetingStartUtc.HasValue ||
+                interaction.MeetingStartUtc.Value > DateTime.UtcNow)
+                return StatusCode(409);
+            interaction.MeetingStatus = "Completed";
+            RecordMeeting(interaction, userId, "Completed");
+            NotifyOther(interaction, userId, "Your partner marked the planned meeting as completed.");
             db.SaveChanges();
             return RedirectToAction(nameof(Sessions), new { id });
         }
@@ -226,7 +301,7 @@ namespace SkillBridge.Controllers
             db.Notifications.Add(new Notification
             {
                 UserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id,
-                Type = "Info",
+                Type = "Exchange",
                 ReferenceId = interactionId,
                 Message = "Your partner suggested changes to your exchange plan. Open the exchange to review them."
             });
@@ -292,7 +367,7 @@ namespace SkillBridge.Controllers
                 UserId = proposal.ProposedByUserId == userId
                     ? (interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id)
                     : proposal.ProposedByUserId,
-                Type = "Info",
+                Type = "Exchange",
                 ReferenceId = interactionId,
                 Message = decision == "Accept" ? "Your partner accepted the updated exchange plan."
                     : decision == "Decline" ? "Your partner declined the exchange plan changes."
@@ -320,9 +395,36 @@ namespace SkillBridge.Controllers
             db.Notifications.Add(new Notification
             {
                 UserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id,
-                Type = "Info", ReferenceId = interaction.Id, Message = message, CreatedAt = DateTime.Now
+                Type = "Exchange", ReferenceId = interaction.Id, Message = message, CreatedAt = DateTime.Now
             });
         }
+
+        private void RecordMeeting(Interaction interaction, string actorId, string eventType)
+        {
+            db.InteractionMeetingEvents.Add(new InteractionMeetingEvent
+            {
+                InteractionId = interaction.Id,
+                ActorUserId = actorId,
+                EventType = eventType,
+                StartsAtUtc = interaction.MeetingStartUtc.Value,
+                Format = interaction.MeetingFormat,
+                Note = interaction.MeetingNote,
+                CreatedAt = DateTime.Now
+            });
+        }
+
+        private List<MeetingEventViewModel> MeetingEvents(int interactionId, string userId) =>
+            db.InteractionMeetingEvents.Where(e => e.InteractionId == interactionId)
+                .OrderByDescending(e => e.CreatedAt).ThenByDescending(e => e.Id)
+                .Select(e => new MeetingEventViewModel
+                {
+                    EventType = e.EventType,
+                    StartsAtUtc = e.StartsAtUtc,
+                    Format = e.Format,
+                    Note = e.Note,
+                    IsMine = e.ActorUserId == userId,
+                    CreatedAt = e.CreatedAt
+                }).ToList();
 
 
 
@@ -367,13 +469,15 @@ namespace SkillBridge.Controllers
                 db.Notifications.Add(new Notification
                 {
                     UserId = session.Interaction.User1Id,
-                    Type = "Info",
+                    Type = "Exchange",
+                    ReferenceId = interactionId,
                     Message = $"Stage {session.StageNumber} of {session.Skill.Name} completed!"
                 });
                 db.Notifications.Add(new Notification
                 {
                     UserId = session.Interaction.User2Id,
-                    Type = "Info",
+                    Type = "Exchange",
+                    ReferenceId = interactionId,
                     Message = $"Stage {session.StageNumber} of {session.Skill.Name} completed!"
                 });
             }
@@ -410,7 +514,7 @@ namespace SkillBridge.Controllers
             db.Notifications.Add(new Notification
             {
                 UserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id,
-                Type = "Info",
+                Type = "Exchange",
                 ReferenceId = id,
                 Message = "The other member ended your exchange. Open Interactions to see the reason.",
                 CreatedAt = DateTime.Now
@@ -443,6 +547,7 @@ namespace SkillBridge.Controllers
             UpdateUserSkill(interaction.User2Id, interaction.SkillFromTeacherId, interaction);
 
             interaction.Status = "Completed";
+            interaction.EndedAt = DateTime.Now;
 
             var user1Rating = db.UserRatings.FirstOrDefault(r => r.UserId == interaction.User1Id);
             var user2Rating = db.UserRatings.FirstOrDefault(r => r.UserId == interaction.User2Id);
@@ -570,7 +675,7 @@ namespace SkillBridge.Controllers
             db.Notifications.Add(new Notification
             {
                 UserId = recipientId,
-                Type = "Info",
+                Type = "Exchange",
                 ReferenceId = model.InteractionId,
                 Message = $"{User.Identity.Name} rated you {model.RatingValue}/10. Comment: \"{model.Comment}\"",
                 CreatedAt = DateTime.Now,

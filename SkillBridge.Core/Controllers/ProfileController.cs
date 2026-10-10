@@ -372,7 +372,8 @@ namespace SkillBridge.Controllers
                     RequestStatus = visitorWantsThisSkill
                         ? (existingRequest != null
                             ? (existingRequest.Status == "Pending" ? "Pending" :
-                               existingRequest.Status == "Accepted" ? "Accepted" : "Declined")
+                               existingRequest.Status == "Accepted" ? "Accepted" :
+                               existingRequest.Status == "Withdrawn" ? "Withdrawn" : "Declined")
                             : "None")
                         : "Hidden"
                 });
@@ -507,6 +508,29 @@ namespace SkillBridge.Controllers
                 .Where(r => r.RequesterId == userId || r.ReceiverId == userId)
                 .OrderByDescending(r => r.CreatedAt).ToList();
             return View(requests);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult WithdrawSkillRequest(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            using var transaction = db.Database.BeginTransaction(System.Data.IsolationLevel.Serializable);
+            var request = db.SkillRequests.Include(r => r.Skill)
+                .FirstOrDefault(r => r.Id == id && r.RequesterId == userId);
+            if (request == null) return NotFound();
+            if (request.Status != "Pending") return StatusCode(409);
+            request.Status = "Withdrawn";
+            var notifications = db.Notifications.Where(n => n.UserId == request.ReceiverId &&
+                n.Type == "SkillRequest" && n.ReferenceId == id).ToList();
+            foreach (var notification in notifications)
+            {
+                notification.Type = "RequestUpdate";
+                notification.Message = $"The request for {request.Skill.Name} was withdrawn.";
+                notification.IsRead = false;
+            }
+            db.SaveChanges();
+            transaction.Commit();
+            return RedirectToAction(nameof(RequestDetails), new { id });
         }
 
         public ActionResult RequestDetails(int id)

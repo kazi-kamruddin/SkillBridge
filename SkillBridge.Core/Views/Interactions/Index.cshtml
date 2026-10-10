@@ -129,6 +129,7 @@
 
 <div class="container">
     <h2>Your Interactions</h2>
+    <p><a href="@Url.Action("History", "Interactions")">View completed exchange history</a></p>
     @if (!Model.Any())
     {
         <div class="alert alert-info">
@@ -146,6 +147,7 @@
                 @if (interaction.Status == "Ended")
                 {
                     <p><strong>Reason:</strong> @interaction.EndReason</p>
+                    <a href="@Url.Action("Details", "Interactions", new { id = interaction.InteractionId })">View record</a>
                 }
                 else
                 {

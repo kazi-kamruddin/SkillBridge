@@ -1,0 +1,22 @@
+@model List<SkillBridge.Models.InteractionIndexViewModel>
+@{ ViewBag.Title = "Exchange history"; }
+<main class="container my-5">
+    <h1 class="h2">Exchange history</h1>
+    <p class="text-muted">Your completed exchanges, shared milestones, notes, and ratings.</p>
+    <a href="@Url.Action("Index", "Interactions")">Current exchanges</a>
+    @if (Model.Count == 0) { <p class="mt-4">No completed exchanges yet.</p> }
+    <div class="row g-3 mt-2">
+        @foreach (var exchange in Model)
+        {
+            <article class="col-md-6 col-xl-4">
+                <div class="card h-100 p-3">
+                    <h2 class="h5">@exchange.OtherUserName</h2>
+                    <p class="mb-1">Learned: @exchange.SkillYouLearn</p>
+                    <p>Taught: @exchange.SkillYouTeach</p>
+                    <p class="small text-muted">Finished @(exchange.EndedAt?.ToString("d") ?? "before dates were tracked")</p>
+                    <a href="@Url.Action("Details", "Interactions", new { id = exchange.InteractionId })">View exchange record</a>
+                </div>
+            </article>
+        }
+    </div>
+</main>

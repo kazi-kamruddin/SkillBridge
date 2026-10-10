@@ -244,6 +244,11 @@
                                     </button>
                                 </div>
                             }
+                            else if (n.Type == "Exchange" || n.Type == "RequestUpdate" || n.Type == "Skill" || n.Type == "Catalog" ||
+                                (n.Type == "Info" && n.ReferenceId.HasValue))
+                            {
+                                <a href="@SkillBridge.Helpers.NotificationLinkHelper.Resolve(n, Url)" class="d-block mb-2">View update</a>
+                            }
                         </div>
 
                         <div class="notification-actions">
@@ -258,7 +263,7 @@
                                     </button>
                                 </div>
                             }
-                            else if (n.Type == "Info" && !n.IsRead)
+                            else if (n.Type != "Feedback" && !n.IsRead)
                             {
                                 <button class="btn btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
                                     <i class="fas fa-eye me-1"></i>Mark as Read

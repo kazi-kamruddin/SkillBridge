@@ -67,7 +67,7 @@
                         <div class="col-md-6 col-lg-4">
                             <div class="card h-100 shadow-sm">
                                 <div class="card-body">
-                                    <h3 class="h5">@skill.SkillName</h3>
+                                    <h3 class="h5"><a href="@Url.Action("Detail", "Explore", new { id = skill.SkillId })">@skill.SkillName</a></h3>
                                     @if (skill.Teachers.Any())
                                     {
                                         <p class="small text-muted mb-2">Members sharing this skill:</p>

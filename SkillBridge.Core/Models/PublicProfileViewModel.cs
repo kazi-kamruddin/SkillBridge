@@ -50,9 +50,21 @@ namespace SkillBridge.Models
 
     public class GuestSkillViewModel
     {
+        public int SkillId { get; set; }
         public string SkillName { get; set; }
         public string CategoryName { get; set; }
         public List<GuestTeacherViewModel> Teachers { get; set; } = new();
+    }
+
+    public class SkillDetailViewModel
+    {
+        public int SkillId { get; set; }
+        public string SkillName { get; set; }
+        public string Description { get; set; }
+        public string CategoryName { get; set; }
+        public List<SkillStage> Stages { get; set; } = new();
+        public List<GuestTeacherViewModel> Teachers { get; set; } = new();
+        public int? CommunityId { get; set; }
     }
 
     public class GuestTeacherViewModel

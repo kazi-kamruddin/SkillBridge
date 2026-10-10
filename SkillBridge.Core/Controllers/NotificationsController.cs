@@ -57,7 +57,7 @@ namespace SkillBridge.Controllers
                 n.Message,
                 n.IsRead,
                 CreatedAt = n.CreatedAt.ToString("g"),
-                Url = Url.Action("Index", "Notifications")
+                Url = NotificationLinkHelper.Resolve(n, Url)
             }).ToList();
 
             return Json(new { notifications, unreadCount });
@@ -94,19 +94,21 @@ namespace SkillBridge.Controllers
             var notif = _context.Notifications.FirstOrDefault(n => n.Id == notificationId && n.UserId == userId);
             if (notif == null || notif.Type != "SkillRequest") return Json(new { success = false });
 
-            var skillRequest = _context.SkillRequests.FirstOrDefault(r => r.Id == notif.ReferenceId);
+            var skillRequest = _context.SkillRequests.Include(r => r.Skill).Include(r => r.Requester)
+                .FirstOrDefault(r => r.Id == notif.ReferenceId);
             if (skillRequest != null && skillRequest.Status == "Pending" && skillRequest.ReceiverId == userId)
             {
                 skillRequest.Status = "Declined";
 
-                notif.Type = "Info";
+                notif.Type = "RequestUpdate";
                 notif.Message = $"You declined the skill request for {skillRequest.Skill.Name} from {skillRequest.Requester.UserName}.";
                 notif.IsRead = true;
 
                 _context.Notifications.Add(new Notification
                 {
                     UserId = skillRequest.RequesterId,
-                    Type = "Info",
+                    Type = "RequestUpdate",
+                    ReferenceId = skillRequest.Id,
                     Message = $"Your skill request for {skillRequest.Skill.Name} was declined by {User.Identity.Name}.",
                     CreatedAt = DateTime.Now,
                     IsRead = false
@@ -257,14 +259,16 @@ namespace SkillBridge.Controllers
 
             skillRequest.Status = "Accepted";
 
-            notif.Type = "Info";
+            notif.Type = "Exchange";
+            notif.ReferenceId = interaction.Id;
             notif.Message = $"You accepted the skill request for {skillRequest.Skill.Name} from {skillRequest.Requester.UserName}.";
             notif.IsRead = true;
 
             _context.Notifications.Add(new Notification
             {
                 UserId = skillRequest.RequesterId,
-                Type = "Info",
+                Type = "Exchange",
+                ReferenceId = interaction.Id,
                 Message = $"Your skill request for {skillRequest.Skill.Name} has been accepted by {User.Identity.Name}.",
                 CreatedAt = DateTime.Now,
                 IsRead = false
@@ -324,7 +328,7 @@ namespace SkillBridge.Controllers
                 n.IsRead,
                 n.Type,
                 CreatedAt = n.CreatedAt.ToString("g"),
-                Url = Url.Action("Index", "Notifications")
+                Url = NotificationLinkHelper.Resolve(n, Url)
             }).ToList();
 
             return Json(new { notifications, unreadCount });

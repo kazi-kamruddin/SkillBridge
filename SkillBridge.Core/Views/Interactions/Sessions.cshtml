@@ -135,6 +135,14 @@
                     <button type="submit" class="btn btn-outline-danger btn-sm">Cancel meeting</button>
                 </form>
             }
+            @if (Model.MeetingStatus == "Confirmed" && Model.MeetingStartUtc <= DateTime.UtcNow)
+            {
+                <form method="post" action="@Url.Action("CompleteMeeting", "Interactions")" class="mb-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.InteractionId" />
+                    <button type="submit" class="btn btn-outline-success btn-sm">Mark meeting completed</button>
+                </form>
+            }
         }
         else if (Model.MeetingStatus == "Cancelled" || Model.MeetingStatus == "Declined")
         { <p>The previous time was @Model.MeetingStatus.ToLowerInvariant(). You can propose another.</p> }
@@ -154,6 +162,9 @@
             </form>
         </details>
     </section>
+
+    <h2 class="h5">Meeting history</h2>
+    <partial name="_MeetingHistory" model="Model.MeetingHistory" />
 
     <div class="exchange-tracks">
         @foreach (var track in Model.SkillBlocks.GroupBy(s => new { s.SkillId, s.SkillName }))

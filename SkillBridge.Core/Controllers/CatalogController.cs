@@ -39,6 +39,7 @@ public class CatalogController : Controller
         }
 
         using var transaction = db.Database.BeginTransaction();
+        int? newSkillId = null;
         if (decision == "Add")
         {
             if (db.Skills.Any(s => s.Name.ToLower() == suggestion.Name.ToLower()))
@@ -54,6 +55,7 @@ public class CatalogController : Controller
             var skill = new Skill { Name = suggestion.Name, SkillCategoryId = category.Id };
             db.Skills.Add(skill);
             db.SaveChanges();
+            newSkillId = skill.Id;
             for (var i = 0; i < stages.Count; i++)
                 db.SkillStages.Add(new SkillStage { SkillId = skill.Id, StageNumber = i + 1, Description = stages[i] });
             db.Communities.Add(new Community { SkillId = skill.Id, Name = skill.Name,
@@ -63,7 +65,8 @@ public class CatalogController : Controller
         db.Notifications.Add(new Notification
         {
             UserId = suggestion.UserId,
-            Type = "Info",
+            Type = newSkillId.HasValue ? "Skill" : "Catalog",
+            ReferenceId = newSkillId,
             Message = decision == "Add" ? $"Your suggestion, {suggestion.Name}, was added to the skills directory."
                 : $"Your suggestion, {suggestion.Name}, was reviewed and not added."
         });

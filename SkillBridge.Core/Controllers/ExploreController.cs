@@ -186,6 +186,7 @@ namespace SkillBridge.Controllers
                     .Where(s => s.UserId == currentUserId).OrderByDescending(s => s.CreatedAt).Take(10).ToList(),
                 Skills = SkillSearch.Rank(skills, q).Select(skill => new GuestSkillViewModel
                 {
+                    SkillId = skill.Id,
                     SkillName = skill.Name,
                     CategoryName = skill.SkillCategory.Name,
                     Teachers = publicTeachers.Where(t => t.SkillId == skill.Id)
@@ -193,6 +194,33 @@ namespace SkillBridge.Controllers
                 }).ToList()
             };
             return View("GuestIndex", model);
+        }
+
+        [AllowAnonymous]
+        public ActionResult Detail(int id)
+        {
+            var skill = db.Skills.Include(s => s.SkillCategory).Include(s => s.SkillStages)
+                .FirstOrDefault(s => s.Id == id);
+            if (skill == null) return NotFound();
+            var userId = User.Identity.GetUserId();
+            var teachers = (from userSkill in db.UserSkills
+                            join info in db.UserInformations on userSkill.UserId equals info.UserId
+                            where userSkill.SkillId == id && userSkill.Status == "Teaching" &&
+                                userSkill.KnownUpToStage > 0 && !info.IsHidden &&
+                                (info.IsPublic || userId != null) && info.UserId != userId
+                            select new { info.UserId, info.FullName }).ToList()
+                .Where(t => userId == null || !BlockRules.EitherBlocked(db, userId, t.UserId))
+                .Select(t => new GuestTeacherViewModel { UserId = t.UserId, FullName = t.FullName }).ToList();
+            return View(new SkillDetailViewModel
+            {
+                SkillId = skill.Id,
+                SkillName = skill.Name,
+                Description = skill.Description,
+                CategoryName = skill.SkillCategory?.Name,
+                Stages = skill.SkillStages.OrderBy(s => s.StageNumber).ToList(),
+                Teachers = teachers,
+                CommunityId = db.Communities.Where(c => c.SkillId == id).Select(c => (int?)c.Id).FirstOrDefault()
+            });
         }
 
         [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
