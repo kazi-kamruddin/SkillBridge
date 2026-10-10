@@ -46,7 +46,7 @@ namespace SkillBridge.Models
         public int Id { get; set; }
 
         [Required]
-        [Range(1, 7)]
+        [Range(1, 12)]
         public int StageNumber { get; set; }
 
         [Required]

@@ -68,9 +68,8 @@ namespace SkillBridge.Controllers
                     !maxStageBySkill.ContainsKey(s.SkillId) ||
                     s.KnownUpToStage < 1 || s.KnownUpToStage > maxStageBySkill[s.SkillId]))
                 ModelState.AddModelError("", "Choose valid skills and stages.");
-            if (teachingSkills.Select(s => s.SkillId).Distinct().Count() != teachingSkills.Count ||
-                teachingSkills.Any(s => learningIds.Contains(s.SkillId)))
-                ModelState.AddModelError("", "A skill cannot appear twice or be both taught and learned.");
+            if (teachingSkills.Select(s => s.SkillId).Distinct().Count() != teachingSkills.Count)
+                ModelState.AddModelError("", "Choose each teaching skill only once.");
 
             if (!ModelState.IsValid)
             {

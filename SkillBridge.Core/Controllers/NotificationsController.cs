@@ -28,7 +28,8 @@ namespace SkillBridge.Controllers
             var userId = User.Identity.GetUserId();
             var notifications = _context.Notifications
                 .Where(n => n.UserId == userId)
-                .OrderByDescending(n => n.CreatedAt)
+                .OrderByDescending(n => n.Type == "SkillRequest")
+                .ThenByDescending(n => n.CreatedAt)
                 .ToList();
 
             return View(notifications);
@@ -146,7 +147,8 @@ namespace SkillBridge.Controllers
                 .Where(us => us.UserId == receiverId && us.Status == "Learning");
 
             var matchingSkills = requesterSkills
-                .Where(rs => receiverSkills.Any(ls => ls.SkillId == rs.SkillId))
+                .Where(rs => rs.SkillId != skillRequest.SkillId && rs.KnownUpToStage > 0 &&
+                    receiverSkills.Any(ls => ls.SkillId == rs.SkillId))
                 .Select(rs => new { rs.SkillId, rs.Skill.Name })
                 .ToList();
 
@@ -184,7 +186,7 @@ namespace SkillBridge.Controllers
                 us.SkillId == skillRequest.SkillId && us.Status == "Teaching" && us.KnownUpToStage > 0);
             var requesterWantsToLearn = _context.UserSkills.Any(us => us.UserId == skillRequest.RequesterId &&
                 us.SkillId == skillRequest.SkillId && us.Status == "Learning");
-            if (!requesterCanTeach || !receiverWantsToLearn || !receiverCanTeach || !requesterWantsToLearn)
+            if (skillId == skillRequest.SkillId || !requesterCanTeach || !receiverWantsToLearn || !receiverCanTeach || !requesterWantsToLearn)
                 return Json(new { success = false });
 
             using (var transaction = _context.Database.BeginTransaction())
@@ -204,7 +206,7 @@ namespace SkillBridge.Controllers
 
             
             var requesterSkill = _context.UserSkills
-                .FirstOrDefault(us => us.UserId == interaction.User2Id && us.SkillId == interaction.SkillFromRequesterId);
+                .FirstOrDefault(us => us.UserId == interaction.User2Id && us.SkillId == interaction.SkillFromRequesterId && us.Status == "Teaching");
 
             int maxRequesterStage = requesterSkill?.KnownUpToStage ?? 0;
 
@@ -220,6 +222,8 @@ namespace SkillBridge.Controllers
                     InteractionId = interaction.Id,
                     SkillId = stage.SkillId,
                     StageNumber = stage.StageNumber,
+                    Title = stage.Description,
+                    CatalogStageNumber = stage.StageNumber,
                     Status = "Pending",
                     User1Confirmed = false,
                     User2Confirmed = false
@@ -227,7 +231,7 @@ namespace SkillBridge.Controllers
             }
 
             var teacherSkill = _context.UserSkills
-                .FirstOrDefault(us => us.UserId == interaction.User1Id && us.SkillId == interaction.SkillFromTeacherId);
+                .FirstOrDefault(us => us.UserId == interaction.User1Id && us.SkillId == interaction.SkillFromTeacherId && us.Status == "Teaching");
 
             int maxTeacherStage = teacherSkill?.KnownUpToStage ?? 0;
 
@@ -243,6 +247,8 @@ namespace SkillBridge.Controllers
                     InteractionId = interaction.Id,
                     SkillId = stage.SkillId,
                     StageNumber = stage.StageNumber,
+                    Title = stage.Description,
+                    CatalogStageNumber = stage.StageNumber,
                     Status = "Pending",
                     User1Confirmed = false,
                     User2Confirmed = false

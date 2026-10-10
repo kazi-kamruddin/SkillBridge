@@ -66,8 +66,14 @@ namespace SkillBridge.Models
         public virtual Skill Skill { get; set; }
 
         [Required]
-        [Range(1, 7)]
+        [Range(1, 12)]
         public int StageNumber { get; set; }
+
+        [StringLength(200)]
+        public string Title { get; set; }
+
+        // Only catalog milestones can increase the member's public skill level.
+        public int? CatalogStageNumber { get; set; }
 
         public bool User1Confirmed { get; set; } = false;
         public bool User2Confirmed { get; set; } = false;

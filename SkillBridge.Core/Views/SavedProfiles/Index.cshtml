@@ -16,6 +16,8 @@
                     {
                         <a href="@Url.Action("PublicProfile", "Profile", new { id = member.UserId })">@member.FullName</a>
                         <div class="small text-muted">@member.Profession</div>
+                        @if (!string.IsNullOrWhiteSpace(member.MatchSummary))
+                        { <div class="small">Can teach you: @member.MatchSummary</div> }
                     }
                     else { <span>This profile is currently unavailable.</span> }
                 </div>

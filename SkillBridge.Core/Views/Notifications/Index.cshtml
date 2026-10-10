@@ -214,8 +214,18 @@
             </div>
 
             <div class="notification-list">
+                @{ var shownUpdatesHeading = false; }
                 @foreach (var n in Model)
                 {
+                    if (n.Type != "SkillRequest" && !shownUpdatesHeading)
+                    {
+                        shownUpdatesHeading = true;
+                        <h2 class="h5 px-4 pt-3">Updates</h2>
+                    }
+                    else if (n.Type == "SkillRequest" && n == Model.First())
+                    {
+                        <h2 class="h5 px-4 pt-3">Action needed</h2>
+                    }
                     <div class="notification-item d-flex justify-content-between align-items-start @(n.IsRead ? "" : "unread")" data-id="@n.Id">
                         <div class="notification-content">
                             <div class="notification-message">@n.Message</div>

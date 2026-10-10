@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
+using SkillBridge.Services;
 using SkillBridge.Helpers;
 
 namespace SkillBridge.Controllers
@@ -15,14 +17,6 @@ namespace SkillBridge.Controllers
         private readonly ApplicationDbContext db;
 
         public ExploreController(ApplicationDbContext db) => this.db = db;
-
-        private readonly List<string> BangladeshDivisions = new List<string>
-        {
-            "Dhaka", "Chattogram", "Khulna", "Barishal", "Sylhet", "Mymensingh", "Rajshahi", "Rangpur"
-        };
-
-
-
 
         ////////////////////////////////////////////////////////////////////////////
         [AllowAnonymous]
@@ -78,10 +72,12 @@ namespace SkillBridge.Controllers
                     .Where(us => us.Status == "Learning")
                     .ToList();
 
-                bool isBestMatch = userLearningSkills.Any(l => teachingSkillsIds.Contains(l.SkillId)) &&
-                                   userTeachingSkills.Any(t => learningSkills.Select(ls => ls.SkillId).Contains(t.SkillId));
+                bool isBestMatch = userLearningSkills.Any(l => teachingSkillsIds.Contains(l.SkillId) &&
+                    userTeachingSkills.Any(t => t.SkillId != l.SkillId && t.KnownUpToStage > 0 &&
+                        learningSkills.Any(wanted => wanted.SkillId == t.SkillId)));
 
-                bool isPartialMatch = !isBestMatch && userTeachingSkills.Any(t => learningSkills.Select(ls => ls.SkillId).Contains(t.SkillId));
+                bool isPartialMatch = !isBestMatch && userTeachingSkills.Any(t => t.KnownUpToStage > 0 &&
+                    learningSkills.Any(wanted => wanted.SkillId == t.SkillId));
 
                 var userRating = db.UserRatings.FirstOrDefault(ur => ur.UserId == user.Id);
                 double averageRating = (userRating != null && userRating.RatingsReceived > 0)
@@ -95,6 +91,10 @@ namespace SkillBridge.Controllers
                     Profession = userInfo?.Profession ?? "",
                     Location = userInfo?.Location ?? "",
                     Bio = userInfo?.Bio ?? "",
+                    AvailabilityNotes = userInfo?.AvailabilityNotes,
+                    AvailableDaysMask = userInfo?.AvailableDaysMask ?? 0,
+                    TimeZoneId = userInfo?.TimeZoneId,
+                    MeetingFormat = userInfo?.MeetingFormat ?? "Either",
                     AverageRating = averageRating,
                     ProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo?.ProfileImageUrl, userInfo?.FullName),
                     YouCanLearn = string.Join(", ", userTeachingSkills
@@ -150,6 +150,13 @@ namespace SkillBridge.Controllers
 
             var model = new ExploreViewModel
             {
+                MaxCatalogStage = db.SkillStages.Select(s => s.StageNumber).DefaultIfEmpty(7).Max(),
+                TimeZones = bestMatches.Concat(partialMatches)
+                    .Select(m => m.TimeZoneId).Where(zone => !string.IsNullOrWhiteSpace(zone))
+                    .Distinct().OrderBy(zone => zone).ToList(),
+                Locations = bestMatches.Concat(partialMatches)
+                    .Select(m => m.Location).Where(location => !string.IsNullOrWhiteSpace(location))
+                    .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(location => location).ToList(),
                 BestMatches = bestMatches,
                 PartialMatches = partialMatches,
                 LearningSkillNames = learningSkills.Select(s => s.Name).Distinct().ToList()
@@ -163,14 +170,20 @@ namespace SkillBridge.Controllers
         {
             q = (q ?? "").Trim();
             if (q.Length > 100) q = q[..100];
+            var currentUserId = User.Identity.GetUserId();
             var publicTeachers = (from userSkill in db.UserSkills
                                   join info in db.UserInformations on userSkill.UserId equals info.UserId
                                   where userSkill.Status == "Teaching" && info.IsPublic && !info.IsHidden
                                   select new { userSkill.SkillId, info.UserId, info.FullName }).ToList();
             var skills = db.Skills.Include(s => s.SkillCategory).Include(s => s.SkillStages).ToList();
+            var catalogEditorEmail = Environment.GetEnvironmentVariable("SKILLBRIDGE_MODERATOR_EMAIL");
             var model = new GuestExploreViewModel
             {
                 Query = q,
+                CanReviewSuggestions = currentUserId != null && !string.IsNullOrWhiteSpace(catalogEditorEmail) &&
+                    db.Users.Any(u => u.Id == currentUserId && u.Email.ToLower() == catalogEditorEmail.Trim().ToLower()),
+                MySuggestions = currentUserId == null ? new() : db.SkillSuggestions
+                    .Where(s => s.UserId == currentUserId).OrderByDescending(s => s.CreatedAt).Take(10).ToList(),
                 Skills = SkillSearch.Rank(skills, q).Select(skill => new GuestSkillViewModel
                 {
                     SkillName = skill.Name,
@@ -180,6 +193,39 @@ namespace SkillBridge.Controllers
                 }).ToList()
             };
             return View("GuestIndex", model);
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult SuggestSkill(string name, string categoryName, string reason)
+        {
+            var userId = User.Identity.GetUserId();
+            name = (name ?? "").Trim();
+            categoryName = (categoryName ?? "").Trim();
+            reason = (reason ?? "").Trim();
+            if (name.Length is < 2 or > 100 || categoryName.Length is < 2 or > 100 ||
+                reason.Length is < 10 or > 500)
+            {
+                TempData["SkillNotice"] = "Add a skill name, category and short reason within the field limits.";
+                return RedirectToAction(nameof(Skills));
+            }
+            if (db.Skills.Any(s => s.Name.ToLower() == name.ToLower()))
+            {
+                TempData["SkillNotice"] = "That skill is already in the directory.";
+                return RedirectToAction(nameof(Skills));
+            }
+            if (db.SkillSuggestions.Any(s => s.UserId == userId && s.Status == "Pending" &&
+                s.Name.ToLower() == name.ToLower()))
+            {
+                TempData["SkillNotice"] = "You already suggested that skill.";
+                return RedirectToAction(nameof(Skills));
+            }
+            db.SkillSuggestions.Add(new SkillSuggestion
+            {
+                UserId = userId, Name = name, CategoryName = categoryName, Reason = reason
+            });
+            db.SaveChanges();
+            TempData["SkillNotice"] = "Thanks. Your suggestion is in review.";
+            return RedirectToAction(nameof(Skills));
         }
     }
 }

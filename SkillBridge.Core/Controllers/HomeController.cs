@@ -35,6 +35,37 @@ namespace SkillBridge.Controllers
                     .Where(us => us.UserId == userId)
                     .ToList();
 
+                if (db.SkillRequests.Any(r => r.ReceiverId == userId && r.Status == "Pending"))
+                {
+                    vm.NextActionTitle = "A member is waiting for your answer";
+                    vm.NextActionDescription = "Review the exchange proposal and decide whether to connect.";
+                    vm.NextActionUrl = Url.Action("Requests", "Profile");
+                }
+                else if (db.Messages.Any(m => m.ToUserId == userId && !m.IsRead))
+                {
+                    vm.NextActionTitle = "You have an unread message";
+                    vm.NextActionDescription = "Pick up the conversation with your learning partner.";
+                    vm.NextActionUrl = Url.Action("Index", "Messages");
+                }
+                else if (!vm.MySkills.Any(s => s.Status == "Teaching") || !vm.MySkills.Any(s => s.Status == "Learning"))
+                {
+                    vm.NextActionTitle = "Add skills to start exchanging";
+                    vm.NextActionDescription = "Choose something you can teach and something you want to learn.";
+                    vm.NextActionUrl = Url.Action("UpdateProfile", "Profile");
+                }
+                else if (db.Interactions.Any(i => i.Status == "Ongoing" && (i.User1Id == userId || i.User2Id == userId)))
+                {
+                    vm.NextActionTitle = "Continue your exchange";
+                    vm.NextActionDescription = "Check your plan, meeting time, and next milestone.";
+                    vm.NextActionUrl = Url.Action("Index", "Interactions");
+                }
+                else
+                {
+                    vm.NextActionTitle = "Find your next learning partner";
+                    vm.NextActionDescription = "Explore people whose teaching skills match what you want to learn.";
+                    vm.NextActionUrl = Url.Action("Index", "Explore");
+                }
+
                 vm.MyLatestPost = db.CommunityPosts
                     .Where(p => p.CreatedByUserId == userId && !p.IsHidden)
                     .OrderByDescending(p => p.CreatedAt)

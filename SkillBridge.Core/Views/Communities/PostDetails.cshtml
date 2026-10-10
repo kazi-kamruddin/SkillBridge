@@ -18,6 +18,25 @@
             </p>
             <p class="fs-5">@Model.Content</p>
             @if (!string.IsNullOrWhiteSpace(Model.ImageUrl)) { <img src="@Model.ImageUrl" alt="Image attached to this post" class="img-fluid rounded mb-3 sb-community-image" loading="lazy" /> }
+            @if (Model.IsAuthor)
+            {
+                <details class="mt-3"><summary>Edit your post</summary>
+                    <form method="post" action="@Url.Action("EditPost", "Communities")" class="mt-2">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="postId" value="@Model.PostId" />
+                        <label for="edit-post-title" class="form-label">Title</label>
+                        <input id="edit-post-title" name="title" value="@Model.Title" maxlength="200" required class="form-control mb-2" />
+                        <label for="edit-post-content" class="form-label">Content</label>
+                        <textarea id="edit-post-content" name="content" maxlength="2000" class="form-control mb-2">@Model.Content</textarea>
+                        <button type="submit" class="btn btn-outline-primary btn-sm">Save changes</button>
+                    </form>
+                </details>
+                <form method="post" action="@Url.Action("RemoveOwnContent", "Communities")" class="mt-2" onsubmit="return confirm('Remove this post and hide its comments?')">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="postId" value="@Model.PostId" />
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Remove your post</button>
+                </form>
+            }
             @if (User.Identity.IsAuthenticated)
             {
                 <details class="mt-3">
@@ -50,6 +69,24 @@
                         <p class="mb-1">@c.Content</p>
                         @if (!string.IsNullOrWhiteSpace(c.ImageUrl)) { <img src="@c.ImageUrl" alt="Image attached to this comment" class="img-fluid rounded mb-2 sb-community-image" loading="lazy" /> }
                         <small class="text-muted">@c.CreatedByFullName, @c.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                        @if (c.IsAuthor)
+                        {
+                            <details class="mt-2"><summary>Edit your comment</summary>
+                                <form method="post" action="@Url.Action("EditComment", "Communities")" class="mt-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="commentId" value="@c.CommentId" />
+                                    <label for="edit-comment-@c.CommentId" class="form-label">Comment</label>
+                                    <textarea id="edit-comment-@c.CommentId" name="content" maxlength="1000" class="form-control mb-2">@c.Content</textarea>
+                                    <button type="submit" class="btn btn-outline-primary btn-sm">Save changes</button>
+                                </form>
+                            </details>
+                            <form method="post" action="@Url.Action("RemoveOwnContent", "Communities")" class="mt-2" onsubmit="return confirm('Remove this comment?')">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="postId" value="@Model.PostId" />
+                                <input type="hidden" name="commentId" value="@c.CommentId" />
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                            </form>
+                        }
                         @if (User.Identity.IsAuthenticated)
                         {
                             <details class="mt-2">

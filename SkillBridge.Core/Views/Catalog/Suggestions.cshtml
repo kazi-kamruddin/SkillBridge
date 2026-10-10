@@ -1,0 +1,29 @@
+@model List<SkillBridge.Models.SkillSuggestion>
+@{ ViewBag.Title = "Skill suggestions"; }
+<main class="container my-5" style="max-width:920px">
+    <h1 class="h2">Skill suggestions</h1>
+    <p>Review requests, then write seven starter milestones before adding a skill to the directory.</p>
+    @if (TempData["CatalogNotice"] is string notice) { <p class="alert alert-info" role="status">@notice</p> }
+    @if (!Model.Any()) { <p>No suggestions awaiting review.</p> }
+    @foreach (var suggestion in Model)
+    {
+        <article class="card p-3 mb-3">
+            <h2 class="h5">@suggestion.Name <small class="text-muted">· @suggestion.CategoryName</small></h2>
+            <p>@suggestion.Reason</p>
+            <form method="post" action="@Url.Action("Review", "Catalog")">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" value="@suggestion.Id" />
+                <details class="mb-2"><summary>Add this skill</summary>
+                    <p class="small text-muted mt-2">Write milestones from beginner to advanced.</p>
+                    @for (var i = 0; i < 7; i++)
+                    {
+                        <label for="stage-@suggestion.Id-@i" class="form-label">Milestone @(i + 1)</label>
+                        <input id="stage-@suggestion.Id-@i" name="stages" maxlength="200" class="form-control mb-2" />
+                    }
+                    <button type="submit" name="decision" value="Add" class="btn btn-success">Add skill</button>
+                </details>
+                <button type="submit" name="decision" value="Decline" class="btn btn-outline-secondary">Decline suggestion</button>
+            </form>
+        </article>
+    }
+</main>

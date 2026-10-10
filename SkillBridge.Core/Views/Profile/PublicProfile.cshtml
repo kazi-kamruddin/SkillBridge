@@ -21,6 +21,8 @@
     @if (!string.IsNullOrWhiteSpace(Model.Profession) || !string.IsNullOrWhiteSpace(Model.Location)) { <p class="text-muted">@string.Join(" · ", new[] { Model.Profession, Model.Location }.Where(s => !string.IsNullOrWhiteSpace(s)))</p> }
     <p>@Model.Bio</p>
     @if (!string.IsNullOrWhiteSpace(Model.AvailabilityNotes)) { <p><strong>Availability:</strong> @Model.AvailabilityNotes</p> }
+    @if (Model.AvailableDaysMask != 0) { <p><strong>Usual days:</strong> @AvailabilityHelper.DescribeDays(Model.AvailableDaysMask)</p> }
+    @if (!string.IsNullOrWhiteSpace(Model.TimeZoneId)) { <p><strong>Time zone:</strong> @Model.TimeZoneId</p> }
     <p><strong>Meeting format:</strong> @Model.MeetingFormat</p>
 
     @if (User.Identity.IsAuthenticated && Model.UserId != User.Identity.GetUserId())

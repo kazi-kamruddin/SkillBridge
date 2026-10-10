@@ -18,10 +18,12 @@ namespace SkillBridge.Models
         public int SessionId { get; set; }
         public int StageNumber { get; set; }
         public int SkillId { get; set; }
+        public string SkillName { get; set; }
         public string Description { get; set; }
         public string Status { get; set; } // Red, Yellow, Green
         public bool UserConfirmed { get; set; }
         public bool IsLocked { get; set; }
+        public bool IsEditable { get; set; }
         public List<StageNoteViewModel> Notes { get; set; } = new();
     }
 
@@ -44,6 +46,14 @@ namespace SkillBridge.Models
         public string MeetingNote { get; set; }
         public string MeetingStatus { get; set; }
         public bool CanRespondToMeeting { get; set; }
+        public List<ExchangePlanProposalViewModel> PlanProposals { get; set; } = new();
+    }
+
+    public class ExchangePlanProposalViewModel
+    {
+        public int SkillId { get; set; }
+        public bool ProposedByMe { get; set; }
+        public List<PlanStepInput> Steps { get; set; } = new();
     }
 
     public class InteractionRatingViewModel

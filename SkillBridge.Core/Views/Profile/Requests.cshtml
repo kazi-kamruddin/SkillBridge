@@ -15,7 +15,7 @@
             <a href="@Url.Action("RequestDetails", "Profile", new { id = request.Id })">View proposal</a>
             @if (request.ReceiverId == myId && request.Status == "Pending")
             {
-                <a class="ms-3" href="@Url.Action("Index", "Notifications")">Respond in Notifications</a>
+                <span class="ms-3 badge bg-warning text-dark">Needs your response</span>
             }
         </div></article>
     }

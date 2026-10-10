@@ -1,6 +1,8 @@
 @model SkillBridge.Models.SkillRequest
 @{
     ViewBag.Title = "Exchange Proposal";
+    var notificationId = ViewBag.RequestNotificationId is int value ? value : 0;
+    var reciprocalSkills = ViewBag.ReciprocalSkills as List<SkillBridge.Models.SkillViewModel>;
 }
 <main class="container my-5" style="max-width: 750px;">
     <h1 class="h2 mb-3">Exchange proposal</h1>
@@ -13,5 +15,64 @@
         <dt class="col-sm-4">Pace</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Pace) ? "Not specified" : Model.Pace)</dd>
         <dt class="col-sm-4">First meeting idea</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.FirstMeetingIdea) ? "Not specified" : Model.FirstMeetingIdea)</dd>
     </dl>
+    @if (Model.ReceiverId == User.Identity.GetUserId() && Model.Status == "Pending")
+    {
+        if (notificationId > 0)
+        {
+            <section class="card p-3 mb-3" aria-labelledby="respond-title">
+                <h2 id="respond-title" class="h5">Respond to this proposal</h2>
+                @if (reciprocalSkills?.Any() == true)
+                {
+                    <form id="acceptProposal" action="@Url.Action("InitializeInteraction", "Notifications")" method="post" class="mb-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="notificationId" value="@notificationId" />
+                        <label for="reciprocalSkill" class="form-label">What will you learn from @Model.Requester.UserName?</label>
+                        <select id="reciprocalSkill" name="skillId" class="form-select mb-2" required>
+                            @foreach (var skill in reciprocalSkills)
+                            {
+                                <option value="@skill.SkillId">@skill.SkillName</option>
+                            }
+                        </select>
+                        <button type="submit" class="btn btn-success">Accept and start exchange</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted">There is no reciprocal skill yet. Add a skill that this member teaches to your learning list to accept.</p>
+                    <a href="@Url.Action("UpdateProfile", "Profile")">Update your skills</a>
+                }
+                <form id="declineProposal" action="@Url.Action("DeclineSkillRequest", "Notifications")" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="notificationId" value="@notificationId" />
+                    <button type="submit" class="btn btn-outline-danger">Decline proposal</button>
+                </form>
+                <p id="proposalError" class="text-danger mt-2" role="alert" hidden></p>
+            </section>
+        }
+    }
     <a href="@Url.Action("Requests", "Profile")">All proposals</a>
 </main>
+@section Scripts {
+    <script>
+        ['acceptProposal', 'declineProposal'].forEach(function (id) {
+            const form = document.getElementById(id);
+            if (!form) return;
+            form.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                const button = form.querySelector('button[type=submit]');
+                button.disabled = true;
+                try {
+                    const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+                    const result = await response.json();
+                    if (!response.ok || !result.success) throw new Error('The proposal could not be updated. Please refresh and try again.');
+                    location.href = '@Url.Action("Requests", "Profile")';
+                } catch (error) {
+                    const message = document.getElementById('proposalError');
+                    message.textContent = error.message;
+                    message.hidden = false;
+                    button.disabled = false;
+                }
+            });
+        });
+    </script>
+}

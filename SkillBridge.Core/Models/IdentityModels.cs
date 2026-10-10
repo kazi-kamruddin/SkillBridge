@@ -34,6 +34,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IDataPro
     public DbSet<Message> Messages { get; set; }
     public DbSet<SavedProfile> SavedProfiles { get; set; }
     public DbSet<InteractionSessionNote> InteractionSessionNotes { get; set; }
+    public DbSet<InteractionPlanProposal> InteractionPlanProposals { get; set; }
+    public DbSet<SkillSuggestion> SkillSuggestions { get; set; }
     public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -89,5 +91,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>, IDataPro
             .HasForeignKey(n => n.InteractionSessionId).OnDelete(DeleteBehavior.Cascade);
         modelBuilder.Entity<InteractionSessionNote>().HasOne(n => n.User).WithMany()
             .HasForeignKey(n => n.UserId).OnDelete(DeleteBehavior.NoAction);
+        modelBuilder.Entity<InteractionPlanProposal>().HasKey(p => new { p.InteractionId, p.SkillId });
+        modelBuilder.Entity<InteractionPlanProposal>().HasOne(p => p.Interaction).WithMany()
+            .HasForeignKey(p => p.InteractionId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<InteractionPlanProposal>().HasOne(p => p.Skill).WithMany()
+            .HasForeignKey(p => p.SkillId).OnDelete(DeleteBehavior.NoAction);
     }
 }

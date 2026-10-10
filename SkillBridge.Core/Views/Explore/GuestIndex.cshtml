@@ -23,6 +23,33 @@
         </div>
         <div class="col-sm-3 align-self-end"><button class="btn btn-primary w-100" type="submit">Search skills</button></div>
     </form>
+    @if (TempData["SkillNotice"] is string skillNotice)
+    { <p class="alert alert-info" role="status">@skillNotice</p> }
+    @if (User.Identity.IsAuthenticated)
+    {
+        @if (Model.CanReviewSuggestions)
+        { <p><a href="@Url.Action("Suggestions", "Catalog")">Review skill suggestions</a></p> }
+        <details class="card p-3 mb-4">
+            <summary>Suggest a missing skill</summary>
+            <p class="small text-muted mt-2">Suggestions are reviewed before they appear in the directory.</p>
+            <form method="post" action="@Url.Action("SuggestSkill", "Explore")">
+                @Html.AntiForgeryToken()
+                <label for="suggested-skill" class="form-label">Skill name</label>
+                <input id="suggested-skill" name="name" maxlength="100" minlength="2" required class="form-control mb-2" />
+                <label for="suggested-category" class="form-label">Suggested category</label>
+                <input id="suggested-category" name="categoryName" maxlength="100" minlength="2" required class="form-control mb-2" />
+                <label for="suggested-reason" class="form-label">Why should we add it?</label>
+                <textarea id="suggested-reason" name="reason" maxlength="500" minlength="10" required class="form-control mb-2"></textarea>
+                <button type="submit" class="btn btn-outline-primary">Send suggestion</button>
+            </form>
+        </details>
+        @if (Model.MySuggestions.Any())
+        {
+            <details class="mb-4"><summary>Your recent suggestions</summary>
+                <ul class="mt-2">@foreach (var suggestion in Model.MySuggestions) { <li>@suggestion.Name — @suggestion.Status</li> }</ul>
+            </details>
+        }
+    }
 
     @if (!Model.Skills.Any())
     {

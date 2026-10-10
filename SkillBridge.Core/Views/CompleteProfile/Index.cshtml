@@ -89,7 +89,7 @@
                     <ul class="list-group">
                         @foreach (var skill in category.Skills)
                         {
-                            <li class="list-group-item skill-learn" data-skill-id="@skill.Id">
+                            <li class="list-group-item skill-learn" data-skill-id="@skill.Id" tabindex="0" role="button" aria-pressed="false">
                                 @skill.Name
                             </li>
                         }
@@ -108,7 +108,7 @@
                     <ul class="list-group">
                         @foreach (var skill in category.Skills)
                         {
-                            <li class="list-group-item skill-know" data-skill-id="@skill.Id" data-skill-name="@skill.Name">
+                            <li class="list-group-item skill-know" data-skill-id="@skill.Id" data-skill-name="@skill.Name" tabindex="0" role="button" aria-pressed="false">
                                 @skill.Name
                             </li>
                         }
@@ -154,41 +154,39 @@
                 var stages = skillStagesData[skillId.toString()];
                 if (!stages) return;
                 $("#stage-selection-" + skillId).remove();
-                var $container = $('<div class="stage-selection-container mt-2" id="stage-selection-' + skillId + '"><strong>Stages you know for ' + skillName + ':</strong><br/></div>');
+                var $container = $('<div>').addClass('stage-selection-container mt-2').attr('id', 'stage-selection-' + skillId);
+                $('<strong>').text('Stages you know for ' + skillName + ':').appendTo($container);
+                $('<br>').appendTo($container);
                 stages.forEach(function (st) {
-                    $container.append('<span class="badge badge-secondary text-dark stage-option mr-1 mb-1" data-stage="' + st.id + '" data-skill-id="' + skillId + '">' + st.name + '</span>');
+                    $('<button type="button">').addClass('badge badge-secondary text-dark stage-option mr-1 mb-1')
+                        .attr({ 'data-stage': st.id, 'data-skill-id': skillId, 'aria-pressed': 'false' })
+                        .text(st.name).appendTo($container);
                 });
                 $("#skillStagesSelectionContainer").append($container);
 
                 var stage = selectedSkillsIKnow[skillId] || 1;
                 $('#stage-selection-' + skillId + ' .stage-option').each(function () {
-                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary');
-                    else $(this).removeClass('badge-primary').addClass('badge-secondary');
+                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary').attr('aria-pressed', 'true');
+                    else $(this).removeClass('badge-primary').addClass('badge-secondary').attr('aria-pressed', 'false');
                 });
             }
 
             // ----- Skill Selection -----
             $(".skill-learn").click(function () {
-                if ($(this).hasClass("disabled")) return;
                 var skillId = String($(this).data("skill-id"));
                 $(this).toggleClass("active");
 
                 if ($(this).hasClass("active")) {
                     selectedSkillsToLearn.add(skillId);
                     $('<input>').attr({ type: 'hidden', name: 'SkillsToLearn', value: skillId }).appendTo($form);
-                    $('.skill-know[data-skill-id="' + skillId + '"]').addClass('disabled').removeClass('active');
-                    delete selectedSkillsIKnow[skillId];
-                    $("#stage-selection-" + skillId).remove();
-                    refreshSkillsIKnowHiddenInputs();
                 } else {
                     selectedSkillsToLearn.delete(skillId);
                     $form.find('input[name="SkillsToLearn"][value="' + skillId + '"]').remove();
-                    $('.skill-know[data-skill-id="' + skillId + '"]').removeClass('disabled');
                 }
+                $(this).attr("aria-pressed", $(this).hasClass("active") ? "true" : "false");
             });
 
             $(document).on("click", ".skill-know", function () {
-                if ($(this).hasClass("disabled")) return;
                 var $this = $(this);
                 var skillId = String($this.data("skill-id")), skillName = $this.data("skill-name");
 
@@ -204,9 +202,14 @@
 
                 refreshSkillsIKnowHiddenInputs();
 
-                // Disable corresponding skill-learn
-                if ($this.hasClass("active")) $('.skill-learn[data-skill-id="' + skillId + '"]').addClass('disabled').removeClass('active');
-                else $('.skill-learn[data-skill-id="' + skillId + '"]').removeClass('disabled');
+                $this.attr("aria-pressed", $this.hasClass("active") ? "true" : "false");
+            });
+
+            $(document).on("keydown", ".skill-learn, .skill-know", function (event) {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    $(this).trigger("click");
+                }
             });
 
             $(document).on("click", ".stage-option", function () {
@@ -215,8 +218,8 @@
 
                 var $allStages = $('#stage-selection-' + skillId + ' .stage-option');
                 $allStages.each(function () {
-                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary');
-                    else $(this).removeClass('badge-primary').addClass('badge-secondary');
+                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary').attr('aria-pressed', 'true');
+                    else $(this).removeClass('badge-primary').addClass('badge-secondary').attr('aria-pressed', 'false');
                 });
 
                 var idx = skillIKnowIndexMap[skillId];
