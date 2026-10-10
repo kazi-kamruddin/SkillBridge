@@ -29,5 +29,6 @@ The database schema is managed by the numbered SQL files in `database/postgres/`
 
 Run `dotnet publish SkillBridge.Core/SkillBridge.Core.csproj -c Release` to compile controllers and Razor views. Existing Playwright guest checks can run with `npm ci`, `npx playwright install chromium`, `SKILLBRIDGE_BASE_URL` pointed at the running site, and `npm run test:e2e`.
 Run `dotnet run --project tests/CloudinaryImageServiceChecks/CloudinaryImageServiceChecks.csproj` for local image validation and authenticated download-signature checks without real Cloudinary credentials.
+Run `dotnet run --project tests/CoreModelChecks/CoreModelChecks.csproj` to verify the lazy-loading EF model can initialize without a database connection. A Release publish alone does not catch invalid proxy navigation properties.
 
 The prior MVC 5 version passed a live two-user flow against Supabase: registration, matching, request and acceptance, encrypted chat, confirmation of both skills' seven stages by both users, completion, and ratings. The temporary accounts were removed. The Core port still needs the same live flow after the compatibility SQL is applied.

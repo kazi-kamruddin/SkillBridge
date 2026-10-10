@@ -42,7 +42,7 @@ This is one ASP.NET Core 10 MVC app with Razor views, C# controllers, Identity, 
 4. Let Render build and deploy. Open the assigned URL and test home, About, Contact, registration, login, profile, matching, a request, chat, stages, ratings, and logout. Test password reset after Brevo is configured and the sender works. Use two accounts for the connected flows.
    For this release, also test confirmation email, resend, Google sign-in and linking, saved profiles, meeting proposal/accept/decline/cancel, both members' stage notes, and unread/read messages. Run 006 on Supabase **before** merging this code into Render's source branch.
 
-The `/health` endpoint checks that the web process responds; it does not query PostgreSQL. A passing Render health check therefore does not replace the member-flow checks above.
+The `/health` endpoint checks that the web process responds; it does not query PostgreSQL. The GitHub production workflow also checks the public skills and communities pages after Render marks a deployment live, so a database-backed page failure will fail the workflow. These checks still do not replace authenticated member-flow testing.
 
 Account submissions share an in-memory limit of 40 requests per minute; selected member write actions allow 40 requests per minute per signed-in account. Excess requests return HTTP 429 with `Retry-After: 60`. Limits reset when the Render instance restarts and are intended for this single-instance deployment. ASP.NET Core sends warnings and errors to Render's log stream, including throttled requests and moderation decisions; do not put passwords, reset tokens, message contents, or connection strings in logs. The Razor frontend and backend share one origin, so no CORS policy or extra service is required.
 
