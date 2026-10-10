@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using SkillBridge.Services;
+using System.Text.Json;
 
 namespace SkillBridge.Controllers
 {
@@ -53,6 +54,60 @@ namespace SkillBridge.Controllers
 
 
         ////////////////////////////////////////////////////////////////////////////
+        public ActionResult History()
+        {
+            var userId = User.Identity.GetUserId();
+            var exchanges = db.Interactions
+                .Where(i => (i.User1Id == userId || i.User2Id == userId) && i.Status == "Completed")
+                .Include(i => i.User1).Include(i => i.User2)
+                .Include(i => i.SkillFromRequester).Include(i => i.SkillFromTeacher)
+                .OrderByDescending(i => i.EndedAt ?? i.CreatedAt)
+                .ToList();
+            return View(exchanges.Select(i => new InteractionIndexViewModel
+            {
+                InteractionId = i.Id,
+                OtherUserName = i.User1Id == userId ? i.User2.UserName : i.User1.UserName,
+                SkillYouLearn = i.User1Id == userId ? i.SkillFromRequester.Name : i.SkillFromTeacher.Name,
+                SkillYouTeach = i.User1Id == userId ? i.SkillFromTeacher.Name : i.SkillFromRequester.Name,
+                Status = i.Status,
+                CreatedAt = i.CreatedAt,
+                EndedAt = i.EndedAt
+            }).ToList());
+        }
+
+        public ActionResult Details(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            var interaction = db.Interactions
+                .Include(i => i.User1).Include(i => i.User2)
+                .Include(i => i.SkillFromRequester).Include(i => i.SkillFromTeacher)
+                .Include(i => i.Sessions.Select(s => s.Skill))
+                .FirstOrDefault(i => i.Id == id && (i.User1Id == userId || i.User2Id == userId));
+            if (interaction == null) return NotFound();
+            if (interaction.Status == "Ongoing") return RedirectToAction(nameof(Sessions), new { id });
+            var ratings = db.Ratings.Where(r => r.InteractionId == id).ToList();
+            return View(new InteractionHistoryViewModel
+            {
+                InteractionId = id,
+                Status = interaction.Status,
+                OtherUserName = interaction.User1Id == userId ? interaction.User2.UserName : interaction.User1.UserName,
+                SkillYouLearn = interaction.User1Id == userId ? interaction.SkillFromRequester.Name : interaction.SkillFromTeacher.Name,
+                SkillYouTeach = interaction.User1Id == userId ? interaction.SkillFromTeacher.Name : interaction.SkillFromRequester.Name,
+                EndReason = interaction.EndReason,
+                CreatedAt = interaction.CreatedAt,
+                EndedAt = interaction.EndedAt,
+                SkillBlocks = BuildSkillBlocks(interaction),
+                MeetingHistory = MeetingEvents(id, userId),
+                Ratings = ratings.Select(r => new HistoryRatingViewModel
+                {
+                    IsMine = r.FromUserId == userId,
+                    Value = r.RatingValue,
+                    Comment = r.Comment
+                }).ToList(),
+                CanRate = interaction.Status == "Completed" && ratings.All(r => r.FromUserId != userId)
+            });
+        }
+
         // Interaction Sessions Page
 
         public ActionResult Sessions(int id)
@@ -76,7 +131,16 @@ namespace SkillBridge.Controllers
                 MeetingFormat = interaction.MeetingFormat,
                 MeetingNote = interaction.MeetingNote,
                 MeetingStatus = interaction.MeetingStatus,
-                CanRespondToMeeting = interaction.MeetingStatus == "Proposed" && interaction.MeetingProposedByUserId != userId
+                CanRespondToMeeting = interaction.MeetingStatus == "Proposed" && interaction.MeetingProposedByUserId != userId,
+                MeetingHistory = MeetingEvents(id, userId),
+                PlanProposals = db.InteractionPlanProposals
+                    .Where(p => p.InteractionId == id).ToList()
+                    .Select(p => new ExchangePlanProposalViewModel
+                    {
+                        SkillId = p.SkillId,
+                        ProposedByMe = p.ProposedByUserId == userId,
+                        Steps = JsonSerializer.Deserialize<List<PlanStepInput>>(p.StepsJson) ?? new()
+                    }).ToList()
             };
 
             return View(model);
@@ -102,6 +166,7 @@ namespace SkillBridge.Controllers
             interaction.MeetingNote = note;
             interaction.MeetingProposedByUserId = userId;
             interaction.MeetingStatus = "Proposed";
+            RecordMeeting(interaction, userId, "Proposed");
             NotifyOther(interaction, userId, "The other member proposed a meeting time. Open your exchange to respond.");
             db.SaveChanges();
             return RedirectToAction(nameof(Sessions), new { id });
@@ -118,6 +183,7 @@ namespace SkillBridge.Controllers
                 return StatusCode(409);
             if (decision != "Accept" && decision != "Decline") return BadRequest();
             interaction.MeetingStatus = decision == "Accept" ? "Confirmed" : "Declined";
+            RecordMeeting(interaction, userId, interaction.MeetingStatus);
             NotifyOther(interaction, userId, decision == "Accept" ?
                 "Your meeting time was accepted." : "Your meeting time was declined. You can propose another.");
             db.SaveChanges();
@@ -134,7 +200,25 @@ namespace SkillBridge.Controllers
             if (interaction.MeetingStatus != "Confirmed" && interaction.MeetingStatus != "Proposed")
                 return StatusCode(409);
             interaction.MeetingStatus = "Cancelled";
+            RecordMeeting(interaction, userId, "Cancelled");
             NotifyOther(interaction, userId, "The planned meeting was cancelled. Open your exchange to propose a new time.");
+            db.SaveChanges();
+            return RedirectToAction(nameof(Sessions), new { id });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult CompleteMeeting(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            var interaction = db.Interactions.FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
+                (i.User1Id == userId || i.User2Id == userId));
+            if (interaction == null) return NotFound();
+            if (interaction.MeetingStatus != "Confirmed" || !interaction.MeetingStartUtc.HasValue ||
+                interaction.MeetingStartUtc.Value > DateTime.UtcNow)
+                return StatusCode(409);
+            interaction.MeetingStatus = "Completed";
+            RecordMeeting(interaction, userId, "Completed");
+            NotifyOther(interaction, userId, "Your partner marked the planned meeting as completed.");
             db.SaveChanges();
             return RedirectToAction(nameof(Sessions), new { id });
         }
@@ -164,14 +248,183 @@ namespace SkillBridge.Controllers
             return RedirectToAction(nameof(Sessions), new { id = session.InteractionId });
         }
 
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult ProposePlan(int interactionId, int skillId, List<PlanStepInput> steps)
+        {
+            var userId = User.Identity.GetUserId();
+            var interaction = db.Interactions.FirstOrDefault(i => i.Id == interactionId &&
+                i.Status == "Ongoing" && (i.User1Id == userId || i.User2Id == userId));
+            if (interaction == null) return NotFound();
+            if (skillId != interaction.SkillFromRequesterId && skillId != interaction.SkillFromTeacherId)
+                return BadRequest();
+            if (db.InteractionPlanProposals.Any(p => p.InteractionId == interactionId && p.SkillId == skillId))
+                return Conflict("Respond to the current plan proposal before suggesting another.");
+
+            var current = db.InteractionSessions.Where(s => s.InteractionId == interactionId && s.SkillId == skillId)
+                .OrderBy(s => s.StageNumber).ToList();
+            var editable = current.Where(s => !s.User1Confirmed && !s.User2Confirmed).ToList();
+            if (editable.Count == 0) return Conflict("No upcoming milestones can be changed.");
+            steps ??= new();
+            if (steps.Count == 0 || current.Count - editable.Count + steps.Count > 12)
+                return BadRequest("Keep between one and twelve milestones per skill.");
+
+            foreach (var step in steps)
+            {
+                step.Title = step.Title?.Trim();
+                if (string.IsNullOrWhiteSpace(step.Title) || step.Title.Length > 200)
+                    return BadRequest("Each milestone needs a title of at most 200 characters.");
+            }
+            if (steps.Select(s => s.Title).Distinct(StringComparer.OrdinalIgnoreCase).Count() != steps.Count)
+                return BadRequest("Give each milestone a distinct title.");
+            var retainedIds = steps.Where(s => s.SessionId != 0).Select(s => s.SessionId).ToList();
+            if (retainedIds.Count != retainedIds.Distinct().Count() ||
+                retainedIds.Any(id => editable.All(s => s.Id != id)))
+                return BadRequest("The proposal contains an invalid milestone.");
+            var removedIds = editable.Select(s => s.Id).Except(retainedIds).ToList();
+            if (steps.Count(s => s.SessionId == 0) > 3 || removedIds.Count > 3)
+                return BadRequest("Add or remove up to three milestones at a time.");
+            if (db.InteractionSessionNotes.Any(n => removedIds.Contains(n.InteractionSessionId)))
+                return Conflict("A milestone with notes cannot be removed. Rename or move it instead.");
+            if (steps.Count == editable.Count && Enumerable.Range(0, steps.Count).All(index =>
+                steps[index].SessionId == editable[index].Id &&
+                steps[index].Title == editable[index].Title))
+                return BadRequest("Change the plan before sending it.");
+
+            db.InteractionPlanProposals.Add(new InteractionPlanProposal
+            {
+                InteractionId = interactionId,
+                SkillId = skillId,
+                ProposedByUserId = userId,
+                StepsJson = JsonSerializer.Serialize(steps),
+                OriginalStepsJson = JsonSerializer.Serialize(PlanSnapshot(current))
+            });
+            db.Notifications.Add(new Notification
+            {
+                UserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id,
+                Type = "Exchange",
+                ReferenceId = interactionId,
+                Message = "Your partner suggested changes to your exchange plan. Open the exchange to review them."
+            });
+            db.SaveChanges();
+            TempData["PlanNotice"] = "Your partner can now review the proposed plan.";
+            return RedirectToAction(nameof(Sessions), new { id = interactionId });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult RespondToPlan(int interactionId, int skillId, string decision)
+        {
+            var userId = User.Identity.GetUserId();
+            using var transaction = db.Database.BeginTransaction(System.Data.IsolationLevel.Serializable);
+            var interaction = db.Interactions.FirstOrDefault(i => i.Id == interactionId &&
+                i.Status == "Ongoing" && (i.User1Id == userId || i.User2Id == userId));
+            var proposal = db.InteractionPlanProposals.FirstOrDefault(p =>
+                p.InteractionId == interactionId && p.SkillId == skillId);
+            if (interaction == null || proposal == null) return NotFound();
+            if (decision != "Accept" && decision != "Decline" && decision != "Withdraw") return BadRequest();
+            if (decision == "Withdraw" && proposal.ProposedByUserId != userId) return StatusCode(403);
+            if (decision != "Withdraw" && proposal.ProposedByUserId == userId) return StatusCode(403);
+
+            if (decision == "Accept")
+            {
+                var current = db.InteractionSessions.Where(s => s.InteractionId == interactionId && s.SkillId == skillId)
+                    .OrderBy(s => s.StageNumber).ToList();
+                if (JsonSerializer.Serialize(PlanSnapshot(current)) != proposal.OriginalStepsJson)
+                    return Conflict("The exchange changed since this proposal. Withdraw it and create a new plan.");
+                var steps = JsonSerializer.Deserialize<List<PlanStepInput>>(proposal.StepsJson) ?? new();
+                var editable = current.Where(s => !s.User1Confirmed && !s.User2Confirmed).ToList();
+                var retainedIds = steps.Where(s => s.SessionId != 0).Select(s => s.SessionId).ToHashSet();
+                var removedIds = editable.Where(s => !retainedIds.Contains(s.Id)).Select(s => s.Id).ToList();
+                if (db.InteractionSessionNotes.Any(n => removedIds.Contains(n.InteractionSessionId)))
+                    return Conflict("A milestone now has notes. Withdraw the proposal and create a new one.");
+
+                db.InteractionSessions.RemoveRange(editable.Where(s => !retainedIds.Contains(s.Id)));
+                foreach (var session in editable.Where(s => retainedIds.Contains(s.Id)))
+                    session.StageNumber = 1000 + session.Id;
+                db.SaveChanges();
+
+                var nextNumber = current.Count - editable.Count + 1;
+                foreach (var step in steps)
+                {
+                    var session = editable.FirstOrDefault(s => s.Id == step.SessionId);
+                    if (session == null)
+                    {
+                        session = new InteractionSession
+                        {
+                            InteractionId = interactionId,
+                            SkillId = skillId,
+                            Status = "Pending"
+                        };
+                        db.InteractionSessions.Add(session);
+                    }
+                    session.StageNumber = nextNumber++;
+                    session.Title = step.Title;
+                }
+            }
+
+            db.InteractionPlanProposals.Remove(proposal);
+            db.Notifications.Add(new Notification
+            {
+                UserId = proposal.ProposedByUserId == userId
+                    ? (interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id)
+                    : proposal.ProposedByUserId,
+                Type = "Exchange",
+                ReferenceId = interactionId,
+                Message = decision == "Accept" ? "Your partner accepted the updated exchange plan."
+                    : decision == "Decline" ? "Your partner declined the exchange plan changes."
+                    : "Your partner withdrew the proposed exchange plan."
+            });
+            db.SaveChanges();
+            transaction.Commit();
+            TempData["PlanNotice"] = decision == "Accept" ? "The shared plan has been updated."
+                : decision == "Decline" ? "The proposal was declined." : "The proposal was withdrawn.";
+            return RedirectToAction(nameof(Sessions), new { id = interactionId });
+        }
+
+        private static List<PlanStepSnapshot> PlanSnapshot(List<InteractionSession> sessions) =>
+            sessions.OrderBy(s => s.StageNumber).Select(s => new PlanStepSnapshot
+            {
+                SessionId = s.Id,
+                StageNumber = s.StageNumber,
+                Title = s.Title,
+                User1Confirmed = s.User1Confirmed,
+                User2Confirmed = s.User2Confirmed
+            }).ToList();
+
         private void NotifyOther(Interaction interaction, string userId, string message)
         {
             db.Notifications.Add(new Notification
             {
                 UserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id,
-                Type = "Info", ReferenceId = interaction.Id, Message = message, CreatedAt = DateTime.Now
+                Type = "Exchange", ReferenceId = interaction.Id, Message = message, CreatedAt = DateTime.Now
             });
         }
+
+        private void RecordMeeting(Interaction interaction, string actorId, string eventType)
+        {
+            db.InteractionMeetingEvents.Add(new InteractionMeetingEvent
+            {
+                InteractionId = interaction.Id,
+                ActorUserId = actorId,
+                EventType = eventType,
+                StartsAtUtc = interaction.MeetingStartUtc.Value,
+                Format = interaction.MeetingFormat,
+                Note = interaction.MeetingNote,
+                CreatedAt = DateTime.Now
+            });
+        }
+
+        private List<MeetingEventViewModel> MeetingEvents(int interactionId, string userId) =>
+            db.InteractionMeetingEvents.Where(e => e.InteractionId == interactionId)
+                .OrderByDescending(e => e.CreatedAt).ThenByDescending(e => e.Id)
+                .Select(e => new MeetingEventViewModel
+                {
+                    EventType = e.EventType,
+                    StartsAtUtc = e.StartsAtUtc,
+                    Format = e.Format,
+                    Note = e.Note,
+                    IsMine = e.ActorUserId == userId,
+                    CreatedAt = e.CreatedAt
+                }).ToList();
 
 
 
@@ -216,13 +469,15 @@ namespace SkillBridge.Controllers
                 db.Notifications.Add(new Notification
                 {
                     UserId = session.Interaction.User1Id,
-                    Type = "Info",
+                    Type = "Exchange",
+                    ReferenceId = interactionId,
                     Message = $"Stage {session.StageNumber} of {session.Skill.Name} completed!"
                 });
                 db.Notifications.Add(new Notification
                 {
                     UserId = session.Interaction.User2Id,
-                    Type = "Info",
+                    Type = "Exchange",
+                    ReferenceId = interactionId,
                     Message = $"Stage {session.StageNumber} of {session.Skill.Name} completed!"
                 });
             }
@@ -259,7 +514,7 @@ namespace SkillBridge.Controllers
             db.Notifications.Add(new Notification
             {
                 UserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id,
-                Type = "Info",
+                Type = "Exchange",
                 ReferenceId = id,
                 Message = "The other member ended your exchange. Open Interactions to see the reason.",
                 CreatedAt = DateTime.Now
@@ -292,6 +547,7 @@ namespace SkillBridge.Controllers
             UpdateUserSkill(interaction.User2Id, interaction.SkillFromTeacherId, interaction);
 
             interaction.Status = "Completed";
+            interaction.EndedAt = DateTime.Now;
 
             var user1Rating = db.UserRatings.FirstOrDefault(r => r.UserId == interaction.User1Id);
             var user2Rating = db.UserRatings.FirstOrDefault(r => r.UserId == interaction.User2Id);
@@ -308,7 +564,7 @@ namespace SkillBridge.Controllers
         {
             if (skillId == 0) return;
 
-            var userSkill = db.UserSkills.FirstOrDefault(us => us.UserId == userId && us.SkillId == skillId);
+            var userSkill = db.UserSkills.FirstOrDefault(us => us.UserId == userId && us.SkillId == skillId && us.Status == "Teaching");
 
             if (userSkill == null)
             {
@@ -321,7 +577,7 @@ namespace SkillBridge.Controllers
                 db.UserSkills.Add(userSkill);
             }
 
-            userSkill.KnownUpToStage = MaxStageCompleted(interaction, skillId);
+            userSkill.KnownUpToStage = Math.Max(userSkill.KnownUpToStage ?? 0, MaxStageCompleted(interaction, skillId));
             userSkill.Status = "Teaching";
         }
 
@@ -419,7 +675,7 @@ namespace SkillBridge.Controllers
             db.Notifications.Add(new Notification
             {
                 UserId = recipientId,
-                Type = "Info",
+                Type = "Exchange",
                 ReferenceId = model.InteractionId,
                 Message = $"{User.Identity.Name} rated you {model.RatingValue}/10. Comment: \"{model.Comment}\"",
                 CreatedAt = DateTime.Now,
@@ -491,10 +747,12 @@ namespace SkillBridge.Controllers
                         SessionId = session.Id,
                         StageNumber = session.StageNumber,
                         SkillId = session.SkillId,
-                        Description = description,
+                        SkillName = session.Skill.Name,
+                        Description = session.Title ?? description,
                         Status = status,
                         UserConfirmed = confirmed,
                         IsLocked = isLocked,
+                        IsEditable = !session.User1Confirmed && !session.User2Confirmed,
                         Notes = notes.TryGetValue(session.Id, out var sessionNotes)
                             ? sessionNotes.Select(n => new StageNoteViewModel
                             {
@@ -519,11 +777,13 @@ namespace SkillBridge.Controllers
             var sessions = interaction.Sessions.Where(s => s.SkillId == skillId).ToList();
             if (!sessions.Any()) return 0;
 
-            return sessions
+            var completedCatalogStages = sessions
                 .Where(s => s.User1Confirmed && s.User2Confirmed)
-                .Select(s => s.StageNumber)
-                .DefaultIfEmpty(0)
-                .Max();
+                .Select(s => s.CatalogStageNumber ?? 0)
+                .Where(stage => stage > 0).ToHashSet();
+            var level = 0;
+            while (completedCatalogStages.Contains(level + 1)) level++;
+            return level;
         }
 
 

@@ -36,6 +36,11 @@ namespace SkillBridge.Models
         [StringLength(300)]
         public string AvailabilityNotes { get; set; }
 
+        public int AvailableDaysMask { get; set; }
+
+        [StringLength(80)]
+        public string TimeZoneId { get; set; }
+
         [StringLength(20)]
         public string MeetingFormat { get; set; } = "Either";
 

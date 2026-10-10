@@ -342,9 +342,9 @@
             </div>
             <div class="sb-hero-art" aria-hidden="true">
                 <div class="sb-art-label">THE EXCHANGE / 001</div>
-                <div class="sb-art-card sb-art-teach"><small>I CAN TEACH</small><strong>Photography</strong><span>✦</span></div>
+                <div class="sb-art-card sb-art-teach"><small>I CAN TEACH</small><strong>Python</strong><span>✦</span></div>
                 <div class="sb-art-link">↔</div>
-                <div class="sb-art-card sb-art-learn"><small>I WANT TO LEARN</small><strong>Guitar</strong><span>♪</span></div>
+                <div class="sb-art-card sb-art-learn"><small>I WANT TO LEARN</small><strong>SQL</strong><span>⌘</span></div>
             </div>
         </section>
 
@@ -385,6 +385,12 @@
             <h1 class="dashboard-welcome">
                 <i class="fas fa-hand-wave"></i>Welcome back, @Model.FullName!
             </h1>
+            <section class="dashboard-card mb-4" aria-labelledby="next-action-heading">
+                <span class="sb-eyebrow">YOUR NEXT STEP</span>
+                <h2 id="next-action-heading" class="h4 mt-2">@Model.NextActionTitle</h2>
+                <p>@Model.NextActionDescription</p>
+                <a class="btn btn-primary" href="@Model.NextActionUrl">Continue <span aria-hidden="true">↗</span></a>
+            </section>
             <!-- Motivational Quote Section -->
             @if (!string.IsNullOrEmpty(Model.MotivationalQuote))
             {

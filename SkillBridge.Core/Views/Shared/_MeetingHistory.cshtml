@@ -1,0 +1,17 @@
+@model List<SkillBridge.Models.MeetingEventViewModel>
+@if (Model.Count == 0) { <p class="text-muted">No meeting changes recorded yet.</p> }
+else
+{
+    <ol class="list-group list-group-numbered mb-3">
+        @foreach (var meeting in Model)
+        {
+            <li class="list-group-item">
+                <strong>@meeting.EventType</strong>
+                @if (meeting.EventType != "Earlier saved state") { <span>by @(meeting.IsMine ? "you" : "your partner")</span> }
+                <span> · @meeting.Format · </span>
+                <time class="meeting-time" data-utc="@meeting.StartsAtUtc.ToString("yyyy-MM-ddTHH:mm:ssZ")">@meeting.StartsAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</time>
+                @if (!string.IsNullOrWhiteSpace(meeting.Note)) { <div class="small">@meeting.Note</div> }
+            </li>
+        }
+    </ol>
+}

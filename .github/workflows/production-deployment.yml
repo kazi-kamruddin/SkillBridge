@@ -1,20 +1,70 @@
 name: Record production deployment
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
   contents: read
   deployments: write
 
+concurrency:
+  group: production-deployment
+  cancel-in-progress: true
+
 jobs:
   production:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 7
+    timeout-minutes: 25
     environment:
       name: production
       url: https://skillbridge-08v4.onrender.com
     steps:
+      - name: Wait for this commit to become live on Render
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ vars.RENDER_SERVICE_ID }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$RENDER_API_KEY" || -z "$RENDER_SERVICE_ID" ]]; then
+            echo "Set RENDER_API_KEY and RENDER_SERVICE_ID in GitHub before running this workflow." >&2
+            exit 1
+          fi
+
+          for attempt in {1..80}; do
+            deploys=$(curl --fail --silent --show-error --max-time 20 \
+              --retry 2 --retry-delay 2 \
+              --header "Authorization: Bearer $RENDER_API_KEY" \
+              --header "Accept: application/json" \
+              "https://api.render.com/v1/services/$RENDER_SERVICE_ID/deploys?limit=30")
+
+            status=$(jq -r --arg sha "$GITHUB_SHA" \
+              '[.[] | .deploy | select(.commit.id == $sha)] | first | .status // empty' \
+              <<< "$deploys")
+
+            case "$status" in
+              live)
+                echo "Render reports commit $GITHUB_SHA as live."
+                break
+                ;;
+              build_failed|update_failed|pre_deploy_failed|canceled|deactivated)
+                echo "Render deploy for $GITHUB_SHA ended with status: $status" >&2
+                exit 1
+                ;;
+            esac
+
+            if [[ "$attempt" -eq 80 ]]; then
+              echo "Timed out waiting for Render to deploy $GITHUB_SHA (last status: ${status:-not found})." >&2
+              exit 1
+            fi
+
+            echo "Waiting for Render deploy $GITHUB_SHA (status: ${status:-not found}; attempt $attempt/80)."
+            sleep 15
+          done
+
       - name: Check the live SkillBridge site
         run: >-
           curl --fail --location --show-error --silent

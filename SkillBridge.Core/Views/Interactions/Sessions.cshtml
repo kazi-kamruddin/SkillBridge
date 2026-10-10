@@ -107,7 +107,9 @@
 
 <div class="container mt-4 sb-session-page">
     @Html.AntiForgeryToken()
-    <h2 class="mb-4">Interaction Stages</h2>
+    <h1 class="h2 mb-2">Your exchange plan</h1>
+    <p class="text-muted mb-4">Both partners confirm each milestone. You can suggest changes to upcoming milestones; the other member must agree.</p>
+    @if (TempData["PlanNotice"] != null) { <p class="alert alert-success" role="status">@TempData["PlanNotice"]</p> }
 
     <section class="card p-3 mb-4" aria-labelledby="meeting-heading">
         <h3 id="meeting-heading" class="h5">Plan your next meeting</h3>
@@ -133,6 +135,14 @@
                     <button type="submit" class="btn btn-outline-danger btn-sm">Cancel meeting</button>
                 </form>
             }
+            @if (Model.MeetingStatus == "Confirmed" && Model.MeetingStartUtc <= DateTime.UtcNow)
+            {
+                <form method="post" action="@Url.Action("CompleteMeeting", "Interactions")" class="mb-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.InteractionId" />
+                    <button type="submit" class="btn btn-outline-success btn-sm">Mark meeting completed</button>
+                </form>
+            }
         }
         else if (Model.MeetingStatus == "Cancelled" || Model.MeetingStatus == "Declined")
         { <p>The previous time was @Model.MeetingStatus.ToLowerInvariant(). You can propose another.</p> }
@@ -153,44 +163,100 @@
         </details>
     </section>
 
-    <div class="skill-blocks">
-        @foreach (var stage in Model.SkillBlocks)
+    <h2 class="h5">Meeting history</h2>
+    <partial name="_MeetingHistory" model="Model.MeetingHistory" />
+
+    <div class="exchange-tracks">
+        @foreach (var track in Model.SkillBlocks.GroupBy(s => new { s.SkillId, s.SkillName }))
         {
-            <div class="stage @stage.Status"
-                 data-stage="@stage.StageNumber"
-                 data-skill="@stage.SkillId">
-                <span>Stage @stage.StageNumber: @stage.Description</span>
-                @if (!stage.IsLocked && !stage.UserConfirmed)
+            var proposal = Model.PlanProposals.FirstOrDefault(p => p.SkillId == track.Key.SkillId);
+            <section class="card p-3 mb-4 exchange-track" aria-label="@track.Key.SkillName plan">
+                <h2 class="h4">@track.Key.SkillName</h2>
+                <p class="small text-muted">@track.Count(s => s.Status == "Green") of @track.Count() milestones completed</p>
+                @if (proposal != null)
                 {
-                    <button class="mark-done" data-stage="@stage.StageNumber" data-skill="@stage.SkillId">
-                        Mark Done
-                    </button>
+                    <div class="alert alert-info">
+                        <strong>@(proposal.ProposedByMe ? "Waiting for your partner to review these changes" : "Your partner suggested this plan")</strong>
+                        <ol class="mb-2 mt-2">@foreach (var step in proposal.Steps) { <li>@step.Title</li> }</ol>
+                        <form method="post" action="@Url.Action("RespondToPlan", "Interactions")" class="d-flex gap-2 flex-wrap">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="interactionId" value="@Model.InteractionId" />
+                            <input type="hidden" name="skillId" value="@track.Key.SkillId" />
+                            @if (proposal.ProposedByMe)
+                            { <button type="submit" name="decision" value="Withdraw" class="btn btn-outline-secondary btn-sm">Withdraw proposal</button> }
+                            else
+                            {
+                                <button type="submit" name="decision" value="Accept" class="btn btn-success btn-sm">Accept plan</button>
+                                <button type="submit" name="decision" value="Decline" class="btn btn-outline-secondary btn-sm">Decline</button>
+                            }
+                        </form>
+                    </div>
                 }
-                <details class="mt-2">
-                    <summary>Stage notes (@stage.Notes.Count)</summary>
-                    @foreach (var note in stage.Notes)
+                <div class="skill-blocks">
+                    @foreach (var stage in track)
                     {
-                        <div class="small mt-2"><strong>@(note.IsMine ? "You" : "Partner"):</strong> @note.WhatWeCovered</div>
-                        @if (!string.IsNullOrWhiteSpace(note.NextStep)) { <div class="small">Next: @note.NextStep</div> }
+                        <div class="stage @stage.Status" data-stage="@stage.StageNumber" data-skill="@stage.SkillId">
+                            <span>Milestone @stage.StageNumber: @stage.Description</span>
+                            <small class="stage-state mb-2">@(stage.Status == "Green" ? "Completed" : stage.UserConfirmed ? "Awaiting partner" : stage.IsLocked ? "Upcoming" : "Ready to confirm")</small>
+                            @if (!stage.IsLocked && !stage.UserConfirmed)
+                            { <button class="mark-done" data-stage="@stage.StageNumber" data-skill="@stage.SkillId">Confirm milestone</button> }
+                            <details class="mt-2">
+                                <summary>Milestone notes (@stage.Notes.Count)</summary>
+                                @foreach (var note in stage.Notes)
+                                {
+                                    <div class="small mt-2"><strong>@(note.IsMine ? "You" : "Partner"):</strong> @note.WhatWeCovered</div>
+                                    @if (!string.IsNullOrWhiteSpace(note.NextStep)) { <div class="small">Next: @note.NextStep</div> }
+                                }
+                                <form method="post" action="@Url.Action("SaveStageNote", "Interactions")" class="mt-2">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="sessionId" value="@stage.SessionId" />
+                                    <label class="small" for="covered-@stage.SessionId">What you covered</label>
+                                    <textarea id="covered-@stage.SessionId" name="whatWeCovered" maxlength="1000" required class="form-control form-control-sm mb-1">@stage.Notes.FirstOrDefault(n => n.IsMine)?.WhatWeCovered</textarea>
+                                    <label class="small" for="next-@stage.SessionId">Your next step</label>
+                                    <textarea id="next-@stage.SessionId" name="nextStep" maxlength="500" class="form-control form-control-sm mb-1">@stage.Notes.FirstOrDefault(n => n.IsMine)?.NextStep</textarea>
+                                    <button type="submit" class="btn btn-light btn-sm">Save note</button>
+                                </form>
+                            </details>
+                        </div>
                     }
-                    <form method="post" action="@Url.Action("SaveStageNote", "Interactions")" class="mt-2">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="sessionId" value="@stage.SessionId" />
-                        <label class="small" for="covered-@stage.SessionId">What you covered</label>
-                        <textarea id="covered-@stage.SessionId" name="whatWeCovered" maxlength="1000" required class="form-control form-control-sm mb-1">@stage.Notes.FirstOrDefault(n => n.IsMine)?.WhatWeCovered</textarea>
-                        <label class="small" for="next-@stage.SessionId">Your next step</label>
-                        <textarea id="next-@stage.SessionId" name="nextStep" maxlength="500" class="form-control form-control-sm mb-1">@stage.Notes.FirstOrDefault(n => n.IsMine)?.NextStep</textarea>
-                        <button type="submit" class="btn btn-light btn-sm">Save note</button>
-                    </form>
-                </details>
-            </div>
+                </div>
+                @if (proposal == null && track.Any(s => s.IsEditable))
+                {
+                    <details class="mt-3 plan-editor">
+                        <summary>Suggest changes to upcoming milestones</summary>
+                        <p class="small text-muted mt-2">Rename, move, remove or add steps. Completed and already confirmed milestones stay in place. Your partner must accept the proposal.</p>
+                        <form method="post" action="@Url.Action("ProposePlan", "Interactions")" class="plan-form" data-fixed-count="@track.Count(s => !s.IsEditable)" data-original-count="@track.Count(s => s.IsEditable)">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="interactionId" value="@Model.InteractionId" />
+                            <input type="hidden" name="skillId" value="@track.Key.SkillId" />
+                            <div class="plan-steps">
+                                @{ var editableStages = track.Where(s => s.IsEditable).ToList(); }
+                                @for (var planIndex = 0; planIndex < editableStages.Count; planIndex++)
+                                {
+                                    var stage = editableStages[planIndex];
+                                    <div class="plan-step d-flex flex-wrap gap-2 align-items-center mb-2" data-session-id="@stage.SessionId">
+                                        <input type="hidden" class="plan-session-id" name="steps[@planIndex].SessionId" value="@stage.SessionId" />
+                                        <input class="form-control flex-grow-1 plan-title" name="steps[@planIndex].Title" style="max-width:450px" value="@stage.Description" maxlength="200" required aria-label="Milestone title" />
+                                        <button type="button" class="btn btn-outline-secondary btn-sm plan-up" aria-label="Move milestone earlier">↑</button>
+                                        <button type="button" class="btn btn-outline-secondary btn-sm plan-down" aria-label="Move milestone later">↓</button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm plan-remove" disabled="@(stage.Notes.Count > 0)">Remove</button>
+                                    </div>
+                                }
+                            </div>
+                            <button type="button" class="btn btn-outline-primary btn-sm plan-add">Add milestone</button>
+                            <button type="submit" class="btn btn-primary btn-sm ms-2">Send plan proposal</button>
+                            <p class="small text-muted mt-2">Add or remove up to three milestones per proposal, with at most 12 per skill. Milestones with notes cannot be removed.</p>
+                        </form>
+                    </details>
+                }
+            </section>
         }
     </div>
 
     <!-- End Interaction Button -->
     @if (Model.SkillBlocks.All(s => s.Status == "Green"))
     {
-        <button id="end-interaction-btn" class="btn btn-success">End Interaction</button>
+        <button id="end-interaction-btn" class="btn btn-success">Complete exchange</button>
     }
     <details class="mt-4">
         <summary>Need to end this exchange early?</summary>
@@ -207,6 +273,52 @@
 @section scripts {
     <script>
         $(document).ready(function () {
+            $(document).on("click", ".plan-add", function () {
+                var form = $(this).closest(".plan-form");
+                if (form.find('.plan-step[data-session-id="0"]').length >= 3) {
+                    alert("Add up to three milestones per proposal.");
+                    return;
+                }
+                if (form.find(".plan-step").length + Number(form.data("fixed-count")) >= 12) {
+                    alert("Keep at most 12 milestones in each skill plan.");
+                    return;
+                }
+                form.find(".plan-steps").append(
+                    '<div class="plan-step d-flex flex-wrap gap-2 align-items-center mb-2" data-session-id="0">' +
+                    '<input type="hidden" class="plan-session-id" value="0" />' +
+                    '<input class="form-control flex-grow-1 plan-title" style="max-width:450px" maxlength="200" required aria-label="Milestone title" placeholder="New milestone" />' +
+                    '<button type="button" class="btn btn-outline-secondary btn-sm plan-up" aria-label="Move milestone earlier">↑</button>' +
+                    '<button type="button" class="btn btn-outline-secondary btn-sm plan-down" aria-label="Move milestone later">↓</button>' +
+                    '<button type="button" class="btn btn-outline-danger btn-sm plan-remove">Remove</button></div>');
+                form.find(".plan-step:last .plan-title").trigger("focus");
+            });
+            $(document).on("click", ".plan-remove", function () {
+                var form = $(this).closest(".plan-form");
+                if ($(this).closest('.plan-step').data('session-id') !== 0 &&
+                    Number(form.data('original-count')) - form.find('.plan-step').filter(function () { return $(this).data('session-id') !== 0; }).length >= 3) {
+                    alert("Remove up to three milestones per proposal.");
+                    return;
+                }
+                if (form.find(".plan-step").length <= 1) {
+                    alert("Keep at least one upcoming milestone.");
+                    return;
+                }
+                $(this).closest(".plan-step").remove();
+            });
+            $(document).on("click", ".plan-up", function () {
+                var row = $(this).closest(".plan-step");
+                row.prev(".plan-step").before(row);
+            });
+            $(document).on("click", ".plan-down", function () {
+                var row = $(this).closest(".plan-step");
+                row.next(".plan-step").after(row);
+            });
+            $(document).on("submit", ".plan-form", function () {
+                $(this).find(".plan-step").each(function (index) {
+                    $(this).find(".plan-session-id").attr("name", "steps[" + index + "].SessionId");
+                    $(this).find(".plan-title").attr("name", "steps[" + index + "].Title");
+                });
+            });
             $(".meeting-time").each(function () {
                 var time = new Date($(this).data("utc"));
                 if (!isNaN(time.getTime())) $(this).text(time.toLocaleString());
@@ -229,13 +341,15 @@
                             var stageDiv = button.closest(".stage");
                             if (response.status === "Confirmed") {
                                 stageDiv.removeClass("Red Yellow").addClass("Green");
+                                stageDiv.find(".stage-state").text("Completed");
                             } else {
                                 stageDiv.removeClass("Red Green").addClass("Yellow");
+                                stageDiv.find(".stage-state").text("Awaiting partner");
                             }
                             button.remove();
 
                             if ($(".stage").length === $(".stage.Green").length && $("#end-interaction-btn").length === 0) {
-                                $(".skill-blocks").after('<button id="end-interaction-btn" class="btn btn-success">End Interaction</button>');
+                                $(".exchange-tracks").after('<button id="end-interaction-btn" class="btn btn-success">Complete exchange</button>');
                                 attachEndInteractionClick();
                             }
                         }

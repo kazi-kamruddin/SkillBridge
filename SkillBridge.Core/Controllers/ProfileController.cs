@@ -78,6 +78,8 @@ namespace SkillBridge.Controllers
                     !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SKILLBRIDGE_GOOGLE_CLIENT_SECRET")),
                 GoogleLinked = googleLinked,
                 AvailabilityNotes = userInfo?.AvailabilityNotes,
+                AvailableDaysMask = userInfo?.AvailableDaysMask ?? 0,
+                TimeZoneId = userInfo?.TimeZoneId,
                 MeetingFormat = userInfo?.MeetingFormat ?? "Either",
                 FullName = userInfo?.FullName ?? "",
                 Email = user.Email,
@@ -127,6 +129,8 @@ namespace SkillBridge.Controllers
                 Age = userInfo.Age,
                 IsPublic = userInfo.IsPublic,
                 AvailabilityNotes = userInfo.AvailabilityNotes,
+                AvailableDays = Enumerable.Range(0, 7).Where(day => (userInfo.AvailableDaysMask & (1 << day)) != 0).ToList(),
+                TimeZoneId = userInfo.TimeZoneId,
                 MeetingFormat = userInfo.MeetingFormat ?? "Either",
                 ExistingProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo.ProfileImageUrl, userInfo.FullName),
                 SkillsToLearn = userSkills.Where(s => s.Status == "Learning").Select(s => s.SkillId).ToList(),
@@ -168,11 +172,18 @@ namespace SkillBridge.Controllers
                     !maxStageBySkill.ContainsKey(s.SkillId) ||
                     s.KnownUpToStage < 1 || s.KnownUpToStage > maxStageBySkill[s.SkillId]))
                 ModelState.AddModelError("", "Choose valid skills and stages.");
-            if (teachingSkills.Select(s => s.SkillId).Distinct().Count() != teachingSkills.Count ||
-                teachingSkills.Any(s => learningIds.Contains(s.SkillId)))
-                ModelState.AddModelError("", "A skill cannot appear twice or be both taught and learned.");
+            if (teachingSkills.Select(s => s.SkillId).Distinct().Count() != teachingSkills.Count)
+                ModelState.AddModelError("", "Choose each teaching skill only once.");
             if (model.MeetingFormat != "Online" && model.MeetingFormat != "In person" && model.MeetingFormat != "Either")
                 ModelState.AddModelError(nameof(model.MeetingFormat), "Choose a meeting format.");
+            if (model.AvailableDays?.Any(day => day < 0 || day > 6) == true)
+                ModelState.AddModelError(nameof(model.AvailableDays), "Choose valid days of the week.");
+            if (!string.IsNullOrWhiteSpace(model.TimeZoneId))
+            {
+                try { TimeZoneInfo.FindSystemTimeZoneById(model.TimeZoneId.Trim()); }
+                catch (TimeZoneNotFoundException) { ModelState.AddModelError(nameof(model.TimeZoneId), "Use a valid time zone such as Asia/Dhaka."); }
+                catch (InvalidTimeZoneException) { ModelState.AddModelError(nameof(model.TimeZoneId), "Use a valid time zone."); }
+            }
 
             if (!ModelState.IsValid)
             {
@@ -208,6 +219,8 @@ namespace SkillBridge.Controllers
             }
             userInfo.IsPublic = model.IsPublic;
             userInfo.AvailabilityNotes = model.AvailabilityNotes?.Trim();
+            userInfo.AvailableDaysMask = (model.AvailableDays ?? new()).Distinct().Aggregate(0, (mask, day) => mask | (1 << day));
+            userInfo.TimeZoneId = string.IsNullOrWhiteSpace(model.TimeZoneId) ? null : model.TimeZoneId.Trim();
             userInfo.MeetingFormat = model.MeetingFormat;
 
             var existingSkills = db.UserSkills.Where(us => us.UserId == userId).ToList();
@@ -359,7 +372,8 @@ namespace SkillBridge.Controllers
                     RequestStatus = visitorWantsThisSkill
                         ? (existingRequest != null
                             ? (existingRequest.Status == "Pending" ? "Pending" :
-                               existingRequest.Status == "Accepted" ? "Accepted" : "Declined")
+                               existingRequest.Status == "Accepted" ? "Accepted" :
+                               existingRequest.Status == "Withdrawn" ? "Withdrawn" : "Declined")
                             : "None")
                         : "Hidden"
                 });
@@ -382,6 +396,8 @@ namespace SkillBridge.Controllers
                 Location = userInfo?.Location ?? "",
                 Bio = userInfo?.Bio ?? "",
                 AvailabilityNotes = userInfo.AvailabilityNotes,
+                AvailableDaysMask = userInfo.AvailableDaysMask,
+                TimeZoneId = userInfo.TimeZoneId,
                 MeetingFormat = userInfo.MeetingFormat ?? "Either",
                 IsSaved = currentUserId != null && db.SavedProfiles.Any(s => s.UserId == currentUserId && s.TargetUserId == id),
                 SkillsToTeach = skillsToTeachVm,
@@ -494,12 +510,48 @@ namespace SkillBridge.Controllers
             return View(requests);
         }
 
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult WithdrawSkillRequest(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            using var transaction = db.Database.BeginTransaction(System.Data.IsolationLevel.Serializable);
+            var request = db.SkillRequests.Include(r => r.Skill)
+                .FirstOrDefault(r => r.Id == id && r.RequesterId == userId);
+            if (request == null) return NotFound();
+            if (request.Status != "Pending") return StatusCode(409);
+            request.Status = "Withdrawn";
+            var notifications = db.Notifications.Where(n => n.UserId == request.ReceiverId &&
+                n.Type == "SkillRequest" && n.ReferenceId == id).ToList();
+            foreach (var notification in notifications)
+            {
+                notification.Type = "RequestUpdate";
+                notification.Message = $"The request for {request.Skill.Name} was withdrawn.";
+                notification.IsRead = false;
+            }
+            db.SaveChanges();
+            transaction.Commit();
+            return RedirectToAction(nameof(RequestDetails), new { id });
+        }
+
         public ActionResult RequestDetails(int id)
         {
             var userId = User.Identity.GetUserId();
             var request = db.SkillRequests.Include(r => r.Skill).Include(r => r.Requester).Include(r => r.Receiver)
                 .FirstOrDefault(r => r.Id == id && (r.RequesterId == userId || r.ReceiverId == userId));
             if (request == null) return NotFound();
+            if (request.ReceiverId == userId && request.Status == "Pending")
+            {
+                ViewBag.RequestNotificationId = db.Notifications
+                    .Where(n => n.UserId == userId && n.Type == "SkillRequest" && n.ReferenceId == id)
+                    .Select(n => n.Id).FirstOrDefault();
+                var wanted = db.UserSkills.Where(us => us.UserId == userId && us.Status == "Learning")
+                    .Select(us => us.SkillId).ToList();
+                ViewBag.ReciprocalSkills = db.UserSkills.Include(us => us.Skill)
+                    .Where(us => us.UserId == request.RequesterId && us.Status == "Teaching" &&
+                        us.KnownUpToStage > 0 && us.SkillId != request.SkillId && wanted.Contains(us.SkillId))
+                    .Select(us => new SkillViewModel { SkillId = us.SkillId, SkillName = us.Skill.Name })
+                    .ToList();
+            }
             return View(request);
         }
 

@@ -13,6 +13,8 @@ namespace SkillBridge.Models
         public bool GoogleEnabled { get; set; }
         public bool GoogleLinked { get; set; }
         public string AvailabilityNotes { get; set; }
+        public int AvailableDaysMask { get; set; }
+        public string TimeZoneId { get; set; }
         public string MeetingFormat { get; set; }
 
         // Personal info
@@ -52,6 +54,10 @@ namespace SkillBridge.Models
         [StringLength(300)]
         [Display(Name = "When are you usually available?")]
         public string AvailabilityNotes { get; set; }
+        public List<int> AvailableDays { get; set; } = new();
+        [StringLength(80)]
+        [Display(Name = "Time zone")]
+        public string TimeZoneId { get; set; }
         [Required, StringLength(20)]
         [Display(Name = "Preferred meeting format")]
         public string MeetingFormat { get; set; } = "Either";

@@ -1,7 +1,38 @@
 
 
-@{
-    ViewBag.Title = "Interaction Details";
-}
-
-<h2>Interaction Details</h2>
+@model SkillBridge.Models.InteractionHistoryViewModel
+@{ ViewBag.Title = "Exchange record"; }
+<main class="container my-5" style="max-width: 1000px;">
+    <a href="@(Model.Status == "Completed" ? Url.Action("History", "Interactions") : Url.Action("Index", "Interactions"))">← Back to exchanges</a>
+    <h1 class="h2 mt-3">Exchange with @Model.OtherUserName</h1>
+    <p><strong>Status:</strong> @Model.Status · <strong>Learned:</strong> @Model.SkillYouLearn · <strong>Taught:</strong> @Model.SkillYouTeach</p>
+    @if (!string.IsNullOrWhiteSpace(Model.EndReason)) { <p><strong>End reason:</strong> @Model.EndReason</p> }
+    @if (Model.EndedAt.HasValue) { <p class="text-muted">Finished @Model.EndedAt.Value.ToString("d")</p> }
+    @if (Model.CanRate) { <a class="btn btn-primary mb-4" href="@Url.Action("RateInteraction", "Interactions", new { interactionId = Model.InteractionId })">Rate this exchange</a> }
+    <h2 class="h4 mt-4">Milestones and notes</h2>
+    @foreach (var track in Model.SkillBlocks.GroupBy(s => s.SkillName))
+    {
+        <section class="card p-3 mb-3">
+            <h3 class="h5">@track.Key</h3>
+            <ol>
+                @foreach (var stage in track)
+                {
+                    <li class="mb-3"><strong>@stage.Description</strong> · @stage.Status
+                        @foreach (var note in stage.Notes)
+                        {
+                            <div class="ms-3 small"><strong>@(note.IsMine ? "Your note" : "Partner's note"):</strong> @note.WhatWeCovered
+                                @if (!string.IsNullOrWhiteSpace(note.NextStep)) { <span>Next: @note.NextStep</span> }
+                            </div>
+                        }
+                    </li>
+                }
+            </ol>
+        </section>
+    }
+    <h2 class="h4 mt-4">Meeting history</h2>
+    <partial name="_MeetingHistory" model="Model.MeetingHistory" />
+    <h2 class="h4 mt-4">Ratings</h2>
+    @if (Model.Ratings.Count == 0) { <p>No ratings have been submitted yet.</p> }
+    @foreach (var rating in Model.Ratings)
+    { <div class="card p-3 mb-2"><strong>@(rating.IsMine ? "Your rating" : "Partner's rating"): @rating.Value/10</strong><p class="mb-0">@rating.Comment</p></div> }
+</main>

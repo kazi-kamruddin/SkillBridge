@@ -27,12 +27,19 @@ public class SavedProfilesController : Controller
         var blockedIds = await db.MemberBlocks
             .Where(b => b.BlockerId == userId || b.BlockedId == userId)
             .Select(b => b.BlockerId == userId ? b.BlockedId : b.BlockerId).ToListAsync();
+        var myLearning = await db.UserSkills.Where(s => s.UserId == userId && s.Status == "Learning")
+            .Select(s => s.SkillId).ToListAsync();
+        var skills = await db.UserSkills.Include(s => s.Skill)
+            .Where(s => ids.Contains(s.UserId) && s.Status == "Teaching" && myLearning.Contains(s.SkillId))
+            .Select(s => new { s.UserId, s.Skill.Name }).ToListAsync();
         var model = saved.Select(s => new SavedProfileItemViewModel
         {
             UserId = s.TargetUserId,
             FullName = profiles.TryGetValue(s.TargetUserId, out var profile) ? profile.FullName : s.UserName,
             Profession = profile?.Profession,
-            CanView = profile != null && !profile.IsHidden && !blockedIds.Contains(s.TargetUserId)
+            CanView = profile != null && !profile.IsHidden && !blockedIds.Contains(s.TargetUserId),
+            MatchSummary = string.Join(", ", skills.Where(skill => skill.UserId == s.TargetUserId)
+                .Select(skill => skill.Name).Distinct())
         }).ToList();
         return View(model);
     }

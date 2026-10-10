@@ -97,6 +97,16 @@ namespace SkillBridge.Controllers
                 .ToListAsync();
             ViewBag.AllConversations = allConversations;
             var conversationIds = allConversations.Select(c => c.Id).ToList();
+            var latestMessages = await db.Messages.Where(m => conversationIds.Contains(m.ConversationId))
+                .GroupBy(m => m.ConversationId)
+                .Select(group => group.OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id).First())
+                .ToListAsync();
+            ViewBag.LastMessagePreviews = latestMessages.ToDictionary(m => m.ConversationId, m =>
+            {
+                var text = MessageEncryptionService.Decrypt(m.Ciphertext, m.IV, m.Hmac);
+                return string.IsNullOrWhiteSpace(text) && !string.IsNullOrWhiteSpace(m.ImagePublicId)
+                    ? "Image" : text;
+            });
             ViewBag.UnreadByConversation = await db.Messages
                 .Where(m => conversationIds.Contains(m.ConversationId) && m.ToUserId == userId && !m.IsRead)
                 .GroupBy(m => m.ConversationId)

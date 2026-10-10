@@ -1,0 +1,42 @@
+@model SkillBridge.Models.SkillDetailViewModel
+@{
+    ViewBag.Title = Model.SkillName;
+}
+<main class="container my-5" style="max-width: 1000px;">
+    <a href="@Url.Action("Skills", "Explore")">← All skills</a>
+    <header class="my-4">
+        <span class="text-muted">@Model.CategoryName</span>
+        <h1>@Model.SkillName</h1>
+        @if (!string.IsNullOrWhiteSpace(Model.Description)) { <p class="lead">@Model.Description</p> }
+        <p class="text-muted">These catalog stages are a starting guide. Exchange partners can agree on a plan that fits their goals.</p>
+    </header>
+    <div class="row g-4">
+        <section class="col-lg-7" aria-labelledby="stages-title">
+            <h2 id="stages-title" class="h4">Learning stages</h2>
+            @if (Model.Stages.Count == 0) { <p>No stages have been added yet.</p> }
+            <ol class="list-group list-group-numbered">
+                @foreach (var stage in Model.Stages)
+                { <li class="list-group-item">@stage.Description</li> }
+            </ol>
+        </section>
+        <aside class="col-lg-5">
+            <section class="card p-3 mb-3" aria-labelledby="teachers-title">
+                <h2 id="teachers-title" class="h4">Members who teach this</h2>
+                @if (Model.Teachers.Count == 0) { <p>No discoverable teachers yet.</p> }
+                else
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var teacher in Model.Teachers)
+                        { <li class="mb-2"><a href="@Url.Action("PublicProfile", "Profile", new { id = teacher.UserId })">@teacher.FullName</a></li> }
+                    </ul>
+                }
+            </section>
+            @if (Model.CommunityId.HasValue)
+            { <a class="btn btn-outline-primary me-2 mb-2" href="@Url.Action("Landing", "Communities", new { id = Model.CommunityId })">Visit community</a> }
+            @if (User.Identity.IsAuthenticated)
+            { <a class="btn btn-primary mb-2" href="@Url.Action("UpdateProfile", "Profile")">Add to your skills</a> }
+            else
+            { <a class="btn btn-primary mb-2" href="@Url.Action("Register", "Account")">Join SkillBridge</a> }
+        </aside>
+    </div>
+</main>

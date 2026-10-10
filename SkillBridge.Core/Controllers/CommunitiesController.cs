@@ -221,6 +221,7 @@ namespace SkillBridge.Controllers
                 CreatedByUserName = DisplayName(post.CreatedByUserId),
                         CreatedAt = post.CreatedAt,
                         IsMember = isMember,
+                        IsAuthor = post.CreatedByUserId == currentUserId,
                         Comments = post.Comments.Where(c => !c.IsHidden).OrderBy(c => c.CreatedAt)
                 .Select(c => new CommunityCommentViewModel
                 {
@@ -228,7 +229,8 @@ namespace SkillBridge.Controllers
                     Content = c.Content,
                     ImageUrl = c.ImageUrl,
                     CreatedByFullName = DisplayName(c.CreatedByUserId),
-                    CreatedAt = c.CreatedAt
+                    CreatedAt = c.CreatedAt,
+                    IsAuthor = c.CreatedByUserId == currentUserId
                 }).ToList(),
                 NewComment = new CommunityCommentCreateModel
                 {
@@ -295,6 +297,63 @@ namespace SkillBridge.Controllers
             db.SaveChanges();
 
             return RedirectToAction("PostDetails", new { id = model.PostId });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult EditPost(int postId, string title, string content)
+        {
+            var post = db.CommunityPosts.FirstOrDefault(p => p.Id == postId && !p.IsHidden &&
+                p.CreatedByUserId == User.Identity.GetUserId());
+            if (post == null) return NotFound();
+            title = (title ?? "").Trim();
+            content = (content ?? "").Trim();
+            if (title.Length is < 1 or > 200 || content.Length > 2000 ||
+                (content.Length == 0 && string.IsNullOrWhiteSpace(post.ImageUrl)))
+                return BadRequest("Add a title and content or an image, within the field limits.");
+            post.Title = title;
+            post.Content = content;
+            post.UpdatedAt = DateTime.UtcNow;
+            db.SaveChanges();
+            TempData["CommunityNotice"] = "Post updated.";
+            return RedirectToAction(nameof(PostDetails), new { id = postId });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult EditComment(int commentId, string content)
+        {
+            var comment = db.CommunityComments.Include(c => c.Post).FirstOrDefault(c => c.Id == commentId &&
+                !c.IsHidden && !c.Post.IsHidden && c.CreatedByUserId == User.Identity.GetUserId());
+            if (comment == null) return NotFound();
+            content = (content ?? "").Trim();
+            if (content.Length > 1000 || (content.Length == 0 && string.IsNullOrWhiteSpace(comment.ImageUrl)))
+                return BadRequest("Keep the comment within 1000 characters and include text or an image.");
+            comment.Content = content;
+            db.SaveChanges();
+            TempData["CommunityNotice"] = "Comment updated.";
+            return RedirectToAction(nameof(PostDetails), new { id = comment.PostId });
+        }
+
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public ActionResult RemoveOwnContent(int postId, int? commentId)
+        {
+            var userId = User.Identity.GetUserId();
+            if (commentId.HasValue)
+            {
+                var comment = db.CommunityComments.FirstOrDefault(c => c.Id == commentId.Value &&
+                    c.PostId == postId && c.CreatedByUserId == userId && !c.IsHidden);
+                if (comment == null) return NotFound();
+                comment.IsHidden = true;
+                db.SaveChanges();
+                TempData["CommunityNotice"] = "Comment removed.";
+                return RedirectToAction(nameof(PostDetails), new { id = postId });
+            }
+            var post = db.CommunityPosts.FirstOrDefault(p => p.Id == postId &&
+                p.CreatedByUserId == userId && !p.IsHidden);
+            if (post == null) return NotFound();
+            post.IsHidden = true;
+            db.SaveChanges();
+            TempData["CommunityNotice"] = "Post removed.";
+            return RedirectToAction(nameof(Landing), new { id = post.CommunityId });
         }
 
         [HttpPost]

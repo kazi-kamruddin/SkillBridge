@@ -12,6 +12,7 @@
     var allConversations = ViewBag.AllConversations as IEnumerable<SkillBridge.Models.Conversation>;
     var unreadByConversation = ViewBag.UnreadByConversation as Dictionary<int, int> ?? new Dictionary<int, int>();
     var partnerNames = ViewBag.PartnerNames as Dictionary<string, string> ?? new Dictionary<string, string>();
+    var lastMessagePreviews = ViewBag.LastMessagePreviews as Dictionary<int, string> ?? new Dictionary<int, string>();
     var currentUserId = User.Identity.GetUserId();
 
     var otherUserProfile = ViewBag.OtherUserProfile as ChatPartnerViewModel;
@@ -34,7 +35,8 @@
                             @if (unreadByConversation.TryGetValue(convo.Id, out var unread) && unread > 0)
                             { <span class="badge bg-danger conversation-unread">@unread unread</span> }
                             <br />
-                            <small class="text-muted">Last: @convo.LastMessageAt?.ToString("g")</small>
+                            <small class="d-block text-truncate">@(lastMessagePreviews.TryGetValue(convo.Id, out var preview) ? preview : "No messages yet")</small>
+                            <small class="text-muted">@convo.LastMessageAt?.ToString("g")</small>
                         </a>
                     </li>
                 }
@@ -73,7 +75,7 @@
                     }
                     else
                     {
-                        <p class="text-muted">No messages yet. Say hi ??</p>
+                        <p class="text-muted">No messages yet. Start the conversation.</p>
                     }
                 </div>
             </div>

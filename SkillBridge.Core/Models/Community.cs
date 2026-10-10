@@ -98,6 +98,7 @@ namespace SkillBridge.Models
         public string CreatedByUserName { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsMember { get; set; }
+        public bool IsAuthor { get; set; }
 
         public List<CommunityCommentViewModel> Comments { get; set; } = new List<CommunityCommentViewModel>();
 
@@ -112,6 +113,7 @@ namespace SkillBridge.Models
         public string ImageUrl { get; set; }
         public string CreatedByFullName { get; set; }
         public DateTime CreatedAt { get; set; }
+        public bool IsAuthor { get; set; }
     }
 
     public class CommunityReport

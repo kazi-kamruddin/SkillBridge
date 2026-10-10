@@ -14,6 +14,9 @@ namespace SkillBridge.Models
 
 
         public string MotivationalQuote { get; set; }
+        public string NextActionTitle { get; set; }
+        public string NextActionDescription { get; set; }
+        public string NextActionUrl { get; set; }
 
 
 

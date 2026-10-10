@@ -61,32 +61,14 @@
 
         <div class="mb-3">
             @Html.LabelFor(m => m.Profession, new { @class = "form-label" })
-            @Html.DropDownListFor(m => m.Profession,
-                new SelectList(new[]
-                {
-                    "Student",
-                    "Teacher",
-                    "Software Developer",
-                    "Engineer",
-                    "Designer",
-                    "Freelancer",
-                    "Entrepreneur"
-                }, Model.Profession), new { @class = "form-select" })
+            @Html.TextBoxFor(m => m.Profession, new { @class = "form-control", list = "profession-suggestions", maxlength = "100", placeholder = "Your profession or role" })
+            <datalist id="profession-suggestions"><option value="Student"></option><option value="Teacher"></option><option value="Software Developer"></option><option value="Designer"></option><option value="Freelancer"></option></datalist>
         </div>
 
         <div class="mb-3">
             @Html.LabelFor(m => m.Location, new { @class = "form-label" })
-            @Html.DropDownListFor(m => m.Location, new SelectList(new[]
-            {
-                "Barishal",
-                "Chattogram",
-                "Dhaka",
-                "Khulna",
-                "Mymensingh",
-                "Rajshahi",
-                "Rangpur",
-                "Sylhet"
-            }, Model.Location), new { @class = "form-select" })
+            @Html.TextBoxFor(m => m.Location, new { @class = "form-control", list = "location-suggestions", maxlength = "100", placeholder = "City or Online" })
+            <datalist id="location-suggestions"><option value="Online"></option><option value="Dhaka"></option><option value="Chattogram"></option><option value="Khulna"></option><option value="Rajshahi"></option></datalist>
         </div>
 
         <div class="mb-3">
@@ -98,6 +80,22 @@
             @Html.LabelFor(m => m.AvailabilityNotes, new { @class = "form-label" })
             @Html.TextAreaFor(m => m.AvailabilityNotes, new { @class = "form-control", rows = 2, maxlength = "300", placeholder = "For example, weekday evenings in Dhaka time" })
             <div class="form-text">This appears on your profile, including to signed-out visitors when your profile is public.</div>
+        </div>
+        <fieldset class="mb-3">
+            <legend class="h6">Days you are usually available (optional)</legend>
+            <div class="d-flex flex-wrap gap-3">
+                @for (var day = 0; day < 7; day++)
+                {
+                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" name="AvailableDays" value="@day" checked="@Model.AvailableDays.Contains(day)" />@AvailabilityHelper.DayNames[day]</label>
+                }
+            </div>
+        </fieldset>
+        <div class="mb-3">
+            @Html.LabelFor(m => m.TimeZoneId, new { @class = "form-label" })
+            @Html.TextBoxFor(m => m.TimeZoneId, new { @class = "form-control", list = "time-zone-suggestions", maxlength = "80", placeholder = "For example, Asia/Dhaka" })
+            <datalist id="time-zone-suggestions"><option value="Asia/Dhaka"></option><option value="Asia/Kolkata"></option><option value="UTC"></option><option value="Europe/London"></option><option value="America/New_York"></option></datalist>
+            <div class="form-text">Use a standard time zone name so meeting times display correctly.</div>
+            @Html.ValidationMessageFor(m => m.TimeZoneId, "", new { @class = "text-danger" })
         </div>
         <div class="mb-3">
             @Html.LabelFor(m => m.MeetingFormat, new { @class = "form-label" })
@@ -116,8 +114,7 @@
                         @foreach (var skill in category.Skills)
                         {
                             var selected = toLearnSkillIds.Contains(skill.Id) ? "active" : "";
-                            var disabled = knownSkillIds.Contains(skill.Id) ? "disabled" : "";
-                            <li class="list-group-item skill-learn @selected @disabled" data-skill-id="@skill.Id">
+                            <li class="list-group-item skill-learn @selected" data-skill-id="@skill.Id" tabindex="0" role="button" aria-pressed="@(selected == "active" ? "true" : "false")">
                                 @skill.Name
                             </li>
                         }
@@ -139,8 +136,7 @@
                         {
                             var knownSkill = Model.SkillsIKnow.FirstOrDefault(s => s.SkillId == skill.Id);
                             var selected = knownSkill != null ? "active" : "";
-                            var disabled = toLearnSkillIds.Contains(skill.Id) ? "disabled" : "";
-                            <li class="list-group-item skill-know @selected @disabled"
+                            <li class="list-group-item skill-know @selected" tabindex="0" role="button" aria-pressed="@(selected == "active" ? "true" : "false")"
                                 data-skill-id="@skill.Id"
                                 data-skill-name="@skill.Name"
                                 data-known-stage="@(knownSkill?.KnownUpToStage ?? 1)">
@@ -192,15 +188,19 @@
                 var stages = skillStagesData[skillId.toString()];
                 if (!stages) return;
                 $("#stage-selection-" + skillId).remove();
-                var $container = $('<div class="stage-selection-container mt-2" id="stage-selection-' + skillId + '"><strong>Stages you know for ' + skillName + ':</strong><br/></div>');
+                var $container = $('<div>').addClass('stage-selection-container mt-2').attr('id', 'stage-selection-' + skillId);
+                $('<strong>').text('Stages you know for ' + skillName + ':').appendTo($container);
+                $('<br>').appendTo($container);
                 stages.forEach(function (st) {
-                    $container.append('<span class="badge badge-secondary text-dark stage-option mr-1 mb-1" data-stage="' + st.id + '" data-skill-id="' + skillId + '">' + st.name + '</span>');
+                    $('<button type="button">').addClass('badge badge-secondary text-dark stage-option mr-1 mb-1')
+                        .attr({ 'data-stage': st.id, 'data-skill-id': skillId, 'aria-pressed': 'false' })
+                        .text(st.name).appendTo($container);
                 });
                 $("#skillStagesSelectionContainer").append($container);
                 var stage = selectedSkillsIKnow[skillId] || 1;
                 $('#stage-selection-' + skillId + ' .stage-option').each(function () {
-                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary');
-                    else $(this).removeClass('badge-primary').addClass('badge-secondary');
+                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary').attr('aria-pressed', 'true');
+                    else $(this).removeClass('badge-primary').addClass('badge-secondary').attr('aria-pressed', 'false');
                 });
             }
 
@@ -210,40 +210,44 @@
 
             // ----- Click Handlers for Skills -----
             $(".skill-learn").click(function () {
-                if ($(this).hasClass("disabled")) return;
                 var skillId = String($(this).data("skill-id"));
                 if ($(this).hasClass("active")) {
                     $(this).removeClass("active");
                     selectedSkillsToLearn.delete(skillId);
                     $form.find('input[name="SkillsToLearn"][value="' + skillId + '"]').remove();
-                    $('.skill-know[data-skill-id="' + skillId + '"]').removeClass('disabled');
                 } else {
                     $(this).addClass("active");
                     selectedSkillsToLearn.add(skillId);
                     $('<input>').attr({ type: 'hidden', name: 'SkillsToLearn', value: skillId }).appendTo($form);
-                    $('.skill-know[data-skill-id="' + skillId + '"]').addClass('disabled').removeClass('active');
-                    if (selectedSkillsIKnow.hasOwnProperty(skillId)) { delete selectedSkillsIKnow[skillId]; $("#stage-selection-" + skillId).remove(); refreshSkillsIKnowHiddenInputs(); }
                 }
+                $(this).attr("aria-pressed", $(this).hasClass("active") ? "true" : "false");
             });
 
             $(document).on("click", ".skill-know", function () {
-                if ($(this).hasClass("disabled")) return;
                 var $this = $(this);
                 var skillId = String($this.data("skill-id")), skillName = $this.data("skill-name");
-                if ($this.hasClass("active")) { $this.removeClass("active"); delete selectedSkillsIKnow[skillId]; $("#stage-selection-" + skillId).remove(); refreshSkillsIKnowHiddenInputs(); $('.skill-learn[data-skill-id="' + skillId + '"]').removeClass('disabled'); }
-                else { $this.addClass("active"); selectedSkillsIKnow[skillId] = 1; renderStageSelectionFor(skillId, skillName); refreshSkillsIKnowHiddenInputs(); $('.skill-learn[data-skill-id="' + skillId + '"]').addClass('disabled').removeClass('active'); selectedSkillsToLearn.delete(skillId); $form.find('input[name="SkillsToLearn"][value="' + skillId + '"]').remove(); }
+                if ($this.hasClass("active")) { $this.removeClass("active"); delete selectedSkillsIKnow[skillId]; $("#stage-selection-" + skillId).remove(); refreshSkillsIKnowHiddenInputs(); }
+                else { $this.addClass("active"); selectedSkillsIKnow[skillId] = 1; renderStageSelectionFor(skillId, skillName); refreshSkillsIKnowHiddenInputs(); }
+                $this.attr("aria-pressed", $this.hasClass("active") ? "true" : "false");
             });
 
             $(document).on("click", ".stage-option", function () {
                 var $this = $(this), skillId = String($this.data("skill-id")), stage = $this.data("stage");
                 selectedSkillsIKnow[skillId] = stage;
                 $('#stage-selection-' + skillId + ' .stage-option').each(function () {
-                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary');
-                    else $(this).removeClass('badge-primary').addClass('badge-secondary');
+                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary').attr('aria-pressed', 'true');
+                    else $(this).removeClass('badge-primary').addClass('badge-secondary').attr('aria-pressed', 'false');
                 });
                 var $knownInput = $form.find('input[data-skill-id="' + skillId + '"][name$=".KnownUpToStage"]');
                 if ($knownInput.length) $knownInput.val(stage);
                 else refreshSkillsIKnowHiddenInputs();
+            });
+
+            $(document).on("keydown", ".skill-learn, .skill-know", function (event) {
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    $(this).trigger("click");
+                }
             });
 
             // ----- Client-side Validation Before Submit -----
