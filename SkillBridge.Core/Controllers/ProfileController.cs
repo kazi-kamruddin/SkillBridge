@@ -514,11 +514,14 @@ namespace SkillBridge.Controllers
         public ActionResult WithdrawSkillRequest(int id)
         {
             var userId = User.Identity.GetUserId();
-            using var transaction = db.Database.BeginTransaction(System.Data.IsolationLevel.Serializable);
+            using var transaction = db.Database.BeginTransaction();
             var request = db.SkillRequests.Include(r => r.Skill)
                 .FirstOrDefault(r => r.Id == id && r.RequesterId == userId);
             if (request == null) return NotFound();
             if (request.Status != "Pending") return StatusCode(409);
+            var claimed = db.SkillRequests.Where(r => r.Id == id && r.RequesterId == userId && r.Status == "Pending")
+                .ExecuteUpdate(setters => setters.SetProperty(r => r.Status, "Withdrawn"));
+            if (claimed != 1) return StatusCode(409);
             request.Status = "Withdrawn";
             var notifications = db.Notifications.Where(n => n.UserId == request.ReceiverId &&
                 n.Type == "SkillRequest" && n.ReferenceId == id).ToList();

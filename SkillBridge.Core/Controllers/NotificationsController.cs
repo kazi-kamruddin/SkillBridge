@@ -94,10 +94,15 @@ namespace SkillBridge.Controllers
             var notif = _context.Notifications.FirstOrDefault(n => n.Id == notificationId && n.UserId == userId);
             if (notif == null || notif.Type != "SkillRequest") return Json(new { success = false });
 
+            using var transaction = _context.Database.BeginTransaction();
             var skillRequest = _context.SkillRequests.Include(r => r.Skill).Include(r => r.Requester)
-                .FirstOrDefault(r => r.Id == notif.ReferenceId);
+                .FirstOrDefault(r => r.Id == notif.ReferenceId && r.ReceiverId == userId);
             if (skillRequest != null && skillRequest.Status == "Pending" && skillRequest.ReceiverId == userId)
             {
+                var claimed = _context.SkillRequests.Where(r => r.Id == skillRequest.Id &&
+                        r.ReceiverId == userId && r.Status == "Pending")
+                    .ExecuteUpdate(setters => setters.SetProperty(r => r.Status, "Declined"));
+                if (claimed != 1) return Json(new { success = false });
                 skillRequest.Status = "Declined";
 
                 notif.Type = "RequestUpdate";
@@ -115,9 +120,11 @@ namespace SkillBridge.Controllers
                 });
 
                 _context.SaveChanges();
+                transaction.Commit();
+                return Json(new { success = true });
             }
 
-            return Json(new { success = true });
+            return Json(new { success = false });
         }
 
 
@@ -193,6 +200,10 @@ namespace SkillBridge.Controllers
 
             using (var transaction = _context.Database.BeginTransaction())
             {
+            var claimed = _context.SkillRequests.Where(r => r.Id == skillRequest.Id &&
+                    r.ReceiverId == userId && r.Status == "Pending")
+                .ExecuteUpdate(setters => setters.SetProperty(r => r.Status, "Accepted"));
+            if (claimed != 1) return Json(new { success = false });
 
             var interaction = new Interaction
             {

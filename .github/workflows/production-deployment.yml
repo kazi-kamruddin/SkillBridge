@@ -66,7 +66,11 @@ jobs:
           done
 
       - name: Check the live SkillBridge site
-        run: >-
-          curl --fail --location --show-error --silent
-          --retry 6 --retry-delay 10 --max-time 30
-          https://skillbridge-08v4.onrender.com/health
+        run: |
+          set -euo pipefail
+          for path in health Explore/Skills Communities; do
+            echo "Checking /$path"
+            curl --fail --location --show-error --silent --output /dev/null \
+              --retry 6 --retry-delay 10 --max-time 30 \
+              "https://skillbridge-08v4.onrender.com/$path"
+          done

@@ -10,8 +10,8 @@ public class InteractionPlanProposal
     [Required] public string StepsJson { get; set; }
     [Required] public string OriginalStepsJson { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
-    public Interaction Interaction { get; set; }
-    public Skill Skill { get; set; }
+    public virtual Interaction Interaction { get; set; }
+    public virtual Skill Skill { get; set; }
 }
 
 public class PlanStepInput

@@ -17,7 +17,7 @@
             <ol>
                 @foreach (var stage in track)
                 {
-                    <li class="mb-3"><strong>@stage.Description</strong> · @stage.Status
+                    <li class="mb-3"><strong>@stage.Description</strong> · @(stage.Status == "Green" ? "Completed" : stage.UserConfirmed ? "Confirmed by you only" : "Unfinished")
                         @foreach (var note in stage.Notes)
                         {
                             <div class="ms-3 small"><strong>@(note.IsMine ? "Your note" : "Partner's note"):</strong> @note.WhatWeCovered
