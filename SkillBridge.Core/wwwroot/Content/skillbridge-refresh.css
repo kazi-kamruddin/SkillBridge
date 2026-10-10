@@ -262,17 +262,6 @@ body .sb-guide-steps p { margin: 0; color: var(--text-muted); }
 body .sb-guide-note { padding: 1.5rem 2rem; margin: 2rem 0; background: #e4e9fb; color: #17242a; border-radius: 17px; border: 1px solid #c4cbea; }
 body .sb-guide-note h2 { font-weight: 900; }
 body .sb-guide-note p:last-child { margin-bottom: 0; }
-body .sb-about-story { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; margin: 2rem 0 4rem; }
-body .sb-about-story section { padding: clamp(1.4rem, 3vw, 2.4rem); background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 17px; }
-body .sb-about-story section:nth-child(2) { background: #e4e9fb; color: #17242a; border-color: #c4cbea; }
-body .sb-about-story h2 { margin: .6rem 0; font-size: 2rem; font-weight: 900; }
-body .sb-about-story p { margin: 0; line-height: 1.65; }
-body .sb-people-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
-body .sb-person-card { overflow: hidden; border: 1px solid var(--border-color); border-radius: 17px; background: var(--card-bg); box-shadow: var(--shadow); }
-body .sb-person-card img { display: block; width: 100%; height: 270px; object-fit: cover; }
-body .sb-person-card > div { padding: 1.2rem; }
-body .sb-person-card h3 { margin: 0 0 .2rem; font-size: 1.2rem; font-weight: 900; }
-body .sb-person-card p { margin: 0; color: var(--text-muted); }
 body .sb-contact-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1rem; margin-top: 2rem; }
 body .sb-contact-card { display: flex; flex-direction: column; min-height: 300px; padding: 1.7rem; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 17px; }
 body .sb-contact-card:nth-child(2) { background: #e4e9fb; color: #17242a; border-color: #c4cbea; }
@@ -320,7 +309,7 @@ body .sb-auth-screen details summary { cursor: pointer; font-weight: 700; }
 
 @media (max-width: 767px) {
     body .sb-community-landing-hero { align-items: flex-start !important; flex-direction: column; }
-    body .sb-about-story, body .sb-contact-grid { grid-template-columns: 1fr; }
+    body .sb-contact-grid { grid-template-columns: 1fr; }
     body .sb-contact-card { min-height: 240px; }
     body .sb-guide-steps li { grid-template-columns: 55px 1fr; gap: .5rem; padding: 1.3rem 0; }
     body .sb-guide-number { font-size: 1.5rem; }
