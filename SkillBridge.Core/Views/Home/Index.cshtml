@@ -330,19 +330,29 @@
     @if (!Model.IsLoggedIn)
     {
         <!-- Guest Hero -->
-        <section class="hero">
+        <section class="hero sb-home-hero">
             <div class="hero-content">
-                <h1>Bridge Your Skills, Build Connections</h1>
-                <p>Learn from peers, teach what you know, and grow together in a community of knowledge sharing.</p>
-                <a class="btn btn-light hero-btn" href="@Url.Action("Index", "Communities")">
-                    <i class="fas fa-rocket me-2"></i>Explore Communities
-                </a>
-                <a class="btn btn-outline-light hero-btn ms-2" href="@Url.Action("Register", "Account")">Join SkillBridge</a>
+                <span class="sb-eyebrow">A community built on give &amp; grow</span>
+                <h1>Teach what you know.<br /><em>Learn what you love.</em></h1>
+                <p>Trade skills with real people. Find someone who wants to learn from you and has something new to share in return.</p>
+                <div class="sb-hero-actions">
+                    <a class="btn btn-primary hero-btn" href="@Url.Action("Skills", "Explore")">Explore skills <span aria-hidden="true">↗</span></a>
+                    <a class="btn btn-outline-primary hero-btn" href="@Url.Action("Register", "Account")">Join SkillBridge</a>
+                </div>
+            </div>
+            <div class="sb-hero-art" aria-hidden="true">
+                <div class="sb-art-label">THE EXCHANGE / 001</div>
+                <div class="sb-art-card sb-art-teach"><small>I CAN TEACH</small><strong>Photography</strong><span>✦</span></div>
+                <div class="sb-art-link">↔</div>
+                <div class="sb-art-card sb-art-learn"><small>I WANT TO LEARN</small><strong>Guitar</strong><span>♪</span></div>
             </div>
         </section>
 
+        <div class="sb-ticker" aria-hidden="true"><div>SHARE A SKILL ✳ FIND YOUR PEOPLE ✳ MAKE SOMETHING NEW ✳ SHARE A SKILL ✳ FIND YOUR PEOPLE ✳ MAKE SOMETHING NEW ✳</div></div>
+
         <!-- Features Section for Guests -->
-        <div class="container py-5">
+        <div class="container py-5 sb-home-features">
+            <div class="sb-section-intro"><span class="sb-eyebrow">THE GOOD PART</span><h2>Everyone brings something to the table.</h2><p>Start with curiosity. Leave with a new skill and a new connection.</p></div>
             <div class="row text-center">
                 <div class="col-md-4 mb-4">
                     <div class="dashboard-card">

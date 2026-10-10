@@ -17,10 +17,10 @@
     var otherUserProfile = ViewBag.OtherUserProfile as ChatPartnerViewModel;
 }
 
-<div class="container-fluid mt-3">
+<div class="container-fluid mt-3 sb-chat">
     <div class="row">
         <!-- Left column: conversation list -->
-        <div class="col-md-3 border-end" style="height:80vh; overflow-y:auto;">
+        <div class="col-md-3 border-end sb-chat-list" style="height:80vh; overflow-y:auto;">
             <h5 class="mb-3">Conversations</h5>
             <ul class="list-group">
                 @foreach (var convo in allConversations)
@@ -42,7 +42,7 @@
         </div>
 
         <!-- Middle column: chat history -->
-        <div class="col-md-6 d-flex flex-column" style="height:80vh;">
+        <div class="col-md-6 d-flex flex-column sb-chat-main" style="height:80vh;">
             <div id="messagePane" class="flex-grow-1 border p-2 mb-2" style="overflow-y:auto;">
                 <h5>Chat with @otherUserProfile?.FullName</h5>
                 <hr />
@@ -86,7 +86,7 @@
         </div>
 
         <!-- Right column: profile info -->
-        <div class="col-md-3 border-start" style="height:80vh; overflow-y:auto;">
+        <div class="col-md-3 border-start sb-chat-profile" style="height:80vh; overflow-y:auto;">
             <h5>Profile Info</h5>
             <hr />
             @if (otherUserProfile != null)
