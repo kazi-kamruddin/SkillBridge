@@ -127,6 +127,7 @@
                         $('[data-conversation-id="' + conversationId + '"] .conversation-unread').remove();
                     });
             }
+            markRead();
             const connection = new signalR.HubConnectionBuilder()
                 .withUrl('/chatHub')
                 .withAutomaticReconnect()
@@ -159,8 +160,6 @@
 
             connection.start().then(function () {
                 return connection.invoke('JoinConversation', conversationId);
-            }).then(function () {
-                markRead();
             }).catch(function (error) {
                 console.error('Could not connect to chat:', error);
             });

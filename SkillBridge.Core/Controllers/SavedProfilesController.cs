@@ -19,7 +19,7 @@ public class SavedProfilesController : Controller
         var userId = User.Identity.GetUserId();
         var saved = await db.SavedProfiles.Where(s => s.UserId == userId)
             .OrderByDescending(s => s.CreatedAt)
-            .Select(s => new { s.TargetUserId, s.TargetUser.UserName })
+            .Select(s => new { s.TargetUserId })
             .ToListAsync();
         var ids = saved.Select(s => s.TargetUserId).ToList();
         var profiles = await db.UserInformations.Where(p => ids.Contains(p.UserId))
@@ -35,7 +35,7 @@ public class SavedProfilesController : Controller
         var model = saved.Select(s => new SavedProfileItemViewModel
         {
             UserId = s.TargetUserId,
-            FullName = profiles.TryGetValue(s.TargetUserId, out var profile) ? profile.FullName : s.UserName,
+            FullName = profiles.TryGetValue(s.TargetUserId, out var profile) ? profile.FullName : "SkillBridge member",
             Profession = profile?.Profession,
             CanView = profile != null && !profile.IsHidden && !blockedIds.Contains(s.TargetUserId),
             MatchSummary = string.Join(", ", skills.Where(skill => skill.UserId == s.TargetUserId)

@@ -46,7 +46,12 @@ public class AccountController : Controller
         var result = await signInManager.PasswordSignInAsync(model.Email, model.Password,
             model.RememberMe, lockoutOnFailure: true);
         if (result.Succeeded)
+        {
+            var user = await userManager.FindByEmailAsync(model.Email);
+            if (user != null && !db.UserInformations.Any(info => info.UserId == user.Id))
+                return RedirectToAction("Index", "CompleteProfile");
             return Url.IsLocalUrl(returnUrl) ? Redirect(returnUrl) : RedirectToAction("Index", "Home");
+        }
         if (result.IsLockedOut)
         {
             logger.LogWarning("An account was locked out after failed sign-in attempts");
@@ -139,7 +144,12 @@ public class AccountController : Controller
         var signedIn = await signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey,
             isPersistent: false, bypassTwoFactor: false);
         if (signedIn.Succeeded)
+        {
+            var existingUser = await userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+            if (existingUser != null && !db.UserInformations.Any(profile => profile.UserId == existingUser.Id))
+                return RedirectToAction("Index", "CompleteProfile");
             return Url.IsLocalUrl(returnUrl) ? LocalRedirect(returnUrl) : RedirectToAction("Index", "Home");
+        }
         if (signedIn.IsLockedOut) return View("Lockout");
 
         var email = info.Principal.FindFirstValue(ClaimTypes.Email);

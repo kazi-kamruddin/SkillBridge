@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using SkillBridge.Services;
+using SkillBridge.Helpers;
 using System.Text.Json;
 
 namespace SkillBridge.Controllers
@@ -38,12 +39,13 @@ namespace SkillBridge.Controllers
                 .Include(i => i.SkillFromTeacher)
                 .ToList();
 
+            var names = MemberNames.For(db, interactions.Select(i => i.User1Id == userId ? i.User2Id : i.User1Id));
             var model = interactions.Select(i => new InteractionIndexViewModel
             {
                 InteractionId = i.Id,
                 Status = i.Status,
                 EndReason = i.EndReason,
-                OtherUserName = i.User1Id == userId ? i.User2.UserName : i.User1.UserName,
+                OtherUserName = MemberNames.Get(names, i.User1Id == userId ? i.User2Id : i.User1Id),
 
                 SkillYouLearn = i.User1Id == userId ? i.SkillFromRequester.Name : i.SkillFromTeacher.Name,
                 SkillYouTeach = i.User1Id == userId ? i.SkillFromTeacher.Name : i.SkillFromRequester.Name
@@ -63,10 +65,11 @@ namespace SkillBridge.Controllers
                 .Include(i => i.SkillFromRequester).Include(i => i.SkillFromTeacher)
                 .OrderByDescending(i => i.EndedAt ?? i.CreatedAt)
                 .ToList();
+            var names = MemberNames.For(db, exchanges.Select(i => i.User1Id == userId ? i.User2Id : i.User1Id));
             return View(exchanges.Select(i => new InteractionIndexViewModel
             {
                 InteractionId = i.Id,
-                OtherUserName = i.User1Id == userId ? i.User2.UserName : i.User1.UserName,
+                OtherUserName = MemberNames.Get(names, i.User1Id == userId ? i.User2Id : i.User1Id),
                 SkillYouLearn = i.User1Id == userId ? i.SkillFromRequester.Name : i.SkillFromTeacher.Name,
                 SkillYouTeach = i.User1Id == userId ? i.SkillFromTeacher.Name : i.SkillFromRequester.Name,
                 Status = i.Status,
@@ -81,7 +84,7 @@ namespace SkillBridge.Controllers
             var interaction = db.Interactions
                 .Include(i => i.User1).Include(i => i.User2)
                 .Include(i => i.SkillFromRequester).Include(i => i.SkillFromTeacher)
-                .Include(i => i.Sessions.Select(s => s.Skill))
+                .Include(i => i.Sessions).ThenInclude(s => s.Skill)
                 .FirstOrDefault(i => i.Id == id && (i.User1Id == userId || i.User2Id == userId));
             if (interaction == null) return NotFound();
             if (interaction.Status == "Ongoing") return RedirectToAction(nameof(Sessions), new { id });
@@ -90,7 +93,7 @@ namespace SkillBridge.Controllers
             {
                 InteractionId = id,
                 Status = interaction.Status,
-                OtherUserName = interaction.User1Id == userId ? interaction.User2.UserName : interaction.User1.UserName,
+                OtherUserName = MemberNames.Get(db, interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id),
                 SkillYouLearn = interaction.User1Id == userId ? interaction.SkillFromRequester.Name : interaction.SkillFromTeacher.Name,
                 SkillYouTeach = interaction.User1Id == userId ? interaction.SkillFromTeacher.Name : interaction.SkillFromRequester.Name,
                 EndReason = interaction.EndReason,
@@ -114,7 +117,7 @@ namespace SkillBridge.Controllers
         {
             var userId = User.Identity.GetUserId();
             var interaction = db.Interactions
-                .Include(i => i.Sessions.Select(s => s.Skill))
+                .Include(i => i.Sessions).ThenInclude(s => s.Skill)
                 .Include(i => i.SkillFromRequester.SkillStages)
                 .Include(i => i.SkillFromTeacher.SkillStages)
                 .FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
@@ -602,9 +605,8 @@ namespace SkillBridge.Controllers
             var ratingModel = new InteractionRatingViewModel
             {
                 InteractionId = interaction.Id,
-                SkillName = interaction.User1Id == userId ? interaction.SkillFromTeacher.Name : interaction.SkillFromRequester.Name,
-                FromUserName = interaction.User1Id == userId ? interaction.User2.UserName : interaction.User1.UserName,
-                ToUserId = userId
+                SkillName = interaction.User1Id == userId ? interaction.SkillFromRequester.Name : interaction.SkillFromTeacher.Name,
+                FromUserName = MemberNames.Get(db, interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id)
             };
 
             var indexModel = new InteractionIndexViewModel
@@ -660,7 +662,7 @@ namespace SkillBridge.Controllers
                 ToUserId = recipientId,
                 RatingValue = model.RatingValue,
                 Comment = model.Comment,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.Now
             };
 
             db.Ratings.Add(rating);
@@ -677,7 +679,7 @@ namespace SkillBridge.Controllers
                 UserId = recipientId,
                 Type = "Exchange",
                 ReferenceId = model.InteractionId,
-                Message = $"{User.Identity.Name} rated you {model.RatingValue}/10. Comment: \"{model.Comment}\"",
+                Message = $"{MemberNames.Get(db, currentUserId)} rated you {model.RatingValue}/10. Comment: \"{model.Comment}\"",
                 CreatedAt = DateTime.Now,
                 IsRead = false
             });
@@ -796,7 +798,7 @@ namespace SkillBridge.Controllers
                 UserId = interaction.User1Id,
                 Type = "Feedback",
                 ReferenceId = interaction.Id,
-                Message = $"You have successfully completed the interaction with {interaction.User2.UserName}. You taught {interaction.SkillFromTeacher.Name} and learned {interaction.SkillFromRequester.Name}. Click below to rate this interaction."
+                Message = $"You have successfully completed the interaction with {MemberNames.Get(db, interaction.User2Id)}. You taught {interaction.SkillFromTeacher.Name} and learned {interaction.SkillFromRequester.Name}. Click below to rate this interaction."
             };
 
             var notif2 = new Notification
@@ -804,7 +806,7 @@ namespace SkillBridge.Controllers
                 UserId = interaction.User2Id,
                 Type = "Feedback",
                 ReferenceId = interaction.Id,
-                Message = $"You have successfully completed the interaction with {interaction.User1.UserName}. You taught {interaction.SkillFromRequester.Name} and learned {interaction.SkillFromTeacher.Name}. Click below to rate this interaction."
+                Message = $"You have successfully completed the interaction with {MemberNames.Get(db, interaction.User1Id)}. You taught {interaction.SkillFromRequester.Name} and learned {interaction.SkillFromTeacher.Name}. Click below to rate this interaction."
             };
 
 

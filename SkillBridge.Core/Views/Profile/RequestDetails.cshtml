@@ -7,8 +7,8 @@
 <main class="container my-5" style="max-width: 750px;">
     <h1 class="h2 mb-3">Exchange proposal</h1>
     <p><strong>Skill requested:</strong> @Model.Skill.Name</p>
-    <p><strong>From:</strong> @Model.Requester.UserName</p>
-    <p><strong>To:</strong> @Model.Receiver.UserName</p>
+    <p><strong>From:</strong> @ViewBag.RequesterName</p>
+    <p><strong>To:</strong> @ViewBag.ReceiverName</p>
     <p><strong>Status:</strong> @Model.Status</p>
     <dl class="row">
         <dt class="col-sm-4">Goal</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Goal) ? "No goal was provided for this earlier request." : Model.Goal)</dd>
@@ -34,7 +34,7 @@
                     <form id="acceptProposal" action="@Url.Action("InitializeInteraction", "Notifications")" method="post" class="mb-3">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="notificationId" value="@notificationId" />
-                        <label for="reciprocalSkill" class="form-label">What will you learn from @Model.Requester.UserName?</label>
+                        <label for="reciprocalSkill" class="form-label">What will you learn from @ViewBag.RequesterName?</label>
                         <select id="reciprocalSkill" name="skillId" class="form-select mb-2" required>
                             @foreach (var skill in reciprocalSkills)
                             {
