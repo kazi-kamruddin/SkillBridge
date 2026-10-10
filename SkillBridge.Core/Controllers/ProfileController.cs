@@ -22,13 +22,18 @@ namespace SkillBridge.Controllers
         private readonly UserManager<ApplicationUser> UserManager;
         private readonly SignInManager<ApplicationUser> SignInManager;
         private readonly ApplicationDbContext db;
+        private readonly CloudinaryImageService images;
+        private readonly ILogger<ProfileController> logger;
 
         public ProfileController(UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager, ApplicationDbContext db)
+            SignInManager<ApplicationUser> signInManager, ApplicationDbContext db, CloudinaryImageService images,
+            ILogger<ProfileController> logger)
         {
             UserManager = userManager;
             SignInManager = signInManager;
             this.db = db;
+            this.images = images;
+            this.logger = logger;
         }
 
 
@@ -87,7 +92,7 @@ namespace SkillBridge.Controllers
                 AverageRating = averageRating,
                 RatingsReceived = ratingsReceived,
                 InteractionsCompleted = interactionsCompleted,
-                ProfileImageUrl = ProfileImageHelper.GetRandomProfileImage()
+                ProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo?.ProfileImageUrl, userInfo?.FullName)
             };
 
             return View(model);
@@ -123,6 +128,7 @@ namespace SkillBridge.Controllers
                 IsPublic = userInfo.IsPublic,
                 AvailabilityNotes = userInfo.AvailabilityNotes,
                 MeetingFormat = userInfo.MeetingFormat ?? "Either",
+                ExistingProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo.ProfileImageUrl, userInfo.FullName),
                 SkillsToLearn = userSkills.Where(s => s.Status == "Learning").Select(s => s.SkillId).ToList(),
                 SkillsIKnow = userSkills.Where(s => s.Status == "Teaching").Select(s => new UpdateProfileViewModel.UserKnownSkill
                 {
@@ -141,7 +147,8 @@ namespace SkillBridge.Controllers
         // POST: /Profile/UpdateProfile
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult UpdateProfile(UpdateProfileViewModel model)
+        [RequestSizeLimit(3 * 1024 * 1024)]
+        public async Task<ActionResult> UpdateProfile(UpdateProfileViewModel model)
         {
             var userId = User.Identity.GetUserId();
             var userInfo = db.UserInformations.FirstOrDefault(u => u.UserId == userId);
@@ -154,8 +161,8 @@ namespace SkillBridge.Controllers
             var maxStageBySkill = db.SkillStages.ToList()
                 .GroupBy(s => s.SkillId)
                 .ToDictionary(g => g.Key, g => g.Max(s => s.StageNumber));
-            if (!learningIds.Any() || !teachingSkills.Any())
-                ModelState.AddModelError("", "Choose at least one skill to learn and one skill to teach.");
+            var imageError = CloudinaryImageService.Validate(model.ProfileImage, 2 * 1024 * 1024);
+            if (imageError != null) ModelState.AddModelError(nameof(model.ProfileImage), imageError);
             if (learningIds.Any(id => !validSkillIds.Contains(id)) ||
                 teachingSkills.Any(s => !validSkillIds.Contains(s.SkillId) ||
                     !maxStageBySkill.ContainsKey(s.SkillId) ||
@@ -170,14 +177,35 @@ namespace SkillBridge.Controllers
             if (!ModelState.IsValid)
             {
                 model.AllSkillCategories = db.SkillCategories.Include("Skills.SkillStages").ToList();
+                model.ExistingProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo.ProfileImageUrl, userInfo.FullName);
                 return View(model);
             }
 
+            UploadedImage uploaded = null;
+            if (model.ProfileImage?.Length > 0)
+            {
+                try { uploaded = await images.UploadAsync(model.ProfileImage, "skillbridge/avatars", false); }
+                catch { ModelState.AddModelError(nameof(model.ProfileImage), "The image could not be uploaded. Please try again.");
+                    model.AllSkillCategories = db.SkillCategories.Include("Skills.SkillStages").ToList();
+                    model.ExistingProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo.ProfileImageUrl, userInfo.FullName);
+                    return View(model); }
+            }
+            var previousImagePublicId = userInfo.ProfileImagePublicId;
             userInfo.FullName = model.FullName.Trim();
-            userInfo.Bio = model.Bio.Trim();
-            userInfo.Profession = model.Profession.Trim();
-            userInfo.Location = model.Location.Trim();
+            userInfo.Bio = model.Bio?.Trim();
+            userInfo.Profession = model.Profession?.Trim();
+            userInfo.Location = model.Location?.Trim();
             userInfo.Age = model.Age;
+            if (uploaded != null)
+            {
+                userInfo.ProfileImageUrl = uploaded.Url;
+                userInfo.ProfileImagePublicId = uploaded.PublicId;
+            }
+            else if (model.RemoveProfileImage)
+            {
+                userInfo.ProfileImageUrl = null;
+                userInfo.ProfileImagePublicId = null;
+            }
             userInfo.IsPublic = model.IsPublic;
             userInfo.AvailabilityNotes = model.AvailabilityNotes?.Trim();
             userInfo.MeetingFormat = model.MeetingFormat;
@@ -211,6 +239,12 @@ namespace SkillBridge.Controllers
 
                 db.SaveChanges();
                 transaction.Commit();
+            }
+            if (!string.IsNullOrWhiteSpace(previousImagePublicId) &&
+                previousImagePublicId != userInfo.ProfileImagePublicId)
+            {
+                try { await images.DeletePublicAsync(previousImagePublicId); }
+                catch { logger.LogWarning("Could not remove an old profile image from Cloudinary."); }
             }
             return RedirectToAction("Index");
         }
@@ -363,7 +397,7 @@ namespace SkillBridge.Controllers
                 AverageRating = averageRating,
                 RatingsReceived = ratingsReceived,
                 InteractionsCompleted = interactionsCompleted,
-                ProfileImageUrl = ProfileImageHelper.GetRandomProfileImage()
+                ProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo?.ProfileImageUrl, userInfo?.FullName)
             };
 
             return View(model);
@@ -381,6 +415,9 @@ namespace SkillBridge.Controllers
             var currentUserId = User.Identity.GetUserId();
             if (currentUserId == null)
                 return Json(new { success = false, message = "You must be logged in." });
+            if (!db.UserSkills.Any(us => us.UserId == currentUserId && us.Status == "Teaching") ||
+                !db.UserSkills.Any(us => us.UserId == currentUserId && us.Status == "Learning"))
+                return Json(new { success = false, message = "Add a skill to teach and a skill to learn before requesting an exchange." });
             goal = (goal ?? "").Trim();
             pace = (pace ?? "").Trim();
             firstMeetingIdea = (firstMeetingIdea ?? "").Trim();

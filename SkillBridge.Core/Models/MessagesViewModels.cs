@@ -20,6 +20,7 @@ namespace SkillBridge.Models
         public string FromUserId { get; set; }
         public string ToUserId { get; set; }
         public string Text { get; set; }
+        public bool HasImage { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsMine { get; set; }
         public bool IsRead { get; set; }

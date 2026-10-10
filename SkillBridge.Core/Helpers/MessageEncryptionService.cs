@@ -12,8 +12,8 @@ namespace SkillBridge.Helpers
 
         public static (byte[] Ciphertext, byte[] IV, byte[] Hmac) Encrypt(string plainText)
         {
-            if (string.IsNullOrWhiteSpace(plainText))
-                throw new ArgumentException("Message text is required.", nameof(plainText));
+            if (plainText == null)
+                throw new ArgumentNullException(nameof(plainText));
 
             using (var aes = Aes.Create())
             {

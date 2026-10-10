@@ -8,7 +8,7 @@
 
     var skillStagesDict = allSkills.ToDictionary(
         s => s.Id.ToString(),
-        s => s.SkillStages.Select(st => new { id = st.StageNumber, name = st.Description }).ToList()
+        s => s.SkillStages.OrderBy(st => st.StageNumber).Select(st => new { id = st.StageNumber, name = st.Description }).ToList()
     );
 
     var skillStagesDataJson = JsonSerializer.Serialize(skillStagesDict);
@@ -23,8 +23,10 @@
 
 <main class="container mt-4">
     <h2>@ViewBag.Title</h2>
+    @if (TempData["AccountNotice"] is string accountNotice) { <div class="alert alert-info" role="status">@accountNotice</div> }
+    <p class="text-muted">Add a skill you can teach and one you want to learn before starting an exchange or conversation.</p>
 
-    @using (Html.BeginForm("UpdateProfile", "Profile", FormMethod.Post, new { @id = "updateProfileForm" }))
+    @using (Html.BeginForm("UpdateProfile", "Profile", FormMethod.Post, new { @id = "updateProfileForm", enctype = "multipart/form-data" }))
     {
         @Html.AntiForgeryToken()
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
@@ -32,6 +34,13 @@
         <div class="mb-3">
             @Html.LabelFor(m => m.FullName, new { @class = "form-label" })
             @Html.TextBoxFor(m => m.FullName, new { @class = "form-control" })
+        </div>
+        <div class="mb-3">
+            <label for="ProfileImage" class="form-label">Profile photo (optional, up to 2 MB)</label>
+            <div class="mb-2"><img src="@Model.ExistingProfileImageUrl" alt="Current profile photo" class="rounded-circle" width="72" height="72" style="object-fit:cover" /></div>
+            <input type="file" id="ProfileImage" name="ProfileImage" class="form-control" accept="image/jpeg,image/png,image/webp" />
+            @Html.ValidationMessageFor(m => m.ProfileImage, "", new { @class = "text-danger" })
+            <label class="form-check mt-2"><input type="checkbox" name="RemoveProfileImage" value="true" class="form-check-input" /> Remove current photo</label>
         </div>
 
         <div class="mb-3">
@@ -257,15 +266,10 @@
 
                 if (!$.trim($form.find("input[name='FullName']").val())) markInvalid($("input[name='FullName']"), "Full Name is required");
                 if (!$.trim($form.find("input[name='Email']").val())) markInvalid($("input[name='Email']"), "Email is required");
-                if (!$.trim($form.find("textarea[name='Bio']").val())) markInvalid($("textarea[name='Bio']"), "Bio is required");
-                if (!$form.find("select[name='Profession']").val()) markInvalid($("select[name='Profession']"), "Profession is required");
-                if (!$form.find("select[name='Location']").val()) markInvalid($("select[name='Location']"), "Location is required");
 
                 var age = $form.find("input[name='Age']").val();
-                if (!age || parseInt(age) <= 0) markInvalid($("input[name='Age']"), "Age must be greater than 0");
+                if (age && parseInt(age) <= 0) markInvalid($("input[name='Age']"), "Enter a valid age");
 
-                if ($("#skillsToLearnContainer .skill-learn.active").length === 0) markInvalid($("#skillsToLearnContainer"), "Select at least one skill to learn");
-                if ($("#skillsIKnowContainer .skill-know.active").length === 0) markInvalid($("#skillsIKnowContainer"), "Select at least one skill you know");
 
                 if (firstInvalidField) {
                     $('html, body').animate({ scrollTop: firstInvalidField.offset().top - 100 }, 300);

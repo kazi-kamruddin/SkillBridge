@@ -14,8 +14,10 @@ namespace SkillBridge.Controllers
     public class CommunitiesController : Controller
     {
         private readonly ApplicationDbContext db;
+        private readonly CloudinaryImageService images;
 
-        public CommunitiesController(ApplicationDbContext db) => this.db = db;
+        public CommunitiesController(ApplicationDbContext db, CloudinaryImageService images)
+        { this.db = db; this.images = images; }
 
         [AllowAnonymous]
         public ActionResult Index(string q = "")
@@ -111,6 +113,7 @@ namespace SkillBridge.Controllers
                     PostId = p.Id,
                     CommentCount = p.Comments.Count(c => !c.IsHidden),
                     Title = p.Title,
+                    ImageUrl = p.ImageUrl,
                     CreatedByFullName = DisplayName(p.CreatedByUserId),
                     CreatedAt = p.CreatedAt
                 })
@@ -153,7 +156,8 @@ namespace SkillBridge.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        public ActionResult CreatePost(CommunityPostCreateModel model)
+        [RequestSizeLimit(6 * 1024 * 1024)]
+        public async Task<ActionResult> CreatePost(CommunityPostCreateModel model)
         {
             var currentUserId = User.Identity.GetUserId();
             var community = db.Communities.Find(model.CommunityId);
@@ -163,16 +167,26 @@ namespace SkillBridge.Controllers
             if (!isMember) return StatusCode(403);
             if (string.IsNullOrWhiteSpace(model.Title))
                 ModelState.AddModelError(nameof(model.Title), "Write a title.");
-            if (string.IsNullOrWhiteSpace(model.Content))
-                ModelState.AddModelError(nameof(model.Content), "Write some content.");
+            if (string.IsNullOrWhiteSpace(model.Content) && model.Image?.Length is not > 0)
+                ModelState.AddModelError(nameof(model.Content), "Write some content or add an image.");
+            var imageError = CloudinaryImageService.Validate(model.Image);
+            if (imageError != null) ModelState.AddModelError(nameof(model.Image), imageError);
             if (!ModelState.IsValid) return View(model);
+
+            UploadedImage uploaded = null;
+            if (model.Image?.Length > 0)
+            {
+                try { uploaded = await images.UploadAsync(model.Image, "skillbridge/community", false); }
+                catch { ModelState.AddModelError(nameof(model.Image), "The image could not be uploaded. Please try again."); return View(model); }
+            }
 
             var post = new CommunityPost
             {
                 CommunityId = model.CommunityId,
                 CreatedByUserId = currentUserId,
                 Title = model.Title.Trim(),
-                Content = model.Content.Trim(),
+                Content = model.Content?.Trim() ?? "",
+                ImageUrl = uploaded?.Url,
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -203,6 +217,7 @@ namespace SkillBridge.Controllers
                 CommunityId = post.CommunityId,
                 Title = post.Title,
                 Content = post.Content,
+                ImageUrl = post.ImageUrl,
                 CreatedByUserName = DisplayName(post.CreatedByUserId),
                         CreatedAt = post.CreatedAt,
                         IsMember = isMember,
@@ -211,6 +226,7 @@ namespace SkillBridge.Controllers
                 {
                     CommentId = c.Id,
                     Content = c.Content,
+                    ImageUrl = c.ImageUrl,
                     CreatedByFullName = DisplayName(c.CreatedByUserId),
                     CreatedAt = c.CreatedAt
                 }).ToList(),
@@ -235,7 +251,8 @@ namespace SkillBridge.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        public ActionResult CreateComment(CommunityCommentCreateModel model)
+        [RequestSizeLimit(6 * 1024 * 1024)]
+        public async Task<ActionResult> CreateComment(CommunityCommentCreateModel model)
         {
             var currentUserId = User.Identity.GetUserId();
 
@@ -246,20 +263,31 @@ namespace SkillBridge.Controllers
             if (post == null || post.IsHidden) return NotFound();
             bool isMember = db.UserSkills.Any(us => us.UserId == currentUserId && us.SkillId == post.Community.SkillId);
             if (!isMember) return StatusCode(403);
-            if (string.IsNullOrWhiteSpace(model.Content))
-                ModelState.AddModelError(nameof(model.Content), "Write a comment.");
+            if (string.IsNullOrWhiteSpace(model.Content) && model.Image?.Length is not > 0)
+                ModelState.AddModelError(nameof(model.Content), "Write a comment or add an image.");
+            var imageError = CloudinaryImageService.Validate(model.Image);
+            if (imageError != null) ModelState.AddModelError(nameof(model.Image), imageError);
 
             if (!ModelState.IsValid)
             {
-                TempData["CommunityNotice"] = "Please write a comment of at most 1,000 characters.";
+                TempData["CommunityNotice"] = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage ?? "Check your comment.";
                 return RedirectToAction("PostDetails", new { id = model.PostId });
+            }
+
+            UploadedImage uploaded = null;
+            if (model.Image?.Length > 0)
+            {
+                try { uploaded = await images.UploadAsync(model.Image, "skillbridge/community", false); }
+                catch { TempData["CommunityNotice"] = "The image could not be uploaded. Please try again.";
+                    return RedirectToAction("PostDetails", new { id = model.PostId }); }
             }
 
             var comment = new CommunityComment
             {
                 PostId = model.PostId,
                 CreatedByUserId = currentUserId,
-                Content = model.Content.Trim(),
+                Content = model.Content?.Trim() ?? "",
+                ImageUrl = uploaded?.Url,
                 CreatedAt = DateTime.UtcNow
             };
 

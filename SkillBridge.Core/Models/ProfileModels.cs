@@ -21,7 +21,7 @@ namespace SkillBridge.Models
         public string Bio { get; set; }
         public string Profession { get; set; }
         public string Location { get; set; }
-        public int Age { get; set; }
+        public int? Age { get; set; }
 
         // Skills
         public List<UserSkillViewModel> TeachingSkills { get; set; }
@@ -60,17 +60,17 @@ namespace SkillBridge.Models
         [StringLength(100)]
         public string FullName { get; set; }
         public string Email { get; set; }
-        [Required]
         [StringLength(500)]
         public string Bio { get; set; }
-        [Required]
         [StringLength(100)]
         public string Profession { get; set; }
-        [Required]
         [StringLength(100)]
         public string Location { get; set; }
         [Range(1, 150)]
-        public int Age { get; set; }
+        public int? Age { get; set; }
+        public Microsoft.AspNetCore.Http.IFormFile ProfileImage { get; set; }
+        public string ExistingProfileImageUrl { get; set; }
+        public bool RemoveProfileImage { get; set; }
 
         // Skills
         public List<int> SkillsToLearn { get; set; } = new List<int>();

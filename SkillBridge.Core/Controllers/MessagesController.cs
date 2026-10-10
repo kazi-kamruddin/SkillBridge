@@ -17,12 +17,14 @@ namespace SkillBridge.Controllers
     {
         private readonly ApplicationDbContext db;
         private readonly Microsoft.AspNetCore.SignalR.IHubContext<SkillBridge.Hubs.ChatHub> hubContext;
+        private readonly CloudinaryImageService images;
 
         public MessagesController(ApplicationDbContext db,
-            Microsoft.AspNetCore.SignalR.IHubContext<SkillBridge.Hubs.ChatHub> hubContext)
+            Microsoft.AspNetCore.SignalR.IHubContext<SkillBridge.Hubs.ChatHub> hubContext, CloudinaryImageService images)
         {
             this.db = db;
             this.hubContext = hubContext;
+            this.images = images;
         }
 
         // GET: /Messages
@@ -73,6 +75,7 @@ namespace SkillBridge.Controllers
                     FromUserId = m.FromUserId,
                     ToUserId = m.ToUserId,
                     Text = MessageEncryptionService.Decrypt(m.Ciphertext, m.IV, m.Hmac),
+                    HasImage = !string.IsNullOrWhiteSpace(m.ImagePublicId),
                     CreatedAt = m.CreatedAt,
                     IsMine = (m.FromUserId == userId),
                     IsRead = m.IsRead
@@ -112,7 +115,7 @@ namespace SkillBridge.Controllers
                 Profession = profileInfo?.Profession ?? "",
                 Location = profileInfo?.Location ?? "",
                 Bio = profileInfo?.Bio ?? "",
-                ProfileImageUrl = ProfileImageHelper.GetRandomProfileImage()
+                ProfileImageUrl = ProfileImageHelper.GetProfileImage(profileInfo?.ProfileImageUrl, profileInfo?.FullName)
             };
 
             ViewBag.OtherUserProfile = partnerVm;
@@ -127,10 +130,15 @@ namespace SkillBridge.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        public async Task<ActionResult> Send(int conversationId, string messageText)
+        [RequestSizeLimit(6 * 1024 * 1024)]
+        public async Task<ActionResult> Send(int conversationId, string messageText, IFormFile image)
         {
-            if (string.IsNullOrWhiteSpace(messageText) || messageText.Length > 4000)
-                return StatusCode(400, "Message must be 1 to 4000 characters long.");
+            messageText ??= "";
+            if ((string.IsNullOrWhiteSpace(messageText) && image?.Length is not > 0) || messageText.Length > 4000)
+                return StatusCode(400, "Add a message or an image; text can be at most 4000 characters.");
+            if (image?.Length > 0 && string.IsNullOrWhiteSpace(messageText)) messageText = "";
+            var imageError = CloudinaryImageService.Validate(image);
+            if (imageError != null) return BadRequest(imageError);
 
             var userId = User.Identity.GetUserId();
 
@@ -143,6 +151,13 @@ namespace SkillBridge.Controllers
             var otherUserId = (conversation.User1Id == userId) ? conversation.User2Id : conversation.User1Id;
             if (BlockRules.EitherBlocked(db, userId, otherUserId)) return StatusCode(403);
 
+            UploadedImage uploaded = null;
+            if (image?.Length > 0)
+            {
+                try { uploaded = await images.UploadAsync(image, "skillbridge/chat", true); }
+                catch { return StatusCode(502, "The image could not be uploaded. Please try again."); }
+            }
+
             var encrypted = MessageEncryptionService.Encrypt(messageText);
 
             var msg = new Message
@@ -153,6 +168,8 @@ namespace SkillBridge.Controllers
                 Ciphertext = encrypted.Ciphertext,
                 IV = encrypted.IV,
                 Hmac = encrypted.Hmac,
+                ImagePublicId = uploaded?.PublicId,
+                ImageFormat = uploaded?.Format,
                 CreatedAt = DateTime.Now,
                 IsRead = false
             };
@@ -169,11 +186,39 @@ namespace SkillBridge.Controllers
                 conversationId = conversation.Id,
                 fromUserId = msg.FromUserId,
                 toUserId = msg.ToUserId,
-                text = messageText,         
+                text = messageText,
+                hasImage = uploaded != null,
                 sentAt = msg.CreatedAt.ToString("o")
             });
 
             return StatusCode(200);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Image(int id)
+        {
+            var userId = User.Identity.GetUserId();
+            var message = await db.Messages.FirstOrDefaultAsync(m => m.Id == id && m.ImagePublicId != null);
+            if (message == null) return NotFound();
+            var conversation = await db.Conversations.FirstOrDefaultAsync(c => c.Id == message.ConversationId &&
+                (c.User1Id == userId || c.User2Id == userId));
+            if (conversation == null) return NotFound();
+            var otherId = conversation.User1Id == userId ? conversation.User2Id : conversation.User1Id;
+            if (BlockRules.EitherBlocked(db, userId, otherId)) return StatusCode(403);
+            try
+            {
+                var bytes = await images.DownloadAuthenticatedAsync(message.ImagePublicId, message.ImageFormat);
+                Response.Headers.CacheControl = "private, no-store";
+                var contentType = message.ImageFormat?.ToLowerInvariant() switch
+                {
+                    "jpg" or "jpeg" => "image/jpeg",
+                    "png" => "image/png",
+                    "webp" => "image/webp",
+                    _ => "application/octet-stream"
+                };
+                return File(bytes, contentType);
+            }
+            catch { return StatusCode(502, "The image is temporarily unavailable."); }
         }
 
         [HttpGet]
@@ -229,6 +274,18 @@ namespace SkillBridge.Controllers
 
             if (targetUserId == currentUserId)
                 return RedirectToAction("Index");
+            if (!await db.UserSkills.AnyAsync(s => s.UserId == currentUserId && s.Status == "Teaching") ||
+                !await db.UserSkills.AnyAsync(s => s.UserId == currentUserId && s.Status == "Learning"))
+            {
+                TempData["AccountNotice"] = "Add a skill you can teach and one you want to learn before starting a conversation.";
+                return RedirectToAction("UpdateProfile", "Profile");
+            }
+            if (!await db.UserSkills.AnyAsync(s => s.UserId == targetUserId && s.Status == "Teaching") ||
+                !await db.UserSkills.AnyAsync(s => s.UserId == targetUserId && s.Status == "Learning"))
+            {
+                TempData["ProfileNotice"] = "This member is still setting up their skills.";
+                return RedirectToAction("PublicProfile", "Profile", new { id = targetUserId });
+            }
             if (BlockRules.EitherBlocked(db, currentUserId, targetUserId)) return StatusCode(403);
 
             var conversation = await db.Conversations

@@ -9,7 +9,7 @@
 
     var skillStagesDict = allSkills.ToDictionary(
         s => s.Id.ToString(),
-        s => s.SkillStages.Select(st => new { id = st.StageNumber, name = st.Description }).ToList()
+        s => s.SkillStages.OrderBy(st => st.StageNumber).Select(st => new { id = st.StageNumber, name = st.Description }).ToList()
     );
 
     var skillStagesDataJson = JsonSerializer.Serialize(skillStagesDict);
@@ -24,12 +24,9 @@
 
 <main aria-labelledby="title">
     <h2 id="title">@ViewBag.Title</h2>
-    <p class="text-muted">Step 2 of 2: add your details, choose at least one skill to learn and one to teach, then start finding exchange partners.</p>
-    <div class="progress mb-4" role="progressbar" aria-label="Profile setup progress" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="height: 8px;">
-        <div class="progress-bar" style="width: 50%;"></div>
-    </div>
+    <p class="text-muted">Add your name to get started. The photo and skill details can wait until you are ready to connect with others.</p>
 
-    @using (Html.BeginForm("Index", "CompleteProfile", FormMethod.Post, new { @id = "completeProfileForm" }))
+    @using (Html.BeginForm("Index", "CompleteProfile", FormMethod.Post, new { @id = "completeProfileForm", enctype = "multipart/form-data" }))
     {
         @Html.AntiForgeryToken()
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
@@ -39,6 +36,14 @@
             @Html.LabelFor(m => m.FullName)
             @Html.TextBoxFor(m => m.FullName, new { @class = "form-control", placeholder = "Full Name" })
         </div>
+        <div class="form-group mb-3">
+            <label for="ProfileImage">Profile photo (optional, up to 2 MB)</label>
+            <input type="file" id="ProfileImage" name="ProfileImage" class="form-control" accept="image/jpeg,image/png,image/webp" />
+            @Html.ValidationMessageFor(m => m.ProfileImage, "", new { @class = "text-danger" })
+        </div>
+        <details class="mb-4 p-3 rounded border">
+            <summary class="fw-semibold">Add more details and skills now (optional)</summary>
+            <p class="text-muted mt-3">Add a skill to teach and one to learn when you want to connect with members.</p>
         <div class="form-group mb-3">
             @Html.LabelFor(m => m.Age)
             @Html.TextBoxFor(m => m.Age, new { @class = "form-control", type = "number", min = "1", placeholder = "Age" })
@@ -113,9 +118,10 @@
         </div>
 
         <div id="skillStagesSelectionContainer" class="mt-3"></div>
+        </details>
 
         <div class="mt-4">
-            <button type="submit" class="btn btn-success" id="proceedButton">Proceed</button>
+            <button type="submit" class="btn btn-success" id="proceedButton">Create my space</button>
         </div>
     }
 </main>
@@ -234,12 +240,7 @@
 
                 if (!$.trim($form.find("input[name='FullName']").val())) markInvalid($("input[name='FullName']"), "Full Name is required");
                 var age = $form.find("input[name='Age']").val();
-                if (!age || parseInt(age) <= 0) markInvalid($("input[name='Age']"), "Age must be greater than 0");
-                if (!$form.find("select[name='Profession']").val()) markInvalid($("select[name='Profession']"), "Profession is required");
-                if (!$form.find("select[name='Location']").val()) markInvalid($("select[name='Location']"), "Location is required");
-                if (!$.trim($form.find("textarea[name='Bio']").val())) markInvalid($("textarea[name='Bio']"), "Bio is required");
-                if ($("#skillsToLearnContainer .skill-learn.active").length === 0) markInvalid($("#skillsToLearnContainer"), "Select at least one skill to learn");
-                if ($("#skillsIKnowContainer .skill-know.active").length === 0) markInvalid($("#skillsIKnowContainer"), "Select at least one skill you know");
+                if (age && parseInt(age) <= 0) markInvalid($("input[name='Age']"), "Enter a valid age");
 
                 if (firstInvalidField) {
                     $('html, body').animate({ scrollTop: firstInvalidField.offset().top - 100 }, 300);

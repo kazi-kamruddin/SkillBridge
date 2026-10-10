@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using SkillBridge.Services;
 
 namespace SkillBridge.Controllers
 {
@@ -12,8 +13,10 @@ namespace SkillBridge.Controllers
     public class CompleteProfileController : Controller
     {
         private readonly ApplicationDbContext db;
+        private readonly CloudinaryImageService images;
 
-        public CompleteProfileController(ApplicationDbContext db) => this.db = db;
+        public CompleteProfileController(ApplicationDbContext db, CloudinaryImageService images)
+        { this.db = db; this.images = images; }
 
 
         ////////////////////////////////////////////////////////////////////////////
@@ -44,7 +47,8 @@ namespace SkillBridge.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Index(CompleteProfileViewModel model)
+        [RequestSizeLimit(3 * 1024 * 1024)]
+        public async Task<ActionResult> Index(CompleteProfileViewModel model)
         {
             var userId = User.Identity.GetUserId();
             if (db.UserInformations.Any(ui => ui.UserId == userId))
@@ -57,8 +61,8 @@ namespace SkillBridge.Controllers
                 .GroupBy(s => s.SkillId)
                 .ToDictionary(g => g.Key, g => g.Max(s => s.StageNumber));
 
-            if (!learningIds.Any() || !teachingSkills.Any())
-                ModelState.AddModelError("", "Choose at least one skill to learn and one skill to teach.");
+            var imageError = CloudinaryImageService.Validate(model.ProfileImage, 2 * 1024 * 1024);
+            if (imageError != null) ModelState.AddModelError(nameof(model.ProfileImage), imageError);
             if (learningIds.Any(id => !validSkillIds.Contains(id)) ||
                 teachingSkills.Any(s => !validSkillIds.Contains(s.SkillId) ||
                     !maxStageBySkill.ContainsKey(s.SkillId) ||
@@ -76,15 +80,25 @@ namespace SkillBridge.Controllers
                 return View(model);
             }
 
+            UploadedImage uploaded = null;
+            if (model.ProfileImage?.Length > 0)
+            {
+                try { uploaded = await images.UploadAsync(model.ProfileImage, "skillbridge/avatars", false); }
+                catch { ModelState.AddModelError(nameof(model.ProfileImage), "The image could not be uploaded. Please try again.");
+                    model.AllSkillCategories = db.SkillCategories.Include("Skills.SkillStages").ToList(); return View(model); }
+            }
+
             var userInfo = new UserInformation
             {
                 UserId = userId,
                 FullName = model.FullName.Trim(),
                 Age = model.Age,
-                Profession = model.Profession.Trim(),
-                Location = model.Location.Trim(),
-                Bio = model.Bio.Trim(),
-                IsPublic = model.IsPublic
+                Profession = model.Profession?.Trim(),
+                Location = model.Location?.Trim(),
+                Bio = model.Bio?.Trim(),
+                IsPublic = model.IsPublic,
+                ProfileImageUrl = uploaded?.Url,
+                ProfileImagePublicId = uploaded?.PublicId
             };
             db.UserInformations.Add(userInfo);
 

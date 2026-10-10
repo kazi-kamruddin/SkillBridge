@@ -39,6 +39,8 @@ namespace SkillBridge.Models
         [Required] public byte[] Ciphertext { get; set; }   // encrypted message bytes
         [Required] public byte[] IV { get; set; }           // AES Initialization Vector
         [Required] public byte[] Hmac { get; set; }         // HMAC for tamper detection
+        [StringLength(500)] public string ImagePublicId { get; set; }
+        [StringLength(20)] public string ImageFormat { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public bool IsRead { get; set; } = false;
 

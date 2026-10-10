@@ -22,6 +22,7 @@ namespace SkillBridge.Models
         public string CreatedByUserId { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
+        [StringLength(500)] public string ImageUrl { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime? UpdatedAt { get; set; }
         public bool IsHidden { get; set; }
@@ -37,6 +38,7 @@ namespace SkillBridge.Models
         public int PostId { get; set; }
         public string CreatedByUserId { get; set; }
         public string Content { get; set; }
+        [StringLength(500)] public string ImageUrl { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public bool IsHidden { get; set; }
 
@@ -81,6 +83,7 @@ namespace SkillBridge.Models
         public int PostId { get; set; }
         public int CommentCount { get; set; }
         public string Title { get; set; }
+        public string ImageUrl { get; set; }
         public string CreatedByFullName { get; set; }
         public DateTime CreatedAt { get; set; }
     }
@@ -91,6 +94,7 @@ namespace SkillBridge.Models
         public int CommunityId { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
+        public string ImageUrl { get; set; }
         public string CreatedByUserName { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsMember { get; set; }
@@ -105,6 +109,7 @@ namespace SkillBridge.Models
     {
         public int CommentId { get; set; }
         public string Content { get; set; }
+        public string ImageUrl { get; set; }
         public string CreatedByFullName { get; set; }
         public DateTime CreatedAt { get; set; }
     }
@@ -136,9 +141,9 @@ namespace SkillBridge.Models
         [Required]
         public int PostId { get; set; }
 
-        [Required]
         [StringLength(1000)]
         public string Content { get; set; }
+        public Microsoft.AspNetCore.Http.IFormFile Image { get; set; }
     }
 
     public class CommunityPostCreateModel
@@ -150,8 +155,8 @@ namespace SkillBridge.Models
         [StringLength(200)]
         public string Title { get; set; }
 
-        [Required]
         [StringLength(2000)]
         public string Content { get; set; }
+        public Microsoft.AspNetCore.Http.IFormFile Image { get; set; }
     }
 }

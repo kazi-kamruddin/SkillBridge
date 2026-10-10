@@ -13,7 +13,7 @@
                 </div>
                 <div class="card-body p-4">
                     <p class="text-muted small">Community posts can be read by signed-out visitors. Avoid sharing private contact details.</p>
-                    @using (Html.BeginForm("CreatePost", "Communities", FormMethod.Post))
+                    @using (Html.BeginForm("CreatePost", "Communities", FormMethod.Post, new { enctype = "multipart/form-data" }))
                     {
                         @Html.AntiForgeryToken()
                         @Html.HiddenFor(m => m.CommunityId)
@@ -30,6 +30,11 @@
                             @Html.LabelFor(m => m.Content, new { @class = "form-label fw-bold" })
                             @Html.TextAreaFor(m => m.Content, 6, 60, new { @class = "form-control", placeholder = "Write your post content here..." })
                             @Html.ValidationMessageFor(m => m.Content, "", new { @class = "text-danger small" })
+                        </div>
+                        <div class="mb-3">
+                            <label for="Image" class="form-label fw-bold">Image (optional, up to 5 MB)</label>
+                            <input type="file" id="Image" name="Image" class="form-control" accept="image/jpeg,image/png,image/webp" />
+                            @Html.ValidationMessageFor(m => m.Image, "", new { @class = "text-danger small" })
                         </div>
 
                         <!-- Buttons -->
