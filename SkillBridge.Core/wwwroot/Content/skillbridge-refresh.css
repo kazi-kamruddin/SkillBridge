@@ -49,7 +49,7 @@ a:hover { color: var(--primary-dark); }
 /* Floating, centered-brand navigation inspired by the supplied reference. */
 body .sb-nav {
     position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
-    width: min(1420px, calc(100% - 32px)); height: auto; min-height: 68px;
+    width: min(1120px, calc(100% - 32px)); height: auto; min-height: 68px;
     z-index: 1030; padding: 7px 12px; border-radius: 999px;
     border: 1px solid rgba(255,255,255,.16); background: #17242a !important;
     box-shadow: 0 14px 32px rgba(17, 33, 39, .2);

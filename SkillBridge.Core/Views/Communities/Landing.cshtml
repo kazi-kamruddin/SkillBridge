@@ -42,6 +42,7 @@
                     <a href="@Url.Action("PostDetails", "Communities", new { id = post.PostId })"
                        class="post-card d-block p-3 mb-3 rounded text-decoration-none">
                         <h5 class="mb-1 text-dark">@post.Title</h5>
+                        @if (!string.IsNullOrWhiteSpace(post.ImageUrl)) { <img src="@post.ImageUrl" alt="Image attached to @post.Title" class="img-fluid rounded mb-2" style="max-height:180px;object-fit:cover" loading="lazy" /> }
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">
                                 by <strong>@post.CreatedByFullName</strong>

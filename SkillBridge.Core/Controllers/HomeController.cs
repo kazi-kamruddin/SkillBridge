@@ -67,7 +67,7 @@ namespace SkillBridge.Controllers
 
                     vm.LatestInteractionOtherUser = otherUser.UserName;
                     vm.LatestInteractionOtherUserFullName = otherUserInfo?.FullName ?? otherUser.UserName;
-                    vm.LatestInteractionOtherUserProfileImage = ProfileImageHelper.GetRandomProfileImage();
+                    vm.LatestInteractionOtherUserProfileImage = ProfileImageHelper.GetProfileImage(otherUserInfo?.ProfileImageUrl, otherUserInfo?.FullName);
 
                     vm.LatestInteractionSkillYouLearn =
                         latestInteraction.User1Id == userId

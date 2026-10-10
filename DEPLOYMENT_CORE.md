@@ -9,6 +9,7 @@ This is one ASP.NET Core 10 MVC app with Razor views, C# controllers, Identity, 
    Before deploying the public-browsing update, also run `database/postgres/004_public_browsing_and_moderation.sql` once. It adds profile visibility, content moderation flags and reports. Existing profiles default to hidden from signed-out visitors. Review existing community content before publishing it to guests.
    Before deploying the issue #36 update, run `database/postgres/005_discovery_exchanges_safety.sql` once after 004. It adds exchange proposal fields, profile reports and blocks, moderation hiding, and early exchange endings. Do not rerun 001.
    Before deploying Google sign-in and exchange planning, run `database/postgres/006_member_access_and_planning.sql` once after 005. It adds availability, meeting proposals, stage notes and saved profiles. It confirms pre-existing accounts once so their logins keep working when email confirmation becomes required. Back up the database first; do not deploy the new code before this script succeeds.
+   Before deploying Cloudinary uploads and lightweight onboarding, run `database/postgres/007_member_images_and_light_onboarding.sql` once after 006. It adds nullable optional profile fields and image references for profiles, community items and messages. Deploy the code only after this script succeeds.
 3. Keep the existing `SKILLBRIDGE_MESSAGE_KEY`. Changing it makes old encrypted chat messages unreadable.
 4. Publish and test the Core app locally against the updated database before pointing visitors to it. Existing ASP.NET Identity 2 password hashes can be verified by Core Identity; successful login may upgrade a hash, so a database backup also matters for rollback to MVC 5.
 
@@ -29,6 +30,9 @@ This is one ASP.NET Core 10 MVC app with Razor views, C# controllers, Identity, 
    | `SKILLBRIDGE_BREVO_FROM` | Sender address configured and verified in Brevo; required for new email/password registration in this release. |
    | `SKILLBRIDGE_GOOGLE_CLIENT_ID` | Google web OAuth client ID, when Google sign-in is ready. |
    | `SKILLBRIDGE_GOOGLE_CLIENT_SECRET` | Matching Google web OAuth client secret, when Google sign-in is ready. |
+   | `SKILLBRIDGE_CLOUDINARY_CLOUD_NAME` | Cloud name from the Cloudinary Console. |
+   | `SKILLBRIDGE_CLOUDINARY_API_KEY` | Cloudinary API key for server-side uploads. |
+   | `SKILLBRIDGE_CLOUDINARY_API_SECRET` | Matching secret; keep it only in Render's environment settings. |
 
    `SKILLBRIDGE_DB_CA_CERT` is optional. Set it only if replacing the certificate bundled at `SkillBridge.Core/certs/prod-ca-2021.crt`. The certificate is a public trust anchor, not a credential.
    For this release, **Brevo API key, verified sender and public URL are required for new email/password sign-ups**. New accounts cannot use member features before confirming their email. If Brevo is not configured, the registration form stays unavailable instead of creating accounts that cannot sign in. Password reset also uses Brevo. Google sign-in is optional; the Google buttons appear only when both Google variables are present. In Google Cloud, create a Web OAuth client and set the authorized redirect URI to `https://<your-render-service>.onrender.com/signin-google` (for this Render service: `https://skillbridge-08v4.onrender.com/signin-google`). Request only `openid`, `email` and `profile`. Keep its client secret in Render, never in Git.

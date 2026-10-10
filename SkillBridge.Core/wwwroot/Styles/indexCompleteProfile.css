@@ -1,4 +1,4 @@
-﻿.stage-option {
+.stage-option {
     cursor: pointer;
     transition: background-color 0.2s, color 0.2s;
 }
@@ -31,3 +31,5 @@
     margin-top: .25rem;
     font-size: 0.875em;
 }
+
+.stage-selection-container { direction: ltr; text-align: left; }

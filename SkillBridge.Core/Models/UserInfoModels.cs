@@ -14,20 +14,21 @@ namespace SkillBridge.Models
         [StringLength(150)]
         public string FullName { get; set; }
 
-        [Required]
-        public int Age { get; set; }
+        public int? Age { get; set; }
 
-        [Required]
         [StringLength(100)]
         public string Profession { get; set; }
 
-        [Required]
         [StringLength(100)]
         public string Location { get; set; }
 
-        [Required]
         [StringLength(500)]
         public string Bio { get; set; }
+
+        [StringLength(500)]
+        public string ProfileImageUrl { get; set; }
+        [StringLength(500)]
+        public string ProfileImagePublicId { get; set; }
 
         public bool IsPublic { get; set; }
         public bool IsHidden { get; set; }

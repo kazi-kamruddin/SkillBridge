@@ -96,7 +96,7 @@ namespace SkillBridge.Controllers
                     Location = userInfo?.Location ?? "",
                     Bio = userInfo?.Bio ?? "",
                     AverageRating = averageRating,
-                    ProfileImageUrl = ProfileImageHelper.GetRandomProfileImage(),
+                    ProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo?.ProfileImageUrl, userInfo?.FullName),
                     YouCanLearn = string.Join(", ", userTeachingSkills
                         .Where(us => learningSkills.Any(ls => ls.SkillId == us.SkillId))
                         .Select(us => $"{us.Skill.Name} (stage {us.KnownUpToStage ?? 0}/{us.Skill.SkillStages.Count})")),
@@ -135,7 +135,7 @@ namespace SkillBridge.Controllers
                     continue;
 
                 if (isBestMatch) bestMatches.Add(profileVm);
-                else if (isPartialMatch) partialMatches.Add(profileVm);
+                else if (isPartialMatch || (currentUserSkills.Count == 0 && userTeachingSkills.Count > 0)) partialMatches.Add(profileVm);
             }
 
             bestMatches = bestMatches

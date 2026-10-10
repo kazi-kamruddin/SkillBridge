@@ -468,7 +468,7 @@
                 </div>
             </div>
         }
-        else
+        else if (Model.LearningSkillNames.Any())
         {
             <div class="matches-container">
                 <div class="no-results">
@@ -483,7 +483,7 @@
         @if (Model.PartialMatches.Any())
         {
             <div class="matches-container">
-                <h3 class="section-title"><i class="fas fa-user-friends"></i>Partial Matches</h3>
+                <h3 class="section-title"><i class="fas fa-user-friends"></i>@(Model.LearningSkillNames.Any() ? "Partial Matches" : "Explore members")</h3>
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4" id="partialMatches">
                     @foreach (var person in Model.PartialMatches)
                     {
