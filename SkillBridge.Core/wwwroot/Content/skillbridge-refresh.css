@@ -162,9 +162,12 @@ body .sb-section-intro { max-width: 720px; margin: .5rem 0 2.8rem; }
 body .sb-section-intro h2 { margin: .6rem 0; font-size: clamp(2.1rem, 3.5vw, 3.5rem); font-weight: 900; line-height: 1.05; }
 body .sb-section-intro p { font-size: 1.08rem; color: var(--text-muted); }
 body .sb-home-features .dashboard-card { height: 100%; text-align: left; border-radius: 18px; padding: 1.8rem; }
+body .sb-home-features .dashboard-card::before { background: #324db2; }
+body .sb-home-features .col-md-4:nth-child(2) .dashboard-card::before { background: #d5583e; }
+body .sb-home-features .col-md-4:nth-child(3) .dashboard-card::before { background: #287363; }
 body .sb-home-features .col-md-4:nth-child(2) .dashboard-card { background: #e4e9fb; color: #17242a; }
 body .sb-home-features .col-md-4:nth-child(3) .dashboard-card { background: #e3eee6; color: #17242a; }
-body .sb-home-features .dashboard-card h5 { font-size: 1.45rem; font-weight: 900; }
+body .sb-home-features .dashboard-card h5 { color: #17242a; font-size: 1.45rem; font-weight: 900; }
 body .sb-home-features .dashboard-card p { color: #435258; }
 body .dashboard-welcome { font-size: clamp(2rem, 3.5vw, 3.5rem); font-weight: 900; }
 
@@ -245,7 +248,7 @@ body .sb-auth-screen details summary { cursor: pointer; font-weight: 700; }
     body .sb-public-profile .text-start.mx-auto { padding: 1.2rem; }
 }
 
-@media (max-width: 1399px) {
+@media (max-width: 1199px) {
     body .sb-nav { border-radius: 24px; }
     body .sb-nav .navbar-toggler { display: flex; align-items: center; color: #f8f4e9; border: 1px solid rgba(255,255,255,.42); border-radius: 999px; font-size: .85rem; padding: 8px 12px; }
     body .sb-nav .sb-nav-content { display: none !important; flex-basis: 100%; flex-direction: column; align-items: stretch; padding: 22px 8px 8px; }
