@@ -1,23 +1,29 @@
 @{
     ViewBag.Title = "How Exchanges Work";
 }
-
-<main class="container my-5" style="max-width: 900px;">
-    <h1 class="h2 mb-3">How an exchange works</h1>
-    <p class="lead">SkillBridge helps two members teach each other, one skill in each direction.</p>
-
-    <ol class="list-group list-group-numbered mb-4">
-        <li class="list-group-item"><strong>Set up your profile.</strong> Choose a skill you can teach, a skill you want to learn, and the stage you know.</li>
-        <li class="list-group-item"><strong>Find a reciprocal match.</strong> For example, Amina can teach Python and wants SQL. Rahim can teach SQL and wants Python.</li>
-        <li class="list-group-item"><strong>Send a proposal.</strong> Amina asks to learn SQL and shares a goal, preferred pace, and first meeting idea. Rahim reviews it and chooses the skill he wants to learn from Amina.</li>
-        <li class="list-group-item"><strong>Learn together.</strong> Each skill has up to seven stages. Both members confirm a stage when they agree it is complete.</li>
-        <li class="list-group-item"><strong>Finish and rate.</strong> Once all stages in the exchange are confirmed, either member can complete the exchange. Both can then rate their experience.</li>
+<main class="container my-5 sb-guide-page">
+    <header class="sb-page-heading">
+        <span class="sb-eyebrow">The exchange, explained</span>
+        <h1>Teach one thing.<br />Learn another.</h1>
+        <p>SkillBridge helps two members teach each other, one skill in each direction.</p>
+    </header>
+    <ol class="sb-guide-steps">
+        <li><span class="sb-guide-number">01</span><div><h2>Set up your profile.</h2><p>Choose a skill you can teach, a skill you want to learn, and the stage you know.</p></div></li>
+        <li><span class="sb-guide-number">02</span><div><h2>Find a reciprocal match.</h2><p>For example, Amina can teach Python and wants SQL. Rahim can teach SQL and wants Python.</p></div></li>
+        <li><span class="sb-guide-number">03</span><div><h2>Send a proposal.</h2><p>Amina asks to learn SQL and shares a goal, preferred pace, and first meeting idea. Rahim reviews it and chooses the skill he wants to learn from Amina.</p></div></li>
+        <li><span class="sb-guide-number">04</span><div><h2>Learn together.</h2><p>Each skill has up to seven stages. Both members confirm a stage when they agree it is complete.</p></div></li>
+        <li><span class="sb-guide-number">05</span><div><h2>Finish and rate.</h2><p>Once all stages in the exchange are confirmed, either member can complete the exchange. Both can then rate their experience.</p></div></li>
     </ol>
-    <p class="text-muted">You can read skills and community discussions before signing up. Requests, messages, and exchanges require an account.</p>
-    <p class="text-muted">If an exchange cannot continue, either member can end it early and give a reason. It will not count as completed.</p>
-    <a class="btn btn-primary" href="@Url.Action("Skills", "Explore")">Browse skills</a>
-    @if (!User.Identity.IsAuthenticated)
-    {
-        <a class="btn btn-outline-primary ms-2" href="@Url.Action("Register", "Account")">Create an account</a>
-    }
+    <aside class="sb-guide-note">
+        <h2>Good to know</h2>
+        <p>You can read skills and community discussions before signing up. Requests, messages, and exchanges require an account.</p>
+        <p>If an exchange cannot continue, either member can end it early and give a reason. It will not count as completed.</p>
+    </aside>
+    <div class="sb-hero-actions">
+        <a class="btn btn-primary" href="@Url.Action("Skills", "Explore")">Browse skills</a>
+        @if (!User.Identity.IsAuthenticated)
+        {
+            <a class="btn btn-outline-primary" href="@Url.Action("Register", "Account")">Create an account</a>
+        }
+    </div>
 </main>

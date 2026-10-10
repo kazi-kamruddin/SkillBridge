@@ -8,7 +8,7 @@
 }
 
 
-<main class="container text-center mt-5" aria-labelledby="title">
+<main class="container text-center mt-5 sb-public-profile sb-own-profile" aria-labelledby="title">
 
     <p class="text-success">@ViewBag.StatusMessage</p>
     @if (TempData["AccountNotice"] is string accountNotice) { <div class="alert alert-info" role="status">@accountNotice</div> }
@@ -20,7 +20,8 @@
              style="width:150px; height:150px; object-fit:cover; border:2px solid #ccc;" />
     </div>
 
-    <h3>@Model.FullName</h3>
+    <span class="sb-eyebrow">YOUR SPACE ON SKILLBRIDGE</span>
+    <h1 id="title">@Model.FullName</h1>
     @if (Model.IsHidden) { <div class="alert alert-warning">Your profile is currently hidden from discovery. Contact the site moderator if you believe this is a mistake.</div> }
     <p class="small text-muted">Your profile is @(Model.IsPublic ? "visible to signed-out visitors" : "visible only to signed-in members"). <a href="@Url.Action("UpdateProfile", "Profile")">Change visibility</a></p>
     <p><a href="@Url.Action("Requests", "Profile")">Exchange proposals</a> · <a href="@Url.Action("BlockedMembers", "Profile")">Blocked members</a> · <a href="@Url.Action("Index", "SavedProfiles")">Saved members</a></p>
@@ -101,7 +102,7 @@
         {
             foreach (var skill in Model.LearningSkills)
             {
-                <div class="card" style="background-color:#004953; color:white; min-width:120px; max-width:200px;">
+                <div class="card sb-learning-skill">
                     <div class="card-body p-2 text-center">
                         <span>@skill.SkillName </span>
                     </div>

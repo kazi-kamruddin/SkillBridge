@@ -347,13 +347,14 @@
     </style>
 }
     <div class="explore-container">
-        <!-- Page Header -->
-        @*<div class="page-header">
-            <h1 class="page-title">Explore SkillBridge</h1>
-        </div>*@
+        <header class="sb-page-heading">
+            <span class="sb-eyebrow">FIND YOUR PEOPLE</span>
+            <h1>Discover your next exchange.</h1>
+            <p>See what members can teach you and what you can share with them.</p>
+        </header>
 
         <!-- Filters Section -->
-        <p><a href="@Url.Action("Skills", "Explore")">Search the skills directory by topic or goal</a></p>
+        <p class="sb-directory-link"><a href="@Url.Action("Skills", "Explore")">Search the full skills directory <span aria-hidden="true">↗</span></a></p>
         <div class="filter-section">
             <h3 class="filter-title"><i class="fas fa-filter"></i>Filter Results</h3>
             <div class="filter-row">

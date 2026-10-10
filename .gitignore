@@ -60,6 +60,7 @@ node_modules/
 App_Data/certs/
 playwright-report/
 test-results/
+.artifacts/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

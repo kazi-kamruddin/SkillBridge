@@ -1,21 +1,37 @@
 @{
     ViewBag.Title = "Contact";
 }
-
-
-@section Styles {
-    <link rel="stylesheet" href="~/Styles/contacts.css" />
-}
-
-
-
-<main aria-labelledby="title">
-    <h2 id="title">Contact SkillBridge</h2>
-    <p>Need help with your account or an exchange? Please include a brief description of the issue, but do not send passwords or reset links.</p>
-    @if (!string.IsNullOrWhiteSpace(ViewBag.SupportEmail as string))
-    {
-        <p>Email <a href="mailto:@ViewBag.SupportEmail">@ViewBag.SupportEmail</a>.</p>
-    }
-    <p>You can also report a site issue on <a href="https://github.com/kazi-kamruddin/SkillBridge/issues" rel="noopener noreferrer">the SkillBridge issue tracker</a>.</p>
-    <p>Forgot your password? <a href="@Url.Action("ForgotPassword", "Account")">Request a reset link</a>.</p>
+<main class="container my-5 sb-contact-page" aria-labelledby="title">
+    <header class="sb-page-heading">
+        <span class="sb-eyebrow">We're here to help</span>
+        <h1 id="title">Let's sort it out.</h1>
+        <p>Need help with your account or an exchange? Pick the route that fits and tell us what happened.</p>
+    </header>
+    <div class="sb-contact-grid">
+        <section class="sb-contact-card">
+            <span class="sb-contact-icon" aria-hidden="true">✉</span>
+            <h2>Talk to us</h2>
+            <p>Include a brief description of the issue. Please do not send passwords or reset links.</p>
+            @if (!string.IsNullOrWhiteSpace(ViewBag.SupportEmail as string))
+            {
+                <a href="mailto:@ViewBag.SupportEmail">Email @ViewBag.SupportEmail <span aria-hidden="true">↗</span></a>
+            }
+            else
+            {
+                <a href="https://github.com/kazi-kamruddin/SkillBridge/issues" rel="noopener noreferrer">Send us an issue <span aria-hidden="true">↗</span></a>
+            }
+        </section>
+        <section class="sb-contact-card">
+            <span class="sb-contact-icon" aria-hidden="true">↗</span>
+            <h2>Report a site issue</h2>
+            <p>Found something broken or confusing? Share it on the SkillBridge issue tracker.</p>
+            <a href="https://github.com/kazi-kamruddin/SkillBridge/issues" rel="noopener noreferrer">Open issue tracker <span aria-hidden="true">↗</span></a>
+        </section>
+        <section class="sb-contact-card">
+            <span class="sb-contact-icon" aria-hidden="true">✳</span>
+            <h2>Get back in</h2>
+            <p>Forgot your password? Request a reset link and return to learning.</p>
+            <a href="@Url.Action("ForgotPassword", "Account")">Request a reset link <span aria-hidden="true">↗</span></a>
+        </section>
+    </div>
 </main>

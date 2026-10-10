@@ -2,198 +2,155 @@
     ViewBag.Title = "About Us";
 }
 
-<main class="about-us-container">
+@section Styles {
+    <link rel="stylesheet" href="~/Content/skillbridge-about.css" asp-append-version="true" />
+}
 
-    <!-- Dev Team -->
-    <section>
-        <h2 class="about-us-section-dev-title">Meet Our Dev Team</h2>
+<main class="container my-5 sb-about-page">
+    <header class="sb-page-heading sb-about-hero">
+        <span class="sb-eyebrow">About SkillBridge</span>
+        <h1>Skills are better<br />when shared.</h1>
+        <p>We connect people who want to teach and learn, creating opportunities to exchange skills, knowledge, and grow together as a community.</p>
+    </header>
 
-        <div class="about-us-gallery">
-            <div class="about-us-card">
-                <img src="~/Content/DP/rakibul.jpg" alt="Rakibul Islam Rahi" />
-                <div class="about-us-overlay-text">
-                    <h3>Rakibul Islam Rahi</h3>
-                    <p>FrontEnd</p>
-                </div>
+    <section class="sb-about-section" aria-labelledby="team-heading">
+        <div class="sb-about-section-heading">
+            <div>
+                <span class="sb-eyebrow">01 / The people</span>
+                <h2 id="team-heading">Meet the team behind SkillBridge.</h2>
             </div>
+            <p><strong>03 / Team members</strong><br />A small team building a place for people to learn from each other.</p>
+        </div>
 
-            <div class="about-us-card">
-                <img src="~/Content/DP/kazi.jpg" alt="Kazi Kamruddin Ahmed" />
-                <div class="about-us-overlay-text">
-                    <h3>Kazi Kamruddin Ahmed</h3>
-                    <p>FrontEnd + BackEnd</p>
-                </div>
+        <div class="sb-team-gallery" role="group" aria-label="SkillBridge development team">
+            <button type="button" class="sb-team-card is-active" aria-pressed="true" aria-label="View Rakibul Islam Rahi, FrontEnd">
+                <img src="~/Content/DP/rakibul.jpg" alt="" draggable="false" />
+                <span class="sb-team-index" aria-hidden="true">01</span>
+                <span class="sb-team-caption" aria-hidden="true"><small>FrontEnd</small><strong>Rakibul Islam Rahi</strong></span>
+            </button>
+            <button type="button" class="sb-team-card" aria-pressed="false" aria-label="View Kazi Kamruddin Ahmed, FrontEnd and BackEnd">
+                <img src="~/Content/DP/kazi.jpg" alt="" draggable="false" />
+                <span class="sb-team-index" aria-hidden="true">02</span>
+                <span class="sb-team-caption" aria-hidden="true"><small>FrontEnd + BackEnd</small><strong>Kazi Kamruddin Ahmed</strong></span>
+            </button>
+            <button type="button" class="sb-team-card" aria-pressed="false" aria-label="View Abdullah Ishtiaq, FrontEnd">
+                <img src="~/Content/DP/sakib.jpg" alt="" draggable="false" />
+                <span class="sb-team-index" aria-hidden="true">03</span>
+                <span class="sb-team-caption" aria-hidden="true"><small>FrontEnd</small><strong>Abdullah Ishtiaq</strong></span>
+            </button>
+        </div>
+
+        <div class="sb-team-toolbar">
+            <p>Choose a portrait to meet each developer.</p>
+            <div class="sb-team-choices" role="group" aria-label="Select a developer">
+                <button type="button" class="is-selected" aria-pressed="true">Rakibul</button>
+                <button type="button" aria-pressed="false">Kazi</button>
+                <button type="button" aria-pressed="false">Abdullah</button>
             </div>
-
-            <div class="about-us-card">
-                <img src="~/Content/DP/sakib.jpg" alt="Abdullah Ishtiaq" />
-                <div class="about-us-overlay-text">
-                    <h3>Abdullah Ishtiaq</h3>
-                    <p>FrontEnd</p>
-                </div>
+            <div class="sb-team-pager">
+                <button type="button" data-direction="-1" aria-label="Previous developer">←</button>
+                <span class="sb-team-counter" aria-live="polite">01 / 03</span>
+                <button type="button" data-direction="1" aria-label="Next developer">→</button>
             </div>
         </div>
     </section>
 
-    <!-- Mission -->
-    <section class="about-us-section-container">
-        <h2 class="about-us-section-title">Our Mission</h2>
-        <p class="about-us-section-text">
-            Our mission is to connect people who want to teach and learn, creating opportunities
-            to exchange skills, knowledge, and grow together as a community.
-        </p>
-    </section>
-
-    <!-- History -->
-    <section class="about-us-section-container">
-        <h2 class="about-us-section-title">Our History</h2>
-        <p class="about-us-section-text">
-            SkillBridge began as a university project to help people exchange skills and learn together.
-            We are continuing to improve it with feedback from the community.
-        </p>
-    </section>
-
-    <!-- Special Thanks To -->
-    <section>
-        <h2 class="about-us-section-dev-title">Special Thanks To</h2>
-
-        <div class="about-us-gallery">
-
-            <div class="about-us-card about-us-card-visible">
-                <img src="~/Content/DP/broti.jpeg" alt="Second Mam" />
-                <div class="about-us-visible-text">
-                    <h3>Ms. Tanjila Broti</h3>
-                    <p>Lecturer</p>
-                </div>
+    <section class="sb-about-section" aria-labelledby="story-heading">
+        <div class="sb-about-section-heading">
+            <div>
+                <span class="sb-eyebrow">02 / Our foundation</span>
+                <h2 id="story-heading">What moves us forward.</h2>
             </div>
+            <p>The purpose, direction, and beginnings of SkillBridge.</p>
+        </div>
+        <div class="sb-about-values">
+            <article>
+                <span class="sb-about-value-number">01 / Our purpose</span>
+                <h3>Our mission</h3>
+                <p>Connect people who want to teach and learn, creating opportunities to exchange skills, knowledge, and grow together as a community.</p>
+            </article>
+            <article>
+                <span class="sb-about-value-number">02 / Our direction</span>
+                <h3>Our vision</h3>
+                <p>A welcoming place where everyone can share what they know, discover what they love, and make progress together.</p>
+            </article>
+            <article>
+                <span class="sb-about-value-number">03 / Our beginnings</span>
+                <h3>Our history</h3>
+                <p>SkillBridge began as a university project to help people exchange skills and learn together. We continue to improve it with feedback from the community.</p>
+            </article>
+        </div>
+    </section>
 
-            <div class="about-us-card about-us-card-visible">
+    <section class="sb-about-section" aria-labelledby="thanks-heading">
+        <div class="sb-about-section-heading">
+            <div>
+                <span class="sb-eyebrow">03 / With gratitude</span>
+                <h2 id="thanks-heading">With thanks to our supervisors.</h2>
+            </div>
+            <p>For their guidance and support throughout this project.</p>
+        </div>
+        <div class="sb-supervisors">
+            <article class="sb-supervisor-card">
+                <img src="~/Content/DP/broti.jpeg" alt="Ms. Tanjila Broti" />
+                <div><span>Supervisor</span><h3>Ms. Tanjila Broti</h3><p>Lecturer</p></div>
+            </article>
+            <article class="sb-supervisor-card">
                 <img src="~/Content/DP/muthaki.jpeg" alt="Ms. Tahsina Muthaki" />
-                <div class="about-us-visible-text">
-                    <h3>Ms. Tahsina Muthaki</h3>
-                    <p>Lecturer</p>
-                </div>
-            </div>
+                <div><span>Supervisor</span><h3>Ms. Tahsina Muthaki</h3><p>Lecturer</p></div>
+            </article>
         </div>
     </section>
 </main>
 
-<!-- Styles -->
-<style>
-    .about-us-container {
-        padding: 50px 20px;
-    }
+@section Scripts {
+    <script>
+        (() => {
+            const page = document.querySelector('.sb-about-page');
+            if (!page) return;
+            const cards = [...page.querySelectorAll('.sb-team-card')];
+            const choices = [...page.querySelectorAll('.sb-team-choices button')];
+            const counter = page.querySelector('.sb-team-counter');
+            let activeIndex = 0;
 
-    .about-us-section-dev-title {
-        font-size: 2rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        text-align: center;
-        background: linear-gradient(20deg, #007BFF, #00C896);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        margin-bottom: 40px;
-    }
+            function activate(index) {
+                activeIndex = (index + cards.length) % cards.length;
+                cards.forEach((card, i) => {
+                    card.classList.toggle('is-active', i === activeIndex);
+                    card.setAttribute('aria-pressed', String(i === activeIndex));
+                });
+                choices.forEach((choice, i) => {
+                    choice.classList.toggle('is-selected', i === activeIndex);
+                    choice.setAttribute('aria-pressed', String(i === activeIndex));
+                });
+                counter.textContent = String(activeIndex + 1).padStart(2, '0') + ' / 03';
+            }
 
-    .about-us-gallery {
-        display: flex;
-        justify-content: center;
-        flex-wrap: wrap;
-        gap: 1.5rem;
-        margin-bottom: 60px;
-    }
-
-    .about-us-card {
-        position: relative;
-        width: 260px;
-        height: 340px;
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.15);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        background: #000;
-    }
-
-        .about-us-card img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .about-us-card:hover {
-            transform: translateY(-8px) scale(1.03);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-        }
-
-    /* Overlay (for Dev Team only) */
-    .about-us-overlay-text {
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: rgba(0, 0, 0, 0.75);
-        color: #fff;
-        padding: 15px;
-        text-align: center;
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
-    }
-
-    .about-us-card:hover .about-us-overlay-text {
-        opacity: 1;
-    }
-
-    /* Always visible text (for Mams) */
-    .about-us-card-visible {
-        display: flex;
-        flex-direction: column;
-    }
-
-        .about-us-card-visible img {
-            width: 100%;
-            height: 266.93px; /* same as .about-us-card height */
-            object-fit: cover; /* ensures proper cropping without distortion */
-        }
-
-
-    .about-us-visible-text {
-        background: #007BFF;
-        color: #fff;
-        text-align: center;
-        padding: 12px;
-    }
-
-        .about-us-visible-text h3 {
-            margin: 0;
-            font-size: 1.2rem;
-        }
-
-        .about-us-visible-text p {
-            margin: 4px 0 0;
-            font-size: 1rem;
-        }
-
-    .about-us-section-container {
-        max-width: 900px;
-        margin: 40px auto;
-    }
-
-    .about-us-section-title {
-        font-size: 1.8rem;
-        font-weight: 700;
-        margin-bottom: 15px;
-        background: linear-gradient(90deg, #007BFF, #00C896);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    .about-us-section-text {
-        font-size: 1.1rem;
-        line-height: 1.7;
-        color: #444;
-        background: #f9f9f9;
-        border-left: 4px solid #007BFF;
-        padding: 15px;
-        border-radius: 6px;
-    }
-</style>
+            cards.forEach((card, i) => {
+                card.addEventListener('click', () => activate(i));
+                card.addEventListener('focus', () => activate(i));
+                if (window.matchMedia('(hover: hover)').matches) {
+                    card.addEventListener('mouseenter', () => activate(i));
+                }
+            });
+            choices.forEach((choice, i) => choice.addEventListener('click', () => activate(i)));
+            page.querySelectorAll('.sb-team-pager button').forEach(button => {
+                button.addEventListener('click', () => activate(activeIndex + Number(button.dataset.direction)));
+            });
+            let touchStart = null;
+            const gallery = page.querySelector('.sb-team-gallery');
+            gallery.addEventListener('touchstart', event => {
+                touchStart = { x: event.changedTouches[0].clientX, y: event.changedTouches[0].clientY };
+            }, { passive: true });
+            gallery.addEventListener('touchend', event => {
+                if (!touchStart) return;
+                const deltaX = event.changedTouches[0].clientX - touchStart.x;
+                const deltaY = event.changedTouches[0].clientY - touchStart.y;
+                if (Math.abs(deltaX) > 45 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+                    activate(activeIndex + (deltaX < 0 ? 1 : -1));
+                }
+                touchStart = null;
+            }, { passive: true });
+        })();
+    </script>
+}
