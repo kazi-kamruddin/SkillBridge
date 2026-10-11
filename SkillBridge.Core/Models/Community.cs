@@ -111,6 +111,7 @@ namespace SkillBridge.Models
         public int CommentId { get; set; }
         public string Content { get; set; }
         public string ImageUrl { get; set; }
+        public string ProfileImageUrl { get; set; }
         public string CreatedByFullName { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsAuthor { get; set; }

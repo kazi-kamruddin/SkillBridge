@@ -381,11 +381,10 @@
     else
     {
         <!-- Dashboard for logged-in users -->
-        <div class="container py-5">
-            <h1 class="dashboard-welcome">
-                <i class="fas fa-hand-wave"></i>Welcome back, @Model.FullName!
-            </h1>
-            <section class="dashboard-card mb-4" aria-labelledby="next-action-heading">
+        <div class="container py-5 sb-member-home">
+            <header class="sb-member-hero"><div class="sb-member-hero-copy"><span class="sb-eyebrow">YOUR SKILLBRIDGE SPACE</span><h1 class="dashboard-welcome">Good to see you, <em>@Model.FullName</em>.</h1><p>Something good starts when you share what you know.</p><div class="sb-hero-actions"><a class="btn btn-primary" href="@Url.Action("Index", "Explore")">Find a partner ↗</a><a class="btn btn-outline-primary" href="@Url.Action("Index", "Communities")">Explore communities</a></div></div><div class="sb-member-hero-art" aria-hidden="true"><div class="sb-orbit sb-orbit-one">TEACH <span>✳</span></div><div class="sb-orbit sb-orbit-two">LEARN <span>↗</span></div><div class="sb-orbit-center">↔</div></div></header>
+            <div class="sb-member-top-grid">
+            <section class="dashboard-card sb-member-next" aria-labelledby="next-action-heading">
                 <span class="sb-eyebrow">YOUR NEXT STEP</span>
                 <h2 id="next-action-heading" class="h4 mt-2">@Model.NextActionTitle</h2>
                 <p>@Model.NextActionDescription</p>
@@ -394,15 +393,14 @@
             <!-- Motivational Quote Section -->
             @if (!string.IsNullOrEmpty(Model.MotivationalQuote))
             {
-                <div class="container my-4">
-                    <div class="quotes-card">
+                <div class="quotes-card sb-member-quote">
                         <i class="fas fa-quote-left fa-2x mb-3"></i>
                         <blockquote class="mb-0">
                             "@Model.MotivationalQuote"
                         </blockquote>
-                    </div>
                 </div>
             }
+            </div>
 
 
 
@@ -446,7 +444,7 @@
                                      style="width:50px; height:50px; object-fit:cover; border:2px solid #ccc;" />
 
                                 <div>
-                                    <h5>With: @Model.LatestInteractionOtherUserFullName</h5>
+                                    <h5>@Model.LatestInteractionOtherUserFullName</h5>
                                     <p class="text-muted">
                                         Status:
                                         <span class="badge bg-info">@Model.LatestInteractionStatus</span>

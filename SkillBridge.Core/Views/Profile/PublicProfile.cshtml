@@ -5,29 +5,29 @@
     <link rel="stylesheet" href="~/Styles/publicProfile.css" />
 }
 
-<main class="container text-center mt-5 sb-public-profile" aria-labelledby="title">
+<main class="container mt-5 sb-public-profile sb-profile-redesign" aria-labelledby="title">
     @Html.AntiForgeryToken()
     @if (TempData["ProfileNotice"] is string notice) { <div class="alert alert-info" role="status">@notice</div> }
 
-    <div class="mb-3 text-center">
-        <img src="@Model.ProfileImageUrl"
-             alt="@Model.FullName"
-             class="rounded-circle"
-             style="width:150px; height:150px; object-fit:cover; border:2px solid #ccc;" />
-    </div>
-
-    <span class="sb-eyebrow">MEET YOUR NEXT LEARNING PARTNER</span>
-    <h1 id="title">@Model.FullName</h1>
-    @if (!string.IsNullOrWhiteSpace(Model.Profession) || !string.IsNullOrWhiteSpace(Model.Location)) { <p class="text-muted">@string.Join(" · ", new[] { Model.Profession, Model.Location }.Where(s => !string.IsNullOrWhiteSpace(s)))</p> }
-    <p>@Model.Bio</p>
-    @if (!string.IsNullOrWhiteSpace(Model.AvailabilityNotes)) { <p><strong>Availability:</strong> @Model.AvailabilityNotes</p> }
-    @if (Model.AvailableDaysMask != 0) { <p><strong>Usual days:</strong> @AvailabilityHelper.DescribeDays(Model.AvailableDaysMask)</p> }
-    @if (!string.IsNullOrWhiteSpace(Model.TimeZoneId)) { <p><strong>Time zone:</strong> @Model.TimeZoneId</p> }
-    <p><strong>Meeting format:</strong> @Model.MeetingFormat</p>
+    <header class="sb-profile-hero">
+        <div class="sb-profile-hero-copy">
+            <span class="sb-eyebrow">MEET YOUR NEXT LEARNING PARTNER</span>
+            <h1 id="title">@Model.FullName</h1>
+            @if (!string.IsNullOrWhiteSpace(Model.Profession) || !string.IsNullOrWhiteSpace(Model.Location)) { <p class="sb-profile-meta">@string.Join(" · ", new[] { Model.Profession, Model.Location }.Where(s => !string.IsNullOrWhiteSpace(s)))</p> }
+            @if (!string.IsNullOrWhiteSpace(Model.Bio)) { <p class="sb-profile-bio">@Model.Bio</p> }
+            <div class="sb-profile-facts">
+                @if (!string.IsNullOrWhiteSpace(Model.AvailabilityNotes)) { <span><strong>Availability</strong> @Model.AvailabilityNotes</span> }
+                @if (Model.AvailableDaysMask != 0) { <span><strong>Usual days</strong> @AvailabilityHelper.DescribeDays(Model.AvailableDaysMask)</span> }
+                @if (!string.IsNullOrWhiteSpace(Model.TimeZoneId)) { <span><strong>Time zone</strong> @Model.TimeZoneId</span> }
+                <span><strong>Meet</strong> @Model.MeetingFormat</span>
+            </div>
+        </div>
+        <div class="sb-profile-portrait"><img src="@Model.ProfileImageUrl" alt="@Model.FullName" /></div>
+    </header>
 
     @if (User.Identity.IsAuthenticated && Model.UserId != User.Identity.GetUserId())
     {
-        <div class="mt-3 mb-4">
+        <div class="sb-profile-actions">
             <form method="post" action="@Url.Action(Model.IsSaved ? "Remove" : "Save", "SavedProfiles")" class="mb-2">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@Model.UserId" />
@@ -59,10 +59,9 @@
         </div>
     }
 
-    <hr />
-
+    <div class="sb-profile-content-grid">
     <!-- Personal Information -->
-    <div class="text-start mx-auto" style="max-width: 600px;">
+    <section class="sb-profile-panel sb-profile-glance">
         <h2 class="h4 mt-4 mb-3">At a glance</h2>
         <dl class="row">
             <dt class="col-sm-4">Profession:</dt>
@@ -79,11 +78,12 @@
                 Completed total @Model.InteractionsCompleted interaction@(Model.InteractionsCompleted == 1 ? "" : "s")
             </dd>
         </dl>
-    </div>
+    </section>
 
     <!-- Teaching Skills -->
-    <h2 class="h4 mt-4 mb-3">What @Model.FullName can teach</h2>
-    <div class="card shadow p-4 mx-auto" style="max-width: 600px;">
+    <section class="sb-profile-panel sb-profile-teaching">
+    <h2 class="h4 mb-3">What @Model.FullName can teach</h2>
+    <div>
         <ul id="skillsToTeachList" class="list-unstyled mb-0">
             @foreach (var skill in Model.SkillsToTeach)
             {
@@ -151,10 +151,12 @@
             }
         </ul>
     </div>
+    </section>
 
     <!-- Learning Skills -->
-    <h2 class="h4 mt-5 mb-3">What @Model.FullName wants to learn</h2>
-    <div class="d-flex flex-wrap justify-content-center gap-3">
+    <section class="sb-profile-panel sb-profile-learning">
+    <h2 class="h4 mb-3">What @Model.FullName wants to learn</h2>
+    <div class="d-flex flex-wrap gap-3">
         @foreach (var skill in Model.SkillsToLearn)
         {
             <div class="card sb-learning-skill">
@@ -164,8 +166,8 @@
             </div>
         }
     </div>
-
-    <div style="height: 45px;"></div>
+    </section>
+    </div>
 </main>
 
 @section Scripts {

@@ -4,14 +4,13 @@
     ViewBag.Title = "Create Post";
 }
 
-<main class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8 col-md-10">
-            <div class="card shadow-lg border-0 rounded-3">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Create a New Post</h4>
-                </div>
+<main class="container my-5 sb-post-editor-page">
+    <header class="sb-page-heading sb-post-editor-hero"><span class="sb-eyebrow">A PLACE TO THINK OUT LOUD</span><h1>Start a conversation.</h1><p>Ask a question, share a breakthrough, or show what you are making.</p></header>
+    <div class="sb-post-editor-layout">
+        <div class="card sb-post-editor-card">
                 <div class="card-body p-4">
+                    <span class="sb-eyebrow">NEW COMMUNITY POST / 01</span>
+                    <h2 class="h3 mt-2 mb-3">What is on your mind?</h2>
                     <p class="text-muted small">Community posts can be read by signed-out visitors. Avoid sharing private contact details.</p>
                     @using (Html.BeginForm("CreatePost", "Communities", FormMethod.Post, new { enctype = "multipart/form-data" }))
                     {
@@ -21,14 +20,20 @@
                         <!-- Title -->
                         <div class="mb-3">
                             @Html.LabelFor(m => m.Title, new { @class = "form-label fw-bold" })
-                            @Html.TextBoxFor(m => m.Title, new { @class = "form-control form-control-lg", placeholder = "Enter a catchy title..." })
+                            @Html.TextBoxFor(m => m.Title, new { @class = "form-control form-control-lg", placeholder = "Give your post a clear title...", maxlength = "200" })
                             @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger small" })
                         </div>
 
                         <!-- Content -->
                         <div class="mb-3">
                             @Html.LabelFor(m => m.Content, new { @class = "form-label fw-bold" })
-                            @Html.TextAreaFor(m => m.Content, 6, 60, new { @class = "form-control", placeholder = "Write your post content here..." })
+                            <div class="sb-editor-toolbar" role="toolbar" aria-label="Post formatting">
+                                <button type="button" data-format="bold" aria-label="Bold selected text" title="Bold"><strong>B</strong></button>
+                                <button type="button" data-format="italic" aria-label="Italic selected text" title="Italic"><em>I</em></button>
+                                <button type="button" data-format="heading" aria-label="Turn line into heading" title="Heading">H2</button>
+                            </div>
+                            @Html.TextAreaFor(m => m.Content, 8, 60, new { @class = "form-control sb-editor-textarea", placeholder = "Share your idea, question, or progress...", maxlength = "2000" })
+                            <p class="form-text">Bold, italic, and headings are available. New lines stay as you write them.</p>
                             @Html.ValidationMessageFor(m => m.Content, "", new { @class = "text-danger small" })
                         </div>
                         <div class="mb-3">
@@ -48,12 +53,33 @@
                         </div>
                     }
                 </div>
-            </div>
         </div>
+        <aside class="sb-post-editor-aside" aria-label="Writing tips"><span aria-hidden="true" class="sb-editor-spark">✳</span><span class="sb-eyebrow">GOOD POSTS START HERE</span><h2>Make it easy to join in.</h2><p>A specific question or example gives others something useful to respond to.</p><div class="sb-editor-example"><span>EXAMPLE PROMPT</span><strong>“What helped you get past the first stage?”</strong></div></aside>
     </div>
 </main>
 
 @section Scripts {
     <script src="~/Scripts/jquery.validate.min.js"></script>
 <script src="~/Scripts/jquery.validate.unobtrusive.min.js"></script>
+<script>
+document.querySelectorAll('.sb-editor-toolbar button').forEach(button => button.addEventListener('click', () => {
+    const editor = document.getElementById('Content');
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const selected = editor.value.slice(start, end);
+    const kind = button.dataset.format;
+    let replacement;
+    if (kind === 'heading') {
+        const lineStart = editor.value.lastIndexOf('\n', start - 1) + 1;
+        if (editor.value.slice(lineStart, lineStart + 3) === '## ') return;
+        editor.setRangeText('## ', lineStart, lineStart, 'preserve');
+        editor.focus();
+        return;
+    }
+    const mark = kind === 'bold' ? '**' : '*';
+    replacement = mark + (selected || 'your text') + mark;
+    editor.setRangeText(replacement, start, end, 'select');
+    editor.focus();
+}));
+</script>
 }

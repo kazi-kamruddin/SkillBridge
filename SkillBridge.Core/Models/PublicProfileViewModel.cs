@@ -79,6 +79,8 @@ namespace SkillBridge.Models
         public string UserId { get; set; }
         public string FullName { get; set; }
         public string Profession { get; set; }
+        public string ProfileImageUrl { get; set; }
+        public string Location { get; set; }
         public bool CanView { get; set; }
         public string MatchSummary { get; set; }
     }
