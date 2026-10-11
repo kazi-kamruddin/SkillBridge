@@ -97,10 +97,12 @@ namespace SkillBridge.Controllers
                 .ToListAsync();
             ViewBag.AllConversations = allConversations;
             var conversationIds = allConversations.Select(c => c.Id).ToList();
-            var latestMessages = await db.Messages.Where(m => conversationIds.Contains(m.ConversationId))
+            var latestMessageIds = await db.Messages.Where(m => conversationIds.Contains(m.ConversationId))
                 .GroupBy(m => m.ConversationId)
-                .Select(group => group.OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id).First())
+                .Select(group => group.OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id)
+                    .Select(m => m.Id).First())
                 .ToListAsync();
+            var latestMessages = await db.Messages.Where(m => latestMessageIds.Contains(m.Id)).ToListAsync();
             ViewBag.LastMessagePreviews = latestMessages.ToDictionary(m => m.ConversationId, m =>
             {
                 var text = MessageEncryptionService.Decrypt(m.Ciphertext, m.IV, m.Hmac);
@@ -201,7 +203,13 @@ namespace SkillBridge.Controllers
                 sentAt = msg.CreatedAt.ToString("o")
             });
 
-            return StatusCode(200);
+            return Ok(new
+            {
+                id = msg.Id,
+                text = messageText,
+                hasImage = uploaded != null,
+                sentAt = msg.CreatedAt.ToString("o")
+            });
         }
 
         [HttpGet]
