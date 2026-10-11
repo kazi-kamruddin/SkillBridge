@@ -10,6 +10,8 @@ The original ASP.NET MVC 5/.NET Framework 4.7.2 application remains at the repos
 
 ## Local development of the Core app
 
+The homepage is the first Tailwind page. In PowerShell at the repository root, set `$env:npm_config_cache = (Join-Path (Get-Location).Path '.npm-cache')`, then run `npm ci` and `npm run build:css` before `dotnet run`; use `npm run watch:css` while editing its Razor view. Node modules, npm cache, and generated CSS stay under this E: workspace, and `.npm-cache/` plus the generated stylesheet are git-ignored. The Render Docker build compiles the Tailwind stylesheet automatically. Bootstrap remains for the other pages during this staged migration.
+
 1. Install the .NET 10 SDK. Docker Desktop is not needed for normal development.
 2. Use the existing Supabase project. The new app needs `database/postgres/003_aspnet_core_identity.sql` applied after `001_initial.sql` and `002_seed.sql`. Existing databases must **not** rerun `001_initial.sql`.
 3. Set `SKILLBRIDGE_DB_CONNECTION` to the Supabase PostgreSQL session-pooler connection string and `SKILLBRIDGE_MESSAGE_KEY` to the same stable Base64 32-byte key used by the MVC 5 app. Set these outside Git.

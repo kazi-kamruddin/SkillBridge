@@ -1,554 +1,124 @@
-
 @model SkillBridge.Models.HomePageViewModel
 @{
     ViewBag.Title = "Home";
 }
 
 @section Styles {
-    <style>
-        /* Hero Section */
-        .hero {
-            position: relative;
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
-            min-height: 48vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-align: center;
-            padding: 3rem 1.5rem;
-            overflow: hidden;
-        }
-
-            .hero::before {
-                content: "";
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.05)"/></svg>');
-                background-size: cover;
-            }
-
-        .hero-content {
-            position: relative;
-            z-index: 2;
-            max-width: 720px;
-        }
-
-        .hero h1 {
-            font-size: clamp(2rem, 4vw, 2.6rem);
-            margin-bottom: 1rem;
-            font-weight: 800;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .hero p {
-            font-size: 1.05rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.9;
-            line-height: 1.6;
-        }
-
-        .hero-btn {
-            padding: 0.7rem 1.5rem;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 50px;
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.3);
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-            .hero-btn:hover {
-                background: rgba(255,255,255,0.3);
-                transform: translateY(-3px);
-                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            }
-
-        /* Dashboard Styles */
-        .dashboard-welcome {
-            font-size: 1.9rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        /* Section Titles */
-        .section-title {
-            font-weight: 700;
-            margin-bottom: 2rem;
-            font-size: 1.45rem;
-            color: var(--text-color);
-            position: relative;
-            padding-bottom: 0.8rem;
-        }
-
-            .section-title::after {
-                content: '';
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                width: 60px;
-                height: 4px;
-                background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-                border-radius: 2px;
-            }
-
-        /* Grid Layout */
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 2rem;
-            margin-bottom: 3rem;
-        }
-
-        /* Cards */
-        .quotes-card {
-            background: var(--card-bg); /* White in light mode, dark in dark mode */
-            color: var(--text-color); /* Black in light mode, white/gray in dark mode */
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-            border: 1px solid var(--border-color);
-            text-align: center;
-            font-style: italic;
-            font-size: 1.05rem;
-        }
-
-        .dashboard-card {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-            border: 1px solid var(--border-color);
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow: hidden;
-        }
-
-            .dashboard-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 4px;
-                background: linear-gradient(45deg, var(--success-bg), var(--success-bg));
-            }
-
-            .dashboard-card:hover {
-                transform: translateY(-8px);
-                box-shadow: var(--shadow-lg);
-            }
-
-            .dashboard-card h5 {
-                font-weight: 600;
-                margin-bottom: 1rem;
-                color: var(--success-bg);
-                font-size: 1.1rem;
-            }
-
-            .dashboard-card p {
-                margin-bottom: 0.8rem;
-                color: var(--text-color);
-                flex-grow: 1;
-            }
-
-            .dashboard-card .status-badge {
-                background: var(--success-bg);
-                color: white;
-                padding: 0.3rem 0.8rem;
-                border-radius: 20px;
-                font-size: 0.8rem;
-                font-weight: 600;
-                display: inline-block;
-                margin-top: 0.5rem;
-            }
-
-        /* Buttons */
-        .btn-action {
-            display: flex;
-            justify-content: flex-end;
-            padding: 0.7rem 1.5rem;
-            font-size: 0.9rem;
-            margin-top: 1rem;
-            margin-left: auto;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: var(--transition);
-        }
-
-            .btn-action:hover {
-                transform: translateY(-2px);
-            }
-
-        /* Empty States */
-        .empty-state {
-            color: var(--text-muted);
-            font-style: italic;
-            padding: 2rem;
-            text-align: center;
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            border: 2px dashed var(--border-color);
-        }
-
-            .empty-state i {
-                font-size: 3rem;
-                margin-bottom: 1rem;
-                opacity: 0.5;
-            }
-
-        /* Latest Interaction Section */
-        .interaction-card {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            margin-bottom: 2rem;
-        }
-
-        .interaction-header {
-            display: flex;
-            justify-content: between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .interaction-user {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .skill-pair {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 1rem;
-            align-items: center;
-            margin: 1.5rem 0;
-            text-align: center;
-        }
-
-        .skill-teach, .skill-learn {
-            padding: 1rem;
-            background: rgba(var(--primary-color), 0.1);
-            border-radius: var(--border-radius);
-            border-left: 4px solid var(--primary-color);
-        }
-
-        .skill-exchange {
-            font-size: 2rem;
-            color: var(--primary-color);
-        }
-
-        /* Responsive Design */
-        @@media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .hero p {
-                font-size: 1rem;
-            }
-
-            .dashboard-welcome {
-                font-size: 1.7rem;
-            }
-
-            .card-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .skill-pair {
-                grid-template-columns: 1fr;
-                gap: 0.5rem;
-            }
-
-            .skill-exchange {
-                transform: rotate(90deg);
-                margin: 0.5rem 0;
-            }
-        }
-
-        @@media (max-width: 576px) {
-            .hero {
-                min-height: 42vh;
-                padding: 2rem 1rem;
-            }
-
-                .hero h1 {
-                    font-size: 1.75rem;
-                }
-
-                .hero p {
-                    font-size: 1rem;
-                }
-
-            .dashboard-welcome {
-                font-size: 1.55rem;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="~/Content/tailwind-home.css" asp-append-version="true" />
 }
 
-<main>
+<main class="tw:mx-auto tw:max-w-[1320px] tw:px-4 tw:py-8 tw:font-display tw:text-sb-ink tw:dark:text-sb-night-ink">
     @if (!Model.IsLoggedIn)
     {
-        <!-- Guest Hero -->
-        <section class="hero sb-home-hero">
-            <div class="hero-content">
-                <span class="sb-eyebrow">A community built on give &amp; grow</span>
-                <h1>Teach what you know.<br /><em>Learn what you love.</em></h1>
-                <p>Trade skills with real people. Find someone who wants to learn from you and has something new to share in return.</p>
-                <div class="sb-hero-actions">
-                    <a class="btn btn-primary hero-btn" href="@Url.Action("Skills", "Explore")">Explore skills <span aria-hidden="true">↗</span></a>
-                    <a class="btn btn-outline-primary hero-btn" href="@Url.Action("Register", "Account")">Join SkillBridge</a>
+        <section class="tw:relative tw:grid tw:grid-cols-1 tw:items-center tw:gap-8 tw:overflow-hidden tw:rounded-[1.6rem] tw:border-2 tw:border-sb-ink tw:bg-sb-sage tw:p-6 tw:shadow-sb tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:shadow-[6px_6px_0_#0c1416] md:tw:grid-cols-[1.08fr_.92fr] md:tw:p-12">
+            <div class="tw:pointer-events-none tw:absolute tw:-right-10 tw:-top-16 tw:size-52 tw:rounded-full tw:border-2 tw:border-sb-ink/10 tw:dark:border-sb-night-ink/10"></div>
+            <div class="tw:relative tw:z-10">
+                <span class="tw:inline-flex tw:items-center tw:gap-2 tw:rounded-full tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:px-3 tw:py-1 tw:text-xs tw:font-black tw:uppercase tw:tracking-[.14em] tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night">A community built on give &amp; grow <span aria-hidden="true">✳</span></span>
+                <h1 class="tw:mt-7 tw:max-w-[700px] tw:text-5xl tw:font-black tw:leading-[.98] tw:tracking-[-.065em] tw:md:text-7xl">Teach what you know.<br /><span class="tw:text-sb-blue-strong tw:dark:text-[#aab9ff]">Learn what you love.</span></h1>
+                <p class="tw:mt-6 tw:max-w-[570px] tw:text-lg tw:leading-relaxed tw:text-sb-muted tw:dark:text-sb-night-ink/80">Trade skills with real people. Find someone who wants to learn from you and has something new to share in return.</p>
+                <div class="tw:mt-8 tw:flex tw:flex-wrap tw:gap-3">
+                    <a class="tw:inline-flex tw:items-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue-strong tw:px-5 tw:py-3 tw:font-extrabold tw:text-white tw:shadow-sb-small tw:transition-transform hover:tw:-translate-y-1 hover:tw:shadow-sb tw:dark:border-sb-night-ink" href="@Url.Action("Skills", "Explore")">Explore skills <span aria-hidden="true">↗</span></a>
+                    <a class="tw:inline-flex tw:items-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:px-5 tw:py-3 tw:font-extrabold tw:text-sb-ink tw:shadow-sb-small tw:transition-transform hover:tw:-translate-y-1 hover:tw:shadow-sb tw:dark:border-sb-night-ink tw:dark:bg-sb-night tw:dark:text-sb-night-ink" href="@Url.Action("Register", "Account")">Join SkillBridge <span aria-hidden="true">✳</span></a>
                 </div>
+                <div class="tw:mt-8 tw:flex tw:flex-wrap tw:gap-x-6 tw:gap-y-2 tw:text-sm tw:font-bold tw:text-sb-muted tw:dark:text-sb-night-ink/75"><span>01 / Share what you know</span><span>02 / Learn from someone new</span></div>
             </div>
-            <div class="sb-hero-art" aria-hidden="true">
-                <div class="sb-art-label">THE EXCHANGE / 001</div>
-                <div class="sb-art-card sb-art-teach"><small>I CAN TEACH</small><strong>Python</strong><span>✦</span></div>
-                <div class="sb-art-link">↔</div>
-                <div class="sb-art-card sb-art-learn"><small>I WANT TO LEARN</small><strong>SQL</strong><span>⌘</span></div>
+
+            <div class="tw:relative tw:mx-auto tw:my-8 tw:min-h-[360px] tw:w-full tw:max-w-[520px] tw:md:min-h-[450px]" aria-label="A sample skill exchange between two members">
+                <div class="tw:absolute tw:left-[4%] tw:top-[4%] tw:rotate-[-7deg] tw:rounded-lg tw:border-2 tw:border-sb-ink tw:bg-sb-blue tw:px-4 tw:py-3 tw:font-black tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night">SKILL EXCHANGE <span class="tw:ml-2 tw:text-xl">01</span></div>
+                <div class="tw:absolute tw:right-[2%] tw:top-[3%] tw:grid tw:size-20 tw:rotate-[10deg] tw:place-items-center tw:rounded-full tw:border-2 tw:border-sb-ink tw:bg-sb-coral tw:text-3xl tw:shadow-sb-small tw:dark:border-sb-night-ink">✳</div>
+                <div class="tw:absolute tw:left-[8%] tw:top-[25%] tw:w-[76%] tw:rotate-[-5deg] tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-5 tw:shadow-sb tw:dark:border-sb-night-ink tw:dark:bg-sb-night">
+                    <span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.18em] tw:text-sb-muted tw:dark:text-sb-night-ink/70">I can teach</span>
+                    <strong class="tw:mt-3 tw:block tw:text-4xl tw:font-black tw:tracking-[-.05em] tw:md:text-5xl">UI Design <span class="tw:float-right tw:text-3xl">✎</span></strong>
+                    <span class="tw:mt-4 tw:inline-flex tw:rounded-full tw:border tw:border-sb-ink tw:bg-sb-sage tw:px-3 tw:py-1 tw:text-sm tw:font-bold tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">Make ideas visible</span>
+                </div>
+                <div class="tw:absolute tw:left-[40%] tw:top-[48%] tw:z-10 tw:grid tw:size-[68px] tw:rotate-[8deg] tw:place-items-center tw:rounded-full tw:border-2 tw:border-sb-ink tw:bg-sb-coral tw:text-4xl tw:font-black tw:shadow-sb-small tw:dark:border-sb-night-ink">↔</div>
+                <div class="tw:absolute tw:bottom-[7%] tw:right-[5%] tw:w-[76%] tw:rotate-[4deg] tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue tw:p-5 tw:shadow-sb tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">
+                    <span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.18em] tw:text-sb-muted tw:dark:text-sb-night-ink/70">I want to learn</span>
+                    <strong class="tw:mt-3 tw:block tw:text-4xl tw:font-black tw:tracking-[-.05em] tw:md:text-5xl">JavaScript <span class="tw:float-right tw:text-3xl">⌘</span></strong>
+                    <span class="tw:mt-4 tw:inline-flex tw:rounded-full tw:border tw:border-sb-ink tw:bg-sb-card tw:px-3 tw:py-1 tw:text-sm tw:font-bold tw:dark:border-sb-night-ink tw:dark:bg-sb-night">Start with the basics</span>
+                </div>
+                <span class="tw:absolute tw:bottom-[1%] tw:left-[3%] tw:rotate-[-8deg] tw:rounded-full tw:border-2 tw:border-sb-ink tw:bg-sb-sage-deep tw:px-4 tw:py-2 tw:text-sm tw:font-black tw:shadow-sb-small tw:dark:border-sb-night-ink">Better, together.</span>
             </div>
         </section>
 
-        <div class="sb-ticker" aria-hidden="true"><div>SHARE A SKILL ✳ FIND YOUR PEOPLE ✳ MAKE SOMETHING NEW ✳ SHARE A SKILL ✳ FIND YOUR PEOPLE ✳ MAKE SOMETHING NEW ✳</div></div>
+        <div class="tw:my-7 tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-x-5 tw:gap-y-2 tw:border-y-2 tw:border-sb-ink tw:py-4 tw:text-center tw:text-sm tw:font-black tw:uppercase tw:tracking-[.12em] tw:dark:border-sb-night-ink md:tw:gap-x-10"><span>Share a skill <span class="tw:text-sb-blue-strong">✳</span></span><span>Find your people <span class="tw:text-sb-blue-strong">✳</span></span><span>Make something new <span class="tw:text-sb-blue-strong">✳</span></span><span>Keep growing</span></div>
 
-        <!-- Features Section for Guests -->
-        <div class="container py-5 sb-home-features">
-            <div class="sb-section-intro"><span class="sb-eyebrow">THE GOOD PART</span><h2>Everyone brings something to the table.</h2><p>Start with curiosity. Leave with a new skill and a new connection.</p></div>
-            <div class="row text-center">
-                <div class="col-md-4 mb-4">
-                    <div class="dashboard-card">
-                        <i class="fas fa-users fa-3x mb-3" style="color: var(--primary-color);"></i>
-                        <h5>Join Communities</h5>
-                        <p>Connect with like-minded individuals who share your interests and goals.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="dashboard-card">
-                        <i class="fas fa-exchange-alt fa-3x mb-3" style="color: var(--accent-color);"></i>
-                        <h5>Skill Exchange</h5>
-                        <p>Teach what you know and learn what you need in a reciprocal learning environment.</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <div class="dashboard-card">
-                        <i class="fas fa-chart-line fa-3x mb-3" style="color: var(--success-color);"></i>
-                        <h5>Grow Together</h5>
-                        <p>Track your progress and celebrate milestones with your learning partners.</p>
-                    </div>
-                </div>
+        <section class="tw:py-8 md:tw:py-12" aria-labelledby="home-good-part">
+            <div class="tw:mb-8 tw:flex tw:flex-wrap tw:items-end tw:justify-between tw:gap-4">
+                <div><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.16em] tw:text-sb-blue-strong">The good part / 02</span><h2 id="home-good-part" class="tw:mt-2 tw:max-w-[700px] tw:text-4xl tw:font-black tw:leading-[1.02] tw:tracking-[-.05em] tw:md:text-5xl">Everyone brings something to the table.</h2></div>
+                <p class="tw:max-w-[360px] tw:text-sb-muted tw:dark:text-sb-night-ink/75">Start with curiosity. Leave with a new skill and a new connection.</p>
             </div>
-        </div>
+            <div class="tw:grid tw:grid-cols-1 tw:gap-5 tw:md:grid-cols-3">
+                <article class="tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-6 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card"><span class="tw:grid tw:size-14 tw:place-items-center tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue tw:text-2xl tw:shadow-sb-small tw:dark:border-sb-night-ink">◎</span><span class="tw:mt-5 block tw:text-xs tw:font-black tw:uppercase tw:tracking-[.14em] tw:text-sb-muted tw:dark:text-sb-night-ink/70">Find your people</span><h3 class="tw:mt-2 tw:text-2xl tw:font-black">Join communities</h3><p class="tw:mt-2 tw:text-sb-muted tw:dark:text-sb-night-ink/75">Meet people who are learning, making, and figuring things out alongside you.</p><a class="tw:mt-4 inline-flex tw:font-extrabold tw:text-sb-blue-strong tw:underline tw:decoration-2 tw:underline-offset-4 tw:dark:text-[#aab9ff]" href="@Url.Action("Index", "Communities")">Browse communities ↗</a></article>
+                <article class="tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-sage tw:p-6 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card"><span class="tw:grid tw:size-14 tw:place-items-center tw:rounded-full tw:border-2 tw:border-sb-ink tw:bg-sb-coral tw:text-2xl tw:shadow-sb-small tw:dark:border-sb-night-ink">↔</span><span class="tw:mt-5 block tw:text-xs tw:font-black tw:uppercase tw:tracking-[.14em] tw:text-sb-muted tw:dark:text-sb-night-ink/70">Give and get</span><h3 class="tw:mt-2 tw:text-2xl tw:font-black">Trade skills</h3><p class="tw:mt-2 tw:text-sb-muted tw:dark:text-sb-night-ink/75">Teach something you know and learn something you have always wanted to try.</p><a class="tw:mt-4 inline-flex tw:font-extrabold tw:text-sb-blue-strong tw:underline tw:decoration-2 tw:underline-offset-4 tw:dark:text-[#aab9ff]" href="@Url.Action("Skills", "Explore")">Explore skills ↗</a></article>
+                <article class="tw:relative tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue tw:p-6 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card"><span class="tw:grid tw:size-14 tw:rotate-[-8deg] tw:place-items-center tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-sage-deep tw:text-2xl tw:shadow-sb-small tw:dark:border-sb-night-ink">↗</span><span class="tw:mt-5 block tw:text-xs tw:font-black tw:uppercase tw:tracking-[.14em] tw:text-sb-muted tw:dark:text-sb-night-ink/70">One step at a time</span><h3 class="tw:mt-2 tw:text-2xl tw:font-black">Grow together</h3><p class="tw:mt-2 tw:text-sb-muted tw:dark:text-sb-night-ink/75">Set a pace, plan sessions, and celebrate progress with your learning partner.</p><a class="tw:mt-4 inline-flex tw:font-extrabold tw:text-sb-blue-strong tw:underline tw:decoration-2 tw:underline-offset-4 tw:dark:text-[#aab9ff]" href="@Url.Action("HowItWorks", "Home")">See how it works ↗</a></article>
+            </div>
+        </section>
+
+        <section class="tw:mb-4 tw:grid tw:grid-cols-1 tw:items-center tw:gap-5 tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-coral tw:p-6 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card md:tw:grid-cols-[1fr_auto] md:tw:p-8">
+            <div><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.16em]">Your next chapter</span><h2 class="tw:mt-2 tw:text-3xl tw:font-black tw:tracking-[-.04em] tw:md:text-4xl">Curiosity looks good on you.</h2><p class="tw:mt-2 tw:max-w-[620px] tw:text-sb-ink/80 tw:dark:text-sb-night-ink/80">Create a profile, share your skills, and see what you can learn from each other.</p></div>
+            <a class="tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:px-5 tw:py-3 tw:font-extrabold tw:text-sb-ink tw:shadow-sb-small tw:transition-transform hover:tw:-translate-y-1 tw:dark:border-sb-night-ink tw:dark:bg-sb-night" href="@Url.Action("Register", "Account")">Create your account <span aria-hidden="true">↗</span></a>
+        </section>
     }
     else
     {
-        <!-- Dashboard for logged-in users -->
-        <div class="container py-5 sb-member-home">
-            <header class="sb-member-hero"><div class="sb-member-hero-copy"><span class="sb-eyebrow">YOUR SKILLBRIDGE SPACE</span><h1 class="dashboard-welcome">Good to see you, <em>@Model.FullName</em>.</h1><p>Something good starts when you share what you know.</p><div class="sb-hero-actions"><a class="btn btn-primary" href="@Url.Action("Index", "Explore")">Find a partner ↗</a><a class="btn btn-outline-primary" href="@Url.Action("Index", "Communities")">Explore communities</a></div></div><div class="sb-member-hero-art" aria-hidden="true"><div class="sb-orbit sb-orbit-one">TEACH <span>✳</span></div><div class="sb-orbit sb-orbit-two">LEARN <span>↗</span></div><div class="sb-orbit-center">↔</div></div></header>
-            <div class="sb-member-top-grid">
-            <section class="dashboard-card sb-member-next" aria-labelledby="next-action-heading">
-                <span class="sb-eyebrow">YOUR NEXT STEP</span>
-                <h2 id="next-action-heading" class="h4 mt-2">@Model.NextActionTitle</h2>
-                <p>@Model.NextActionDescription</p>
-                <a class="btn btn-primary" href="@Model.NextActionUrl">Continue <span aria-hidden="true">↗</span></a>
-            </section>
-            <!-- Motivational Quote Section -->
-            @if (!string.IsNullOrEmpty(Model.MotivationalQuote))
-            {
-                <div class="quotes-card sb-member-quote">
-                        <i class="fas fa-quote-left fa-2x mb-3"></i>
-                        <blockquote class="mb-0">
-                            "@Model.MotivationalQuote"
-                        </blockquote>
-                </div>
-            }
+        <div class="tw:space-y-10">
+            <header class="tw:relative tw:grid tw:grid-cols-1 tw:items-center tw:gap-6 tw:overflow-hidden tw:rounded-[1.6rem] tw:border-2 tw:border-sb-ink tw:bg-sb-sage tw:p-6 tw:shadow-sb tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:shadow-[6px_6px_0_#0c1416] md:tw:grid-cols-[1fr_.72fr] md:tw:p-10">
+                <div><span class="tw:inline-flex tw:items-center tw:gap-2 tw:rounded-full tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:px-3 tw:py-1 tw:text-xs tw:font-black tw:uppercase tw:tracking-[.14em] tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night">Your SkillBridge space <span aria-hidden="true">✳</span></span><h1 class="tw:mt-6 tw:text-4xl tw:font-black tw:leading-[1.02] tw:tracking-[-.055em] tw:md:text-6xl">Good to see you,<br /><span class="tw:text-sb-blue-strong tw:dark:text-[#aab9ff]">@Model.FullName.</span></h1><p class="tw:mt-4 tw:max-w-[560px] tw:text-lg tw:text-sb-muted tw:dark:text-sb-night-ink/75">Something good starts when you share what you know.</p><div class="tw:mt-6 tw:flex tw:flex-wrap tw:gap-3"><a class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue-strong tw:px-5 tw:py-3 tw:font-extrabold tw:text-white tw:shadow-sb-small tw:dark:border-sb-night-ink" href="@Url.Action("Index", "Explore")">Find a partner ↗</a><a class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:px-5 tw:py-3 tw:font-extrabold tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night" href="@Url.Action("Index", "Communities")">Explore communities</a></div></div>
+                <div class="tw:relative tw:mx-auto tw:min-h-[230px] tw:w-full tw:max-w-[430px]" aria-hidden="true"><div class="tw:absolute tw:left-[5%] tw:top-[10%] tw:w-[76%] tw:rotate-[-7deg] tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue tw:p-5 tw:text-2xl tw:font-black tw:shadow-sb tw:dark:border-sb-night-ink tw:dark:bg-sb-night">I CAN TEACH <span class="tw:float-right tw:text-3xl">✎</span></div><div class="tw:absolute tw:bottom-[8%] tw:right-[4%] tw:w-[76%] tw:rotate-[6deg] tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-coral tw:p-5 tw:text-2xl tw:font-black tw:shadow-sb tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">I WANT TO LEARN <span class="tw:float-right tw:text-3xl">↗</span></div><span class="tw:absolute tw:left-[42%] tw:top-[43%] tw:grid tw:size-16 tw:place-items-center tw:rounded-full tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-3xl tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night">↔</span></div>
+            </header>
+
+            <div class="tw:grid tw:grid-cols-1 tw:gap-5 tw:md:grid-cols-[1.25fr_.75fr]">
+                <section class="tw:flex tw:flex-col tw:items-start tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-6 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card" aria-labelledby="next-action-heading"><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.15em] tw:text-sb-blue-strong tw:dark:text-[#aab9ff]">Your next step</span><h2 id="next-action-heading" class="tw:mt-2 tw:text-2xl tw:font-black">@Model.NextActionTitle</h2><p class="tw:mt-2 tw:flex-1 tw:text-sb-muted tw:dark:text-sb-night-ink/75">@Model.NextActionDescription</p><a class="tw:mt-5 tw:inline-flex tw:items-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue-strong tw:px-5 tw:py-3 tw:font-extrabold tw:text-white tw:shadow-sb-small tw:dark:border-sb-night-ink" href="@Model.NextActionUrl">Continue <span aria-hidden="true">↗</span></a></section>
+                @if (!string.IsNullOrEmpty(Model.MotivationalQuote))
+                {
+                    <blockquote class="tw:flex tw:flex-col tw:justify-center tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue tw:p-6 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card"><span class="tw:text-4xl tw:font-black" aria-hidden="true">“</span><p class="tw:text-xl tw:font-bold tw:italic">@Model.MotivationalQuote</p><span class="tw:mt-3 tw:text-xs tw:font-black tw:uppercase tw:tracking-[.14em]">A small thought for today</span></blockquote>
+                }
             </div>
 
-
-
-            <!-- Your Skills -->
-            <section class="mb-5">
-                <h2 class="section-title">Your Skills</h2>
-                <div class="card-grid">
+            <section aria-labelledby="my-skills-heading"><div class="tw:mb-5 tw:flex tw:flex-wrap tw:items-end tw:justify-between tw:gap-3"><div><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.15em] tw:text-sb-blue-strong tw:dark:text-[#aab9ff]">Your toolkit / 01</span><h2 id="my-skills-heading" class="tw:mt-1 tw:text-3xl tw:font-black tw:tracking-[-.04em]">Your skills</h2></div><a class="tw:font-extrabold tw:underline tw:decoration-2 tw:underline-offset-4" href="@Url.Action("UpdateProfile", "Profile")">Manage skills ↗</a></div>
+                <div class="tw:grid tw:grid-cols-1 tw:gap-4 tw:sm:grid-cols-2 tw:lg:grid-cols-3">
                     @if (Model.MySkills.Any())
                     {
                         foreach (var skill in Model.MySkills)
                         {
-                            <div class="dashboard-card">
-                                <h5><i class="fas fa-star me-2"></i>@skill.Skill.Name</h5>
-
-                                <span class="status-badge ">@skill.Status</span>
-                            </div>
+                            <article class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-5 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card"><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.14em] tw:text-sb-muted tw:dark:text-sb-night-ink/70">@(skill.Status == "Teaching" ? "I can teach" : "I want to learn")</span><h3 class="tw:mt-2 tw:text-2xl tw:font-black">@skill.Skill.Name</h3><span class="tw:mt-4 inline-flex tw:rounded-full tw:border tw:border-sb-ink tw:bg-sb-sage tw:px-3 tw:py-1 tw:text-sm tw:font-bold tw:dark:border-sb-night-ink tw:dark:bg-sb-night">@skill.Status</span></article>
                         }
                     }
                     else
                     {
-                        <div class="empty-state">
-                            <i class="fas fa-clipboard-list"></i>
-                            <p>You haven't added any skills yet.</p>
-                            <a href="@Url.Action("UpdateProfile", "Profile")" class="btn btn-primary mt-2">Add Skills</a>
-                        </div>
+                        <div class="tw:rounded-xl tw:border-2 tw:border-dashed tw:border-sb-ink tw:bg-sb-card tw:p-6 tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card"><span class="tw:text-3xl" aria-hidden="true">✳</span><h3 class="tw:mt-2 tw:text-xl tw:font-black">Your first skill goes here</h3><p class="tw:mt-1 tw:text-sb-muted tw:dark:text-sb-night-ink/75">Add something you can teach and something you want to learn.</p><a class="tw:mt-3 inline-flex tw:font-extrabold tw:underline" href="@Url.Action("UpdateProfile", "Profile")">Add skills ↗</a></div>
                     }
                 </div>
             </section>
 
-            <!-- Latest Interaction -->
-            <section class="mb-5">
-                <h2 class="section-title">Latest Interaction</h2>
+            <section aria-labelledby="latest-interaction-heading"><div class="tw:mb-5"><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.15em] tw:text-sb-blue-strong tw:dark:text-[#aab9ff]">Keep the exchange moving / 02</span><h2 id="latest-interaction-heading" class="tw:mt-1 tw:text-3xl tw:font-black tw:tracking-[-.04em]">Latest interaction</h2></div>
                 @if (Model.LatestInteractionId != null)
                 {
-                    <div class="interaction-card">
-                        <div class="interaction-header">
-                            <div class="interaction-user d-flex align-items-center">
-                                <img src="@Model.LatestInteractionOtherUserProfileImage"
-                                     alt="@Model.LatestInteractionOtherUserFullName"
-                                     class="rounded-circle me-3"
-                                     style="width:50px; height:50px; object-fit:cover; border:2px solid #ccc;" />
-
-                                <div>
-                                    <h5>@Model.LatestInteractionOtherUserFullName</h5>
-                                    <p class="text-muted">
-                                        Status:
-                                        <span class="badge bg-info">@Model.LatestInteractionStatus</span>
-                                    </p>
-                                </div>
-                            </div>
-                            <a href="@Url.Action("Sessions", "Interactions", new { id = Model.LatestInteractionId })"
-                               class="btn btn-primary btn-action">
-                                <i class="fas fa-eye me-1"></i>View Stages
-                            </a>
-                        </div>
-
-                        <div class="skill-pair">
-                            <div class="skill-teach">
-                                <h6>You're Teaching</h6>
-                                <p class="mb-0"><strong>@Model.LatestInteractionSkillYouTeach</strong></p>
-                            </div>
-                            <div class="skill-exchange">
-                                <i class="fas fa-exchange-alt"></i>
-                            </div>
-                            <div class="skill-learn">
-                                <h6>You're Learning</h6>
-                                <p class="mb-0"><strong>@Model.LatestInteractionSkillYouLearn</strong></p>
-                            </div>
-                        </div>
-                    </div>
+                    <article class="tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-5 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card"><div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4"><div class="tw:flex tw:items-center tw:gap-3"><img src="@Model.LatestInteractionOtherUserProfileImage" alt="@Model.LatestInteractionOtherUserFullName" class="tw:size-14 tw:rounded-full tw:border-2 tw:border-sb-ink tw:object-cover tw:shadow-sb-small tw:dark:border-sb-night-ink" /><div><h3 class="tw:text-xl tw:font-black">@Model.LatestInteractionOtherUserFullName</h3><p class="tw:mt-1 tw:text-sm tw:text-sb-muted tw:dark:text-sb-night-ink/75">Status: <span class="tw:font-extrabold">@Model.LatestInteractionStatus</span></p></div></div><a class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-sage tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night" href="@Url.Action("Sessions", "Interactions", new { id = Model.LatestInteractionId })">View stages ↗</a></div><div class="tw:mt-5 tw:grid tw:grid-cols-1 tw:items-center tw:gap-3 tw:md:grid-cols-[1fr_auto_1fr]"><div class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-sage tw:p-4 tw:dark:border-sb-night-ink tw:dark:bg-sb-night"><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.12em]">You're teaching</span><p class="tw:mt-1 tw:text-lg tw:font-black">@Model.LatestInteractionSkillYouTeach</p></div><span class="tw:justify-self-center tw:text-3xl tw:font-black" aria-hidden="true">↔</span><div class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue tw:p-4 tw:dark:border-sb-night-ink tw:dark:bg-sb-night"><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.12em]">You're learning</span><p class="tw:mt-1 tw:text-lg tw:font-black">@Model.LatestInteractionSkillYouLearn</p></div></div></article>
                 }
                 else
                 {
-                    <div class="empty-state">
-                        <i class="fas fa-comments"></i>
-                        <p>No recent interactions. Start a new skill exchange!</p>
-                        <a href="@Url.Action("Index", "Explore")" class="btn btn-primary mt-2">Find Partners</a>
-                    </div>
+                    <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4 tw:rounded-2xl tw:border-2 tw:border-dashed tw:border-sb-ink tw:bg-sb-card tw:p-6 tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card"><div><span class="tw:text-3xl" aria-hidden="true">↔</span><h3 class="tw:mt-2 tw:text-xl tw:font-black">Your next exchange is out there.</h3><p class="tw:mt-1 tw:text-sb-muted tw:dark:text-sb-night-ink/75">Find someone whose skills complement yours.</p></div><a class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue-strong tw:px-5 tw:py-3 tw:font-extrabold tw:text-white tw:shadow-sb-small tw:dark:border-sb-night-ink" href="@Url.Action("Index", "Explore")">Find a partner ↗</a></div>
                 }
             </section>
 
-            <!-- Latest Posts -->
-            <section>
-                <h2 class="section-title">Latest Community Posts</h2>
-                <div class="card-grid">
+            <section aria-labelledby="latest-posts-heading"><div class="tw:mb-5"><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.15em] tw:text-sb-blue-strong tw:dark:text-[#aab9ff]">From your communities / 03</span><h2 id="latest-posts-heading" class="tw:mt-1 tw:text-3xl tw:font-black tw:tracking-[-.04em]">Latest community posts</h2></div>
+                <div class="tw:grid tw:grid-cols-1 tw:gap-4 tw:md:grid-cols-2">
                     @if (Model.MyLatestPost != null)
                     {
-                        <div class="dashboard-card">
-                            <h5><i class="fas fa-feather me-2"></i>@Model.MyLatestPost.Title</h5>
-                            <p>@Model.MyLatestPost.Content</p>
-                            <div class="mt-auto">
-                                <small class="text-muted">Posted on @Model.MyLatestPost.CreatedAt.ToString("MMM dd, yyyy")</small>
-                                <span class="badge bg-primary ms-2">Your Post</span>
-                            </div>
-                        </div>
+                        <article class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-5 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card"><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.12em]">Your post</span><h3 class="tw:mt-2 tw:text-xl tw:font-black">@Model.MyLatestPost.Title</h3><p class="tw:mt-2 tw:line-clamp-3 tw:text-sb-muted tw:dark:text-sb-night-ink/75">@Model.MyLatestPost.Content</p><small class="tw:mt-4 block tw:font-bold">Posted @Model.MyLatestPost.CreatedAt.ToString("MMM dd, yyyy")</small></article>
                     }
-
                     @if (Model.OtherLatestPost != null)
                     {
-                        <div class="dashboard-card">
-                            <h5><i class="fas fa-newspaper me-2"></i>@Model.OtherLatestPost.Title</h5>
-                            <p>@Model.OtherLatestPost.Content</p>
-                            <div class="mt-auto">
-                                <small class="text-muted">Posted on @Model.OtherLatestPost.CreatedAt.ToString("MMM dd, yyyy")</small>
-                                <span class="badge bg-success ms-2">Community</span>
-                            </div>
-                        </div>
+                        <article class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue tw:p-5 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card"><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.12em]">From the community</span><h3 class="tw:mt-2 tw:text-xl tw:font-black">@Model.OtherLatestPost.Title</h3><p class="tw:mt-2 tw:line-clamp-3 tw:text-sb-muted tw:dark:text-sb-night-ink/75">@Model.OtherLatestPost.Content</p><small class="tw:mt-4 block tw:font-bold">Posted @Model.OtherLatestPost.CreatedAt.ToString("MMM dd, yyyy")</small></article>
                     }
-
                     @if (Model.MyLatestPost == null && Model.OtherLatestPost == null)
                     {
-                        <div class="empty-state">
-                            <i class="fas fa-newspaper"></i>
-                            <p>No posts yet in your communities.</p>
-                            <a href="@Url.Action("Index", "Communities")" class="btn btn-primary mt-2">Explore Communities</a>
-                        </div>
+                        <div class="tw:rounded-xl tw:border-2 tw:border-dashed tw:border-sb-ink tw:bg-sb-card tw:p-6 tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card"><span class="tw:text-3xl" aria-hidden="true">✎</span><h3 class="tw:mt-2 tw:text-xl tw:font-black">The conversation is waiting.</h3><p class="tw:mt-1 tw:text-sb-muted tw:dark:text-sb-night-ink/75">Drop into a community and share what you are learning.</p><a class="tw:mt-3 inline-flex tw:font-extrabold tw:underline" href="@Url.Action("Index", "Communities")">Explore communities ↗</a></div>
                     }
                 </div>
             </section>
         </div>
     }
 </main>
-
-@section Scripts {
-    <script>
-        // Add subtle animations to cards when they come into view
-        $(document).ready(function() {
-            // Animate cards on scroll
-            function animateOnScroll() {
-                $('.dashboard-card, .interaction-card').each(function() {
-                    var elementTop = $(this).offset().top;
-                    var elementBottom = elementTop + $(this).outerHeight();
-                    var viewportTop = $(window).scrollTop();
-                    var viewportBottom = viewportTop + $(window).height();
-
-                    if (elementBottom > viewportTop && elementTop < viewportBottom) {
-                        $(this).addClass('animate__animated animate__fadeInUp');
-                    }
-                });
-            }
-
-            // Initial check
-            animateOnScroll();
-
-            // Check on scroll
-            $(window).on('scroll', function() {
-                animateOnScroll();
-            });
-        });
-    </script>
-}
