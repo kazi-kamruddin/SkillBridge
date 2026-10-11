@@ -2,41 +2,41 @@
 @{
     ViewBag.Title = Model.SkillName;
 }
-<main class="container my-5" style="max-width: 1000px;">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8" style="max-width: 1000px;">
     <a href="@Url.Action("Skills", "Explore")">← All skills</a>
-    <header class="my-4">
-        <span class="text-muted">@Model.CategoryName</span>
+    <header class="my-4 tw:my-6">
+        <span class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">@Model.CategoryName</span>
         <h1>@Model.SkillName</h1>
-        @if (!string.IsNullOrWhiteSpace(Model.Description)) { <p class="lead">@Model.Description</p> }
-        <p class="text-muted">These catalog stages are a starting guide. Exchange partners can agree on a plan that fits their goals.</p>
+        @if (!string.IsNullOrWhiteSpace(Model.Description)) { <p class="lead tw:text-lg tw:leading-relaxed">@Model.Description</p> }
+        <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">These catalog stages are a starting guide. Exchange partners can agree on a plan that fits their goals.</p>
     </header>
-    <div class="row g-4">
-        <section class="col-lg-7" aria-labelledby="stages-title">
+    <div class="row tw:grid tw:grid-cols-12 tw:gap-4 g-4 tw:gap-6">
+        <section class="col-lg-7 tw:col-span-12 tw:lg:col-span-7" aria-labelledby="stages-title">
             <h2 id="stages-title" class="h4">Learning stages</h2>
             @if (Model.Stages.Count == 0) { <p>No stages have been added yet.</p> }
-            <ol class="list-group list-group-numbered">
+            <ol class="list-group tw:flex tw:flex-col tw:gap-2 list-group-numbered">
                 @foreach (var stage in Model.Stages)
-                { <li class="list-group-item">@stage.Description</li> }
+                { <li class="list-group-item tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">@stage.Description</li> }
             </ol>
         </section>
-        <aside class="col-lg-5">
-            <section class="card p-3 mb-3" aria-labelledby="teachers-title">
+        <aside class="col-lg-5 tw:col-span-12 tw:lg:col-span-5">
+            <section class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink p-3 tw:p-4 mb-3 tw:mb-4" aria-labelledby="teachers-title">
                 <h2 id="teachers-title" class="h4">Members who teach this</h2>
                 @if (Model.Teachers.Count == 0) { <p>No discoverable teachers yet.</p> }
                 else
                 {
-                    <ul class="list-unstyled mb-0">
+                    <ul class="list-unstyled mb-0 tw:mb-0">
                         @foreach (var teacher in Model.Teachers)
-                        { <li class="mb-2"><a href="@Url.Action("PublicProfile", "Profile", new { id = teacher.UserId })">@teacher.FullName</a></li> }
+                        { <li class="mb-2 tw:mb-2"><a href="@Url.Action("PublicProfile", "Profile", new { id = teacher.UserId })">@teacher.FullName</a></li> }
                     </ul>
                 }
             </section>
             @if (Model.CommunityId.HasValue)
-            { <a class="btn btn-outline-primary me-2 mb-2" href="@Url.Action("Landing", "Communities", new { id = Model.CommunityId })">Visit community</a> }
+            { <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong me-2 tw:me-2 mb-2 tw:mb-2" href="@Url.Action("Landing", "Communities", new { id = Model.CommunityId })">Visit community</a> }
             @if (User.Identity.IsAuthenticated)
-            { <a class="btn btn-primary mb-2" href="@Url.Action("UpdateProfile", "Profile")">Add to your skills</a> }
+            { <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white mb-2 tw:mb-2" href="@Url.Action("UpdateProfile", "Profile")">Add to your skills</a> }
             else
-            { <a class="btn btn-primary mb-2" href="@Url.Action("Register", "Account")">Join SkillBridge</a> }
+            { <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white mb-2 tw:mb-2" href="@Url.Action("Register", "Account")">Join SkillBridge</a> }
         </aside>
     </div>
 </main>

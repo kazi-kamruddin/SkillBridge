@@ -10,7 +10,7 @@ WORKDIR /src
 COPY SkillBridge.Core/SkillBridge.Core.csproj SkillBridge.Core/
 RUN dotnet restore SkillBridge.Core/SkillBridge.Core.csproj
 COPY SkillBridge.Core/ SkillBridge.Core/
-COPY --from=tailwind /src/SkillBridge.Core/wwwroot/Content/tailwind-home.css SkillBridge.Core/wwwroot/Content/tailwind-home.css
+COPY --from=tailwind /src/SkillBridge.Core/wwwroot/Content/tailwind-app.css SkillBridge.Core/wwwroot/Content/tailwind-app.css
 RUN dotnet publish SkillBridge.Core/SkillBridge.Core.csproj -c Release --no-restore -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0

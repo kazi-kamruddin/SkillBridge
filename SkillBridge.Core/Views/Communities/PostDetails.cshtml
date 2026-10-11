@@ -4,58 +4,58 @@
     ViewBag.Title = Model.Title;
 }
 
-<main class="container my-5 sb-post-details-page">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8 sb-post-details-page">
     @if (TempData["CommunityNotice"] is string notice)
     {
-        <div class="alert alert-info" role="status">@notice</div>
+        <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink" role="status">@notice</div>
     }
     <!-- Post Header -->
-    <article class="card sb-post-story @(Model.IsAuthor ? "has-remove" : "") mb-4">
-        <div class="card-body">
+    <article class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink sb-post-story @(Model.IsAuthor ?"has-remove" : "") mb-4">
+        <div class="card-body tw:p-5">
             @if (Model.IsAuthor)
             {
                 <form method="post" action="@Url.Action("RemoveOwnContent", "Communities")" class="sb-card-remove" onsubmit="return confirm('Remove this post and hide its comments?')">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="postId" value="@Model.PostId" />
-                    <button type="submit" class="btn btn-outline-danger btn-sm">Remove post</button>
+                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43] btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Remove post</button>
                 </form>
             }
             <span class="sb-eyebrow">COMMUNITY CONVERSATION</span>
-            <h2 class="fw-bold">@Model.Title</h2>
-            <p class="text-muted mb-3">
+            <h2 class="fw-bold tw:font-bold">@Model.Title</h2>
+            <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 mb-3 tw:mb-4">
                 by <strong>@Model.CreatedByUserName</strong> on @Model.CreatedAt.ToString("MMM dd, yyyy HH:mm")
             </p>
             <div class="sb-post-content">@SkillBridge.Helpers.PostTextFormatter.Render(Model.Content)</div>
-            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl)) { <img src="@Model.ImageUrl" alt="Image attached to this post" class="img-fluid rounded mb-3 sb-community-image" loading="lazy" /> }
+            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl)) { <img src="@Model.ImageUrl" alt="Image attached to this post" class="img-fluid rounded tw:rounded-xl mb-3 tw:mb-4 sb-community-image" loading="lazy" /> }
             @if (Model.IsAuthor)
             {
-                <details class="mt-3"><summary>Edit your post</summary>
-                    <form method="post" action="@Url.Action("EditPost", "Communities")" class="mt-2">
+                <details class="mt-3 tw:mt-4"><summary>Edit your post</summary>
+                    <form method="post" action="@Url.Action("EditPost", "Communities")" class="mt-2 tw:mt-2">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="postId" value="@Model.PostId" />
-                        <label for="edit-post-title" class="form-label">Title</label>
-                        <input id="edit-post-title" name="title" value="@Model.Title" maxlength="200" required class="form-control mb-2" />
-                        <label for="edit-post-content" class="form-label">Content</label>
+                        <label for="edit-post-title" class="form-label tw:mb-1 tw:block tw:font-bold">Title</label>
+                        <input id="edit-post-title" name="title" value="@Model.Title" maxlength="200" required class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" />
+                        <label for="edit-post-content" class="form-label tw:mb-1 tw:block tw:font-bold">Content</label>
                         <div class="sb-editor-toolbar" role="toolbar" aria-label="Post formatting">
                             <button type="button" data-format="bold" data-editor="edit-post-content" aria-label="Bold selected text"><strong>B</strong></button>
                             <button type="button" data-format="italic" data-editor="edit-post-content" aria-label="Italic selected text"><em>I</em></button>
                             <button type="button" data-format="heading" data-editor="edit-post-content" aria-label="Turn line into heading">H2</button>
                         </div>
-                        <textarea id="edit-post-content" name="content" maxlength="2000" class="form-control mb-2">@Model.Content</textarea>
-                        <button type="submit" class="btn btn-outline-primary btn-sm">Save changes</button>
+                        <textarea id="edit-post-content" name="content" maxlength="2000" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2">@Model.Content</textarea>
+                        <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Save changes</button>
                     </form>
                 </details>
             }
             @if (User.Identity.IsAuthenticated)
             {
-                <details class="mt-3">
+                <details class="mt-3 tw:mt-4">
                     <summary>Report this post</summary>
-                    <form action="@Url.Action("Report", "Communities")" method="post" class="mt-2">
+                    <form action="@Url.Action("Report", "Communities")" method="post" class="mt-2 tw:mt-2">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="postId" value="@Model.PostId" />
-                        <label class="form-label" for="post-report-reason">Reason for report</label>
-                        <textarea id="post-report-reason" name="reason" class="form-control mb-2" maxlength="500" required></textarea>
-                        <button class="btn btn-outline-danger btn-sm" type="submit">Send report</button>
+                        <label class="form-label tw:mb-1 tw:block tw:font-bold" for="post-report-reason">Reason for report</label>
+                        <textarea id="post-report-reason" name="reason" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" maxlength="500" required></textarea>
+                        <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43] btn-sm tw:px-3 tw:py-1.5 tw:text-sm" type="submit">Send report</button>
                     </form>
                 </details>
             }
@@ -64,38 +64,38 @@
 
     <!-- Comments Section -->
     <section class="comments">
-        <div class="sb-section-heading"><span class="sb-section-number">DISCUSS</span><h2 class="h4 mb-3">Comments (@Model.Comments.Count)</h2></div>
+        <div class="sb-section-heading"><span class="sb-section-number">DISCUSS</span><h2 class="h4 mb-3 tw:mb-4">Comments (@Model.Comments.Count)</h2></div>
 
         @if (Model.Comments.Any())
         {
             foreach (var c in Model.Comments.OrderBy(c => c.CreatedAt))
             {
-                <article class="comment-card @(c.IsAuthor ? "has-remove" : "") d-flex align-items-start p-3 mb-3 rounded">
+                <article class="comment-card @(c.IsAuthor ?"has-remove" : "") d-flex align-items-start p-3 mb-3 rounded">
                     @if (c.IsAuthor)
                     {
                         <form method="post" action="@Url.Action("RemoveOwnContent", "Communities")" class="sb-card-remove" onsubmit="return confirm('Remove this comment?')">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="postId" value="@Model.PostId" />
                             <input type="hidden" name="commentId" value="@c.CommentId" />
-                            <button type="submit" class="btn btn-outline-danger btn-sm">Remove</button>
+                            <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43] btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Remove</button>
                         </form>
                     }
-                    <div class="comment-avatar me-3"><img src="@c.ProfileImageUrl" alt="" class="sb-comment-avatar" loading="lazy" /></div>
-                    <div class="comment-body flex-grow-1">
-                        <p class="mb-1">@c.Content</p>
-                        @if (!string.IsNullOrWhiteSpace(c.ImageUrl)) { <img src="@c.ImageUrl" alt="Image attached to this comment" class="img-fluid rounded mb-2 sb-community-image" loading="lazy" /> }
-                        <small class="text-muted">@c.CreatedByFullName, @c.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                    <div class="comment-avatar me-3 tw:me-4"><img src="@c.ProfileImageUrl" alt="" class="sb-comment-avatar" loading="lazy" /></div>
+                    <div class="comment-body flex-grow-1 tw:flex-1">
+                        <p class="mb-1 tw:mb-1">@c.Content</p>
+                        @if (!string.IsNullOrWhiteSpace(c.ImageUrl)) { <img src="@c.ImageUrl" alt="Image attached to this comment" class="img-fluid rounded tw:rounded-xl mb-2 tw:mb-2 sb-community-image" loading="lazy" /> }
+                        <small class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">@c.CreatedByFullName, @c.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <details class="mt-2">
+                            <details class="mt-2 tw:mt-2">
                                 <summary>Report comment</summary>
-                                <form action="@Url.Action("Report", "Communities")" method="post" class="mt-2">
+                                <form action="@Url.Action("Report", "Communities")" method="post" class="mt-2 tw:mt-2">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="postId" value="@Model.PostId" />
                                     <input type="hidden" name="commentId" value="@c.CommentId" />
-                                    <label class="form-label" for="comment-report-@c.CommentId">Reason for report</label>
-                                    <textarea id="comment-report-@c.CommentId" name="reason" class="form-control mb-2" maxlength="500" required></textarea>
-                                    <button class="btn btn-outline-danger btn-sm" type="submit">Send report</button>
+                                    <label class="form-label tw:mb-1 tw:block tw:font-bold" for="comment-report-@c.CommentId">Reason for report</label>
+                                    <textarea id="comment-report-@c.CommentId" name="reason" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" maxlength="500" required></textarea>
+                                    <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43] btn-sm tw:px-3 tw:py-1.5 tw:text-sm" type="submit">Send report</button>
                                 </form>
                             </details>
                         }
@@ -105,30 +105,30 @@
         }
         else
         {
-            <div class="alert alert-light border">No comments yet. Be the first!</div>
+            <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-light border">No comments yet. Be the first!</div>
         }
     </section>
 
     <!-- Add Comment Form -->
     @if (Model.IsMember)
     {
-        <section class="comment-form mt-4">
-            <h5 class="mb-3">Add a Comment</h5>
-            <p class="text-muted small">Comments can be read by signed-out visitors.</p>
+        <section class="comment-form mt-4 tw:mt-6">
+            <h5 class="mb-3 tw:mb-4">Add a Comment</h5>
+            <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 small tw:text-sm">Comments can be read by signed-out visitors.</p>
 
-            <form action="@Url.Action("CreateComment", "Communities")" method="post" enctype="multipart/form-data" class="card p-3 shadow-sm border-0">
+            <form action="@Url.Action("CreateComment", "Communities")" method="post" enctype="multipart/form-data" class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink p-3 tw:p-4 shadow-sm border-0">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="PostId" value="@Model.PostId" />
 
-                <div class="mb-3">
-                    <textarea name="Content" class="form-control" placeholder="Write your comment..." rows="3" maxlength="1000"></textarea>
-                    @Html.ValidationMessage("Content", "", new { @class = "text-danger small" })
+                <div class="mb-3 tw:mb-4">
+                    <textarea name="Content" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" placeholder="Write your comment..." rows="3" maxlength="1000"></textarea>
+                    @Html.ValidationMessage("Content", "", new { @class = "text-danger tw:text-[#a34f42] small tw:text-sm" })
                 </div>
-                <div class="mb-3"><label for="comment-image" class="form-label">Add an image (optional, up to 5 MB)</label><input type="file" id="comment-image" name="Image" class="form-control" accept="image/jpeg,image/png,image/webp" /></div>
+                <div class="mb-3 tw:mb-4"><label for="comment-image" class="form-label tw:mb-1 tw:block tw:font-bold">Add an image (optional, up to 5 MB)</label><input type="file" id="comment-image" name="Image" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" accept="image/jpeg,image/png,image/webp" /></div>
 
-                <div class="text-end">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane me-1"></i> Submit
+                <div class="text-end tw:text-right">
+                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white">
+                        <i class="fas fa-paper-plane me-1 tw:me-1"></i> Submit
                     </button>
                 </div>
             </form>
@@ -136,11 +136,11 @@
     }
     else if (!User.Identity.IsAuthenticated)
     {
-        <p class="mt-4">Want to join the conversation? <a href="@Url.Action("Register", "Account")">Create an account</a> or <a href="@Url.Action("Login", "Account")">log in</a>.</p>
+        <p class="mt-4 tw:mt-6">Want to join the conversation? <a href="@Url.Action("Register", "Account")">Create an account</a> or <a href="@Url.Action("Login", "Account")">log in</a>.</p>
     }
     else
     {
-        <p class="mt-4">Add this skill to your profile to post or comment in this community. <a href="@Url.Action("UpdateProfile", "Profile")">Update your skills</a>.</p>
+        <p class="mt-4 tw:mt-6">Add this skill to your profile to post or comment in this community. <a href="@Url.Action("UpdateProfile", "Profile")">Update your skills</a>.</p>
     }
 </main>
 

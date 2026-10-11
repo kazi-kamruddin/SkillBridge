@@ -4,57 +4,57 @@
     var notificationId = ViewBag.RequestNotificationId is int value ? value : 0;
     var reciprocalSkills = ViewBag.ReciprocalSkills as List<SkillBridge.Models.SkillViewModel>;
 }
-<main class="container my-5" style="max-width: 750px;">
-    <h1 class="h2 mb-3">Exchange proposal</h1>
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8" style="max-width: 750px;">
+    <h1 class="h2 mb-3 tw:mb-4">Exchange proposal</h1>
     <p><strong>Skill requested:</strong> @Model.Skill.Name</p>
     <p><strong>From:</strong> @ViewBag.RequesterName</p>
     <p><strong>To:</strong> @ViewBag.ReceiverName</p>
     <p><strong>Status:</strong> @Model.Status</p>
-    <dl class="row">
-        <dt class="col-sm-4">Goal</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Goal) ? "No goal was provided for this earlier request." : Model.Goal)</dd>
-        <dt class="col-sm-4">Pace</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.Pace) ? "Not specified" : Model.Pace)</dd>
-        <dt class="col-sm-4">First meeting idea</dt><dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.FirstMeetingIdea) ? "Not specified" : Model.FirstMeetingIdea)</dd>
+    <dl class="row tw:grid tw:grid-cols-12 tw:gap-4">
+        <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4">Goal</dt><dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">@(string.IsNullOrWhiteSpace(Model.Goal) ? "No goal was provided for this earlier request." : Model.Goal)</dd>
+        <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4">Pace</dt><dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">@(string.IsNullOrWhiteSpace(Model.Pace) ? "Not specified" : Model.Pace)</dd>
+        <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4">First meeting idea</dt><dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">@(string.IsNullOrWhiteSpace(Model.FirstMeetingIdea) ? "Not specified" : Model.FirstMeetingIdea)</dd>
     </dl>
     @if (Model.RequesterId == User.Identity.GetUserId() && Model.Status == "Pending")
     {
-        <form method="post" action="@Url.Action("WithdrawSkillRequest", "Profile")" class="mb-3">
+        <form method="post" action="@Url.Action("WithdrawSkillRequest", "Profile")" class="mb-3 tw:mb-4">
             @Html.AntiForgeryToken()
             <input type="hidden" name="id" value="@Model.Id" />
-            <button type="submit" class="btn btn-outline-danger">Withdraw request</button>
+            <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43]">Withdraw request</button>
         </form>
     }
     @if (Model.ReceiverId == User.Identity.GetUserId() && Model.Status == "Pending")
     {
         if (notificationId > 0)
         {
-            <section class="card p-3 mb-3" aria-labelledby="respond-title">
+            <section class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink p-3 tw:p-4 mb-3 tw:mb-4" aria-labelledby="respond-title">
                 <h2 id="respond-title" class="h5">Respond to this proposal</h2>
                 @if (reciprocalSkills?.Any() == true)
                 {
-                    <form id="acceptProposal" action="@Url.Action("InitializeInteraction", "Notifications")" method="post" class="mb-3">
+                    <form id="acceptProposal" action="@Url.Action("InitializeInteraction", "Notifications")" method="post" class="mb-3 tw:mb-4">
                         @Html.AntiForgeryToken()
                         <input type="hidden" name="notificationId" value="@notificationId" />
-                        <label for="reciprocalSkill" class="form-label">What will you learn from @ViewBag.RequesterName?</label>
-                        <select id="reciprocalSkill" name="skillId" class="form-select mb-2" required>
+                        <label for="reciprocalSkill" class="form-label tw:mb-1 tw:block tw:font-bold">What will you learn from @ViewBag.RequesterName?</label>
+                        <select id="reciprocalSkill" name="skillId" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" required>
                             @foreach (var skill in reciprocalSkills)
                             {
                                 <option value="@skill.SkillId">@skill.SkillName</option>
                             }
                         </select>
-                        <button type="submit" class="btn btn-success">Accept and start exchange</button>
+                        <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success tw:bg-sb-sage-deep tw:text-sb-ink">Accept and start exchange</button>
                     </form>
                 }
                 else
                 {
-                    <p class="text-muted">There is no reciprocal skill yet. Add a skill that this member teaches to your learning list to accept.</p>
+                    <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">There is no reciprocal skill yet. Add a skill that this member teaches to your learning list to accept.</p>
                     <a href="@Url.Action("UpdateProfile", "Profile")">Update your skills</a>
                 }
                 <form id="declineProposal" action="@Url.Action("DeclineSkillRequest", "Notifications")" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="notificationId" value="@notificationId" />
-                    <button type="submit" class="btn btn-outline-danger">Decline proposal</button>
+                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43]">Decline proposal</button>
                 </form>
-                <p id="proposalError" class="text-danger mt-2" role="alert" hidden></p>
+                <p id="proposalError" class="text-danger tw:text-[#a34f42] mt-2 tw:mt-2" role="alert" hidden></p>
             </section>
         }
     }

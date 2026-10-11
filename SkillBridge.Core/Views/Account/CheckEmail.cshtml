@@ -1,11 +1,11 @@
 @{ ViewBag.Title = "Check your email"; }
-<main class="container sb-account-simple">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 sb-account-simple">
     <div class="sb-account-panel">
     <span class="sb-eyebrow">Almost there</span>
     <h1>Check your email</h1>
     @if (ViewBag.EmailDeliveryFailed == true)
     {
-        <p class="alert alert-warning">We could not send the confirmation email right now. Your account was created; request a new link from the sign-in page later.</p>
+        <p class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-warning tw:bg-sb-coral tw:text-sb-ink">We could not send the confirmation email right now. Your account was created; request a new link from the sign-in page later.</p>
     }
     else
     {

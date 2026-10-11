@@ -379,9 +379,9 @@ body .sb-auth-screen details summary { cursor: pointer; font-weight: 700; }
 
 @media (max-width: 1199px) {
     body .sb-nav { border-radius: 24px; }
-    body .sb-nav .navbar-toggler { display: flex; align-items: center; color: #f8f4e9; border: 1px solid rgba(255,255,255,.42); border-radius: 999px; font-size: .85rem; padding: 8px 12px; }
+    body .sb-nav .sb-menu-toggle { display: flex; align-items: center; color: #f8f4e9; border: 1px solid rgba(255,255,255,.42); border-radius: 999px; font-size: .85rem; padding: 8px 12px; }
     body .sb-nav .sb-nav-content { display: none !important; flex-basis: 100%; flex-direction: column; align-items: stretch; padding: 22px 8px 8px; }
-    body .sb-nav .sb-nav-content.show { display: flex !important; }
+    body .sb-nav .sb-nav-content.is-open { display: flex !important; }
     body .sb-nav-primary, body .sb-nav-secondary, body .sb-nav .navbar-nav.navbar-right { flex-direction: column; align-items: stretch; padding: 0; }
     body .sb-nav .nav-link { display: block; line-height: 1.3; padding: 12px 14px !important; }
     body .sb-nav .navbar-nav.navbar-right { margin: 0; }

@@ -4,13 +4,13 @@ SkillBridge is a peer-to-peer skill exchange website. Members list skills they c
 
 ## Current application
 
-`SkillBridge.Core/` is the ASP.NET Core 10 MVC application. It serves the existing Razor pages, Bootstrap/jQuery assets, C# controllers, Identity login, and SignalR chat from one URL. EF Core connects directly to the existing Supabase PostgreSQL `skillbridge` schema; the browser never receives database credentials and Supabase Auth/Data API are not used.
+`SkillBridge.Core/` is the ASP.NET Core 10 MVC application. It serves the Razor pages, Tailwind CSS styling, C# controllers, Identity login, jQuery validation, and SignalR chat from one URL. EF Core connects directly to the existing Supabase PostgreSQL `skillbridge` schema; the browser never receives database credentials and Supabase Auth/Data API are not used.
 
 The original ASP.NET MVC 5/.NET Framework 4.7.2 application remains at the repository root for comparison and rollback. Its Windows hosting instructions are in [DEPLOYMENT.md](DEPLOYMENT.md). The new Render deployment steps are in [DEPLOYMENT_CORE.md](DEPLOYMENT_CORE.md).
 
 ## Local development of the Core app
 
-The homepage is the first Tailwind page. In PowerShell at the repository root, set `$env:npm_config_cache = (Join-Path (Get-Location).Path '.npm-cache')`, then run `npm ci` and `npm run build:css` before `dotnet run`; use `npm run watch:css` while editing its Razor view. Node modules, npm cache, and generated CSS stay under this E: workspace, and `.npm-cache/` plus the generated stylesheet are git-ignored. The Render Docker build compiles the Tailwind stylesheet automatically. Bootstrap remains for the other pages during this staged migration.
+The shared layout loads a Tailwind-built stylesheet with SkillBridge's page-wide design tokens and component styling. Bootstrap CSS and its JavaScript runtime are no longer loaded by the Core application; the shared layout owns the small navigation and logout-dialog interactions. In PowerShell at the repository root, set `$env:npm_config_cache = (Join-Path (Get-Location).Path '.npm-cache')`, then run `npm ci` and `npm run build:css` before `dotnet run`; use `npm run watch:css` while editing views or shared styles. Node modules, npm cache, and generated CSS stay under this E: workspace, and `.npm-cache/` plus the generated stylesheet are git-ignored. The Render Docker build compiles the stylesheet automatically. Tailwind utility classes use the `tw:` prefix while app-specific component styles remain in the shared stylesheet.
 
 1. Install the .NET 10 SDK. Docker Desktop is not needed for normal development.
 2. Use the existing Supabase project. The new app needs `database/postgres/003_aspnet_core_identity.sql` applied after `001_initial.sql` and `002_seed.sql`. Existing databases must **not** rerun `001_initial.sql`.

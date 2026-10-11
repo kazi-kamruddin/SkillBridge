@@ -1,15 +1,15 @@
 @model List<SkillBridge.Models.SavedProfileItemViewModel>
 @{ ViewBag.Title = "Saved members"; }
-<main class="container my-5 sb-saved-page">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8 sb-saved-page">
     <header class="sb-page-heading sb-saved-hero">
         <span class="sb-eyebrow">YOUR PEOPLE / YOUR PACE</span>
         <h1>Saved members <span aria-hidden="true">✳</span></h1>
         <p>Keep promising learning partners close while you decide who to contact.</p>
-        <a class="btn btn-primary mt-3" href="@Url.Action("Index", "Explore")">Explore more people ↗</a>
+        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white mt-3 tw:mt-4" href="@Url.Action("Index", "Explore")">Explore more people ↗</a>
     </header>
     @if (!Model.Any())
     {
-        <div class="sb-empty-panel"><span aria-hidden="true" class="sb-empty-spark">✳</span><h2>No one saved yet</h2><p>Find a skill you want to learn, then save someone you would like to meet.</p><a class="btn btn-primary" href="@Url.Action("Index", "Explore")">Find a partner</a></div>
+        <div class="sb-empty-panel"><span aria-hidden="true" class="sb-empty-spark">✳</span><h2>No one saved yet</h2><p>Find a skill you want to learn, then save someone you would like to meet.</p><a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white" href="@Url.Action("Index", "Explore")">Find a partner</a></div>
     }
     <div class="sb-saved-grid">
         @foreach (var member in Model)
@@ -24,14 +24,14 @@
                     { <p class="sb-saved-meta">@string.Join(" · ", new[] { member.Profession, member.Location }.Where(s => !string.IsNullOrWhiteSpace(s)))</p> }
                     @if (!string.IsNullOrWhiteSpace(member.MatchSummary))
                     { <p class="sb-saved-match"><span>CAN TEACH YOU</span><strong>@member.MatchSummary</strong></p> }
-                    <a class="btn btn-primary" href="@Url.Action("PublicProfile", "Profile", new { id = member.UserId })">View profile</a>
+                    <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white" href="@Url.Action("PublicProfile", "Profile", new { id = member.UserId })">View profile</a>
                 }
                 else { <div class="sb-saved-unavailable"><span aria-hidden="true">◌</span><h2>Profile unavailable</h2><p>This member cannot currently be viewed.</p></div> }
                 <form method="post" action="@Url.Action("Remove", "SavedProfiles")" class="sb-saved-remove">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@member.UserId" />
                     <input type="hidden" name="fromList" value="true" />
-                    <button type="submit" class="btn btn-outline-secondary btn-sm">Remove from saved</button>
+                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Remove from saved</button>
                 </form>
             </article>
         }

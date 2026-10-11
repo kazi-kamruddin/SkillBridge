@@ -4,28 +4,28 @@
     var myId = User.Identity.GetUserId();
     var memberNames = ViewBag.MemberNames as Dictionary<string, string> ?? new Dictionary<string, string>();
 }
-<main class="container my-5">
-    <h1 class="h2 mb-4">Exchange proposals</h1>
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8">
+    <h1 class="h2 mb-4 tw:mb-6">Exchange proposals</h1>
     @if (!Model.Any()) { <p>No proposals yet. <a href="@Url.Action("Index", "Explore")">Explore members</a>.</p> }
     @foreach (var request in Model)
     {
-        <article class="card mb-3"><div class="card-body">
+        <article class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-3 tw:mb-4"><div class="card-body tw:p-5">
             <h2 class="h5">@request.Skill.Name</h2>
             @{ var otherId = request.RequesterId == myId ? request.ReceiverId : request.RequesterId; }
-            <p class="mb-1">@(request.RequesterId == myId ? "Sent to" : "Received from") @MemberNames.Get(memberNames, otherId)</p>
-            <p class="mb-1">Status: @request.Status</p>
+            <p class="mb-1 tw:mb-1">@(request.RequesterId == myId ? "Sent to" : "Received from") @MemberNames.Get(memberNames, otherId)</p>
+            <p class="mb-1 tw:mb-1">Status: @request.Status</p>
             <a href="@Url.Action("RequestDetails", "Profile", new { id = request.Id })">View proposal</a>
             @if (request.RequesterId == myId && request.Status == "Pending")
             {
-                <form method="post" action="@Url.Action("WithdrawSkillRequest", "Profile")" class="mt-2">
+                <form method="post" action="@Url.Action("WithdrawSkillRequest", "Profile")" class="mt-2 tw:mt-2">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@request.Id" />
-                    <button type="submit" class="btn btn-outline-danger btn-sm">Withdraw request</button>
+                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43] btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Withdraw request</button>
                 </form>
             }
             @if (request.ReceiverId == myId && request.Status == "Pending")
             {
-                <span class="ms-3 badge bg-warning text-dark">Needs your response</span>
+                <span class="ms-3 tw:ms-4 badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:px-2.5 tw:py-1 tw:text-xs tw:font-bold bg-warning tw:bg-sb-coral text-dark tw:text-sb-ink tw:dark:text-sb-night-ink">Needs your response</span>
             }
         </div></article>
     }

@@ -127,16 +127,16 @@
     </style>
 }
 
-<div class="container">
+<div class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4">
     <h2>Your Interactions</h2>
     <p><a href="@Url.Action("History", "Interactions")">View completed exchange history</a></p>
     @if (!Model.Any())
     {
-        <div class="alert alert-info">
+        <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink">
             You have no exchanges yet. <a href="@Url.Action("Index", "Explore")">Explore matching members</a> to get started.
         </div>
     }
-    <div class="row">
+    <div class="row tw:grid tw:grid-cols-12 tw:gap-4">
         @foreach (var interaction in Model)
         {
             <div class="interaction-card">

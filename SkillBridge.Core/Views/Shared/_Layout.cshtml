@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewBag.Title - SkillBridge</title>
     <link rel="icon" type="image/svg+xml" href="~/favicon.svg" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/Content/Site.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     @RenderSection("Styles", required: false)
     <script src="~/Scripts/modernizr-2.8.3.js"></script>
@@ -55,7 +53,7 @@
             --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
         }
 
-        * {
+        a, button, .btn, .card, .dashboard-card, .interaction-card, .nav-link, .theme-toggle {
             transition: var(--transition);
         }
 
@@ -397,42 +395,43 @@
     </style>
     <link rel="stylesheet" href="~/Content/skillbridge-refresh.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Content/skillbridge-overhaul.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Content/tailwind-app.css" asp-append-version="true" />
 </head>
 <body>
     <a class="sb-skip-link" href="#main-content">Skip to content</a>
-    <nav class="navbar navbar-expand-lg sb-nav" aria-label="Main navigation">
-        <div class="container sb-nav-shell">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent"
+    <nav class="sb-nav" aria-label="Main navigation">
+        <div class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 sb-nav-shell">
+            <button class="sb-menu-toggle" type="button" data-ui-toggle="collapse" data-ui-target="#navbarContent"
                     aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
-                <i class="fas fa-bars" aria-hidden="true"></i><span class="ms-2">Menu</span>
+                <i class="fas fa-bars" aria-hidden="true"></i><span class="ms-2 tw:ms-2">Menu</span>
             </button>
             <a class="navbar-brand sb-brand" href="@Url.Action("Index", "Home")" aria-label="SkillBridge home">Skill<span>Bridge</span><span class="sb-brand-spark" aria-hidden="true">✳</span></a>
-            <div class="collapse navbar-collapse sb-nav-content" id="navbarContent">
-                <ul class="navbar-nav sb-nav-primary">
-                    <li class="nav-item">@Html.ActionLink("Explore", "Index", "Explore", new { area = "" }, new { @class = "nav-link" })</li>
-                    <li class="nav-item">@Html.ActionLink("Communities", "Index", "Communities", new { area = "" }, new { @class = "nav-link" })</li>
+            <div class="sb-nav-content" id="navbarContent">
+                <ul class="navbar-nav sb-nav-primary tw:flex tw:items-center tw:gap-1 tw:m-0 tw:list-none tw:p-0">
+                    <li class="nav-item tw:list-none">@Html.ActionLink("Explore", "Index", "Explore", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
+                    <li class="nav-item tw:list-none">@Html.ActionLink("Communities", "Index", "Communities", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <li class="nav-item">@Html.ActionLink("Interactions", "Index", "Interactions", new { area = "" }, new { @class = "nav-link" })</li>
-                        <li class="nav-item"><a class="nav-link" href="@Url.Action("Index", "Messages")">Messages <span id="messageBadge" class="badge bg-danger" style="display:none;"></span></a></li>
+                        <li class="nav-item tw:list-none">@Html.ActionLink("Interactions", "Index", "Interactions", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
+                        <li class="nav-item tw:list-none"><a class="nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" href="@Url.Action("Index", "Messages")">Messages <span id="messageBadge" class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:px-2.5 tw:py-1 tw:text-xs tw:font-bold tw:bg-sb-coral" style="display:none;"></span></a></li>
                     }
                 </ul>
 
-                <ul class="navbar-nav sb-nav-secondary">
+                <ul class="navbar-nav sb-nav-secondary tw:flex tw:items-center tw:gap-1 tw:m-0 tw:list-none tw:p-0">
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <li class="nav-item">@Html.ActionLink("Saved", "Index", "SavedProfiles", new { area = "" }, new { @class = "nav-link" })</li>
+                        <li class="nav-item tw:list-none">@Html.ActionLink("Saved", "Index", "SavedProfiles", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
                     }
-                    <li class="nav-item dropdown">
-                        <button class="nav-link dropdown-toggle sb-more-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">More</button>
-                        <ul class="dropdown-menu sb-more-menu">
-                            <li><a class="dropdown-item" href="@Url.Action("HowItWorks", "Home")">How It Works</a></li>
-                            <li><a class="dropdown-item" href="@Url.Action("About", "Home")">About</a></li>
-                            <li><a class="dropdown-item" href="@Url.Action("Contact", "Home")">Contact</a></li>
+                    <li class="nav-item dropdown tw:list-none">
+                        <button class="nav-link sb-more-toggle tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" type="button" data-ui-toggle="dropdown" aria-expanded="false" aria-controls="moreMenu">More</button>
+                        <ul class="sb-more-menu" id="moreMenu" hidden>
+                            <li><a class="dropdown-item tw:block tw:rounded-lg tw:px-3 tw:py-2 tw:font-bold" href="@Url.Action("HowItWorks", "Home")">How It Works</a></li>
+                            <li><a class="dropdown-item tw:block tw:rounded-lg tw:px-3 tw:py-2 tw:font-bold" href="@Url.Action("About", "Home")">About</a></li>
+                            <li><a class="dropdown-item tw:block tw:rounded-lg tw:px-3 tw:py-2 tw:font-bold" href="@Url.Action("Contact", "Home")">Contact</a></li>
                             @if (User.Identity.IsAuthenticated && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SKILLBRIDGE_MODERATOR_EMAIL")) &&
                                  string.Equals(User.Identity.Name, Environment.GetEnvironmentVariable("SKILLBRIDGE_MODERATOR_EMAIL"), StringComparison.OrdinalIgnoreCase))
                             {
-                                <li><a class="dropdown-item" href="@Url.Action("Index", "Moderation")">Reports</a></li>
+                                <li><a class="dropdown-item tw:block tw:rounded-lg tw:px-3 tw:py-2 tw:font-bold" href="@Url.Action("Index", "Moderation")">Reports</a></li>
                             }
                         </ul>
                     </li>
@@ -440,16 +439,16 @@
 
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <li class="nav-item">
-                            <a class="nav-link sb-notification-link" href="@Url.Action("Index", "Notifications")" title="Notifications">
-                                <i class="fas fa-bell "></i>
-                                <span id="notifBadge" class="notification-badge badge bg-danger sb-notification-badge" style="display:none;"></span>
+                        <li class="nav-item tw:list-none">
+                            <a class="nav-link sb-notification-link tw:inline-flex tw:items-center tw:justify-center" href="@Url.Action("Index", "Notifications")" title="Notifications">
+                                <i class="fas fa-bell"></i>
+                                <span id="notifBadge" class="notification-badge badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:px-2.5 tw:py-1 tw:text-xs tw:font-bold bg-danger tw:bg-sb-coral sb-notification-badge" style="display:none;"></span>
                             </a>
                         </li>
                     }
 
-                    <li class="nav-item">
-                        <button id="themeToggle" type="button" class="btn theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle color theme">
+                    <li class="nav-item tw:list-none">
+                        <button id="themeToggle" type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle color theme">
                             <i class="fas fa-moon" aria-hidden="true"></i>
                         </button>
                     </li>
@@ -460,16 +459,16 @@
     </nav>
 
     <main id="main-content" class="main-content">
-        <div class="container">
+        <div class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4">
             @RenderBody()
         </div>
     </main>
 
     <footer>
-        <div class="container">
+        <div class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <h3><i class="fas fa-bridge me-2"></i>SkillBridge</h3>
+                    <h3><i class="fas fa-bridge me-2 tw:me-2"></i>SkillBridge</h3>
                     <p>Connecting talent with opportunity through skill sharing and community collaboration.</p>
                 </div>
                 <div class="footer-links">
@@ -509,12 +508,84 @@
     </footer>
 
     <script src="~/Scripts/jquery-3.7.0.min.js"></script>
-    <script src="~/Scripts/bootstrap.bundle.min.js"></script>
     <script src="~/Scripts/signalr.min.js"></script>
 
     @RenderSection("scripts", required: false)
 
     <script>
+        // Small site-owned interaction layer; visual styling lives in Tailwind and app CSS.
+        function closeSkillBridgeModal(modal, returnFocus) {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            if (returnFocus && modal._returnFocusElement) modal._returnFocusElement.focus();
+        }
+
+        document.addEventListener('click', function (event) {
+            const toggle = event.target.closest('[data-ui-toggle]');
+            if (toggle) {
+                const type = toggle.dataset.uiToggle;
+                if (type === 'collapse') {
+                    const target = document.querySelector(toggle.dataset.uiTarget);
+                    if (target) {
+                        const isOpen = target.classList.toggle('is-open');
+                        toggle.setAttribute('aria-expanded', String(isOpen));
+                    }
+                } else if (type === 'dropdown') {
+                    const menu = toggle.parentElement.querySelector('.sb-more-menu');
+                    if (menu) {
+                        menu.hidden = !menu.hidden;
+                        toggle.setAttribute('aria-expanded', String(!menu.hidden));
+                    }
+                } else if (type === 'modal') {
+                    const modal = document.querySelector(toggle.dataset.uiTarget);
+                    if (modal) {
+                        modal._returnFocusElement = toggle;
+                        modal.classList.add('is-open');
+                        modal.setAttribute('aria-hidden', 'false');
+                        modal.setAttribute('aria-modal', 'true');
+                        modal.querySelector('.sb-modal-close, [data-ui-dismiss="modal"]')?.focus();
+                    }
+                }
+                return;
+            }
+
+            const dismiss = event.target.closest('[data-ui-dismiss="modal"]');
+            if (dismiss) {
+                const modal = dismiss.closest('.sb-modal');
+                if (modal) closeSkillBridgeModal(modal, true);
+                return;
+            }
+
+            document.querySelectorAll('.sb-more-menu:not([hidden])').forEach(function (menu) {
+                if (!menu.parentElement.contains(event.target)) {
+                    menu.hidden = true;
+                    menu.parentElement.querySelector('[data-ui-toggle="dropdown"]')?.setAttribute('aria-expanded', 'false');
+                }
+            });
+        });
+
+        document.addEventListener('keydown', function (event) {
+            const openModal = document.querySelector('.sb-modal.is-open');
+            if (openModal && event.key === 'Tab') {
+                const focusable = Array.from(openModal.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+                if (focusable.length) {
+                    const first = focusable[0];
+                    const last = focusable[focusable.length - 1];
+                    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+                    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+                }
+            }
+            if (event.key === 'Escape') {
+                document.querySelectorAll('.sb-modal.is-open').forEach(function (modal) {
+                    closeSkillBridgeModal(modal, true);
+                });
+                document.querySelectorAll('.sb-more-menu:not([hidden])').forEach(function (menu) {
+                    menu.hidden = true;
+                    menu.parentElement.querySelector('[data-ui-toggle="dropdown"]')?.setAttribute('aria-expanded', 'false');
+                });
+            }
+        });
+
         $(function () {
             function updateNotifBadge() {
                 if ('@User.Identity.IsAuthenticated' === 'True') {

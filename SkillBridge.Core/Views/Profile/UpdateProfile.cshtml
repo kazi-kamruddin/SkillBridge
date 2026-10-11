@@ -21,100 +21,100 @@
     <link rel="stylesheet" href="~/Styles/updateProfile.css" />
 }
 
-<main class="container mt-4">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 mt-4 tw:mt-6">
     <h2>@ViewBag.Title</h2>
-    @if (TempData["AccountNotice"] is string accountNotice) { <div class="alert alert-info" role="status">@accountNotice</div> }
-    <p class="text-muted">Add a skill you can teach and one you want to learn before starting an exchange or conversation.</p>
+    @if (TempData["AccountNotice"] is string accountNotice) { <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink" role="status">@accountNotice</div> }
+    <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">Add a skill you can teach and one you want to learn before starting an exchange or conversation.</p>
 
     @using (Html.BeginForm("UpdateProfile", "Profile", FormMethod.Post, new { @id = "updateProfileForm", enctype = "multipart/form-data" }))
     {
         @Html.AntiForgeryToken()
-        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.ValidationSummary(true, "", new { @class = "text-danger tw:text-[#a34f42]" })
 
-        <div class="mb-3">
-            @Html.LabelFor(m => m.FullName, new { @class = "form-label" })
-            @Html.TextBoxFor(m => m.FullName, new { @class = "form-control" })
+        <div class="mb-3 tw:mb-4">
+            @Html.LabelFor(m => m.FullName, new { @class = "form-label tw:mb-1 tw:block tw:font-bold" })
+            @Html.TextBoxFor(m => m.FullName, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" })
         </div>
-        <div class="mb-3">
-            <label for="ProfileImage" class="form-label">Profile photo (optional, up to 2 MB)</label>
-            <div class="mb-2"><img src="@Model.ExistingProfileImageUrl" alt="Current profile photo" class="rounded-circle" width="72" height="72" style="object-fit:cover" /></div>
-            <input type="file" id="ProfileImage" name="ProfileImage" class="form-control" accept="image/jpeg,image/png,image/webp" />
-            @Html.ValidationMessageFor(m => m.ProfileImage, "", new { @class = "text-danger" })
-            <label class="form-check mt-2"><input type="checkbox" name="RemoveProfileImage" value="true" class="form-check-input" /> Remove current photo</label>
-        </div>
-
-        <div class="mb-3">
-            @Html.LabelFor(m => m.Email, new { @class = "form-label" })
-            @Html.TextBoxFor(m => m.Email, new { @class = "form-control", @readonly = "readonly" })
+        <div class="mb-3 tw:mb-4">
+            <label for="ProfileImage" class="form-label tw:mb-1 tw:block tw:font-bold">Profile photo (optional, up to 2 MB)</label>
+            <div class="mb-2 tw:mb-2"><img src="@Model.ExistingProfileImageUrl" alt="Current profile photo" class="rounded-circle tw:rounded-full" width="72" height="72" style="object-fit:cover" /></div>
+            <input type="file" id="ProfileImage" name="ProfileImage" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" accept="image/jpeg,image/png,image/webp" />
+            @Html.ValidationMessageFor(m => m.ProfileImage, "", new { @class = "text-danger tw:text-[#a34f42]" })
+            <label class="form-check tw:flex tw:items-start tw:gap-2 mt-2 tw:mt-2"><input type="checkbox" name="RemoveProfileImage" value="true" class="form-check-input tw:mt-1 tw:accent-sb-blue-strong" /> Remove current photo</label>
         </div>
 
-        <div class="mb-3">
-            @Html.LabelFor(m => m.Bio, new { @class = "form-label" })
-            @Html.TextAreaFor(m => m.Bio, new { @class = "form-control", rows = 3 })
+        <div class="mb-3 tw:mb-4">
+            @Html.LabelFor(m => m.Email, new { @class = "form-label tw:mb-1 tw:block tw:font-bold" })
+            @Html.TextBoxFor(m => m.Email, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", @readonly = "readonly" })
         </div>
 
-        <div class="form-check mb-3">
-            @Html.CheckBoxFor(m => m.IsPublic, new { @class = "form-check-input" })
-            @Html.LabelFor(m => m.IsPublic, "Allow signed-out visitors to view my profile", new { @class = "form-check-label" })
-            <div class="form-text">Your name, location, profession, bio, skills and ratings will be public. Your email and age stay private.</div>
+        <div class="mb-3 tw:mb-4">
+            @Html.LabelFor(m => m.Bio, new { @class = "form-label tw:mb-1 tw:block tw:font-bold" })
+            @Html.TextAreaFor(m => m.Bio, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", rows = 3 })
         </div>
 
-        <div class="mb-3">
-            @Html.LabelFor(m => m.Profession, new { @class = "form-label" })
-            @Html.TextBoxFor(m => m.Profession, new { @class = "form-control", list = "profession-suggestions", maxlength = "100", placeholder = "Your profession or role" })
+        <div class="form-check tw:flex tw:items-start tw:gap-2 mb-3 tw:mb-4">
+            @Html.CheckBoxFor(m => m.IsPublic, new { @class = "form-check-input tw:mt-1 tw:accent-sb-blue-strong" })
+            @Html.LabelFor(m => m.IsPublic, "Allow signed-out visitors to view my profile", new { @class = "form-check-label tw:font-semibold" })
+            <div class="form-text tw:mt-1 tw:block tw:text-sm tw:text-sb-muted tw:dark:text-sb-night-ink/70">Your name, location, profession, bio, skills and ratings will be public. Your email and age stay private.</div>
+        </div>
+
+        <div class="mb-3 tw:mb-4">
+            @Html.LabelFor(m => m.Profession, new { @class = "form-label tw:mb-1 tw:block tw:font-bold" })
+            @Html.TextBoxFor(m => m.Profession, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", list = "profession-suggestions", maxlength = "100", placeholder = "Your profession or role" })
             <datalist id="profession-suggestions"><option value="Student"></option><option value="Teacher"></option><option value="Software Developer"></option><option value="Designer"></option><option value="Freelancer"></option></datalist>
         </div>
 
-        <div class="mb-3">
-            @Html.LabelFor(m => m.Location, new { @class = "form-label" })
-            @Html.TextBoxFor(m => m.Location, new { @class = "form-control", list = "location-suggestions", maxlength = "100", placeholder = "City or Online" })
+        <div class="mb-3 tw:mb-4">
+            @Html.LabelFor(m => m.Location, new { @class = "form-label tw:mb-1 tw:block tw:font-bold" })
+            @Html.TextBoxFor(m => m.Location, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", list = "location-suggestions", maxlength = "100", placeholder = "City or Online" })
             <datalist id="location-suggestions"><option value="Online"></option><option value="Dhaka"></option><option value="Chattogram"></option><option value="Khulna"></option><option value="Rajshahi"></option></datalist>
         </div>
 
-        <div class="mb-3">
-            @Html.LabelFor(m => m.Age, new { @class = "form-label" })
-            @Html.TextBoxFor(m => m.Age, new { @class = "form-control", type = "number", min = "0" })
+        <div class="mb-3 tw:mb-4">
+            @Html.LabelFor(m => m.Age, new { @class = "form-label tw:mb-1 tw:block tw:font-bold" })
+            @Html.TextBoxFor(m => m.Age, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", type = "number", min = "0" })
         </div>
 
-        <div class="mb-3">
-            @Html.LabelFor(m => m.AvailabilityNotes, new { @class = "form-label" })
-            @Html.TextAreaFor(m => m.AvailabilityNotes, new { @class = "form-control", rows = 2, maxlength = "300", placeholder = "For example, weekday evenings in Dhaka time" })
-            <div class="form-text">This appears on your profile, including to signed-out visitors when your profile is public.</div>
+        <div class="mb-3 tw:mb-4">
+            @Html.LabelFor(m => m.AvailabilityNotes, new { @class = "form-label tw:mb-1 tw:block tw:font-bold" })
+            @Html.TextAreaFor(m => m.AvailabilityNotes, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", rows = 2, maxlength = "300", placeholder = "For example, weekday evenings in Dhaka time" })
+            <div class="form-text tw:mt-1 tw:block tw:text-sm tw:text-sb-muted tw:dark:text-sb-night-ink/70">This appears on your profile, including to signed-out visitors when your profile is public.</div>
         </div>
-        <fieldset class="mb-3">
+        <fieldset class="mb-3 tw:mb-4">
             <legend class="h6">Days you are usually available (optional)</legend>
-            <div class="d-flex flex-wrap gap-3">
+            <div class="d-flex tw:flex flex-wrap tw:flex-wrap gap-3 tw:gap-4">
                 @for (var day = 0; day < 7; day++)
                 {
-                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" name="AvailableDays" value="@day" checked="@Model.AvailableDays.Contains(day)" />@AvailabilityHelper.DayNames[day]</label>
+                    <label class="form-check-label tw:font-semibold"><input class="form-check-input tw:mt-1 tw:accent-sb-blue-strong me-1 tw:me-1" type="checkbox" name="AvailableDays" value="@day" checked="@Model.AvailableDays.Contains(day)" />@AvailabilityHelper.DayNames[day]</label>
                 }
             </div>
         </fieldset>
-        <div class="mb-3">
-            @Html.LabelFor(m => m.TimeZoneId, new { @class = "form-label" })
-            @Html.TextBoxFor(m => m.TimeZoneId, new { @class = "form-control", list = "time-zone-suggestions", maxlength = "80", placeholder = "For example, Asia/Dhaka" })
+        <div class="mb-3 tw:mb-4">
+            @Html.LabelFor(m => m.TimeZoneId, new { @class = "form-label tw:mb-1 tw:block tw:font-bold" })
+            @Html.TextBoxFor(m => m.TimeZoneId, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", list = "time-zone-suggestions", maxlength = "80", placeholder = "For example, Asia/Dhaka" })
             <datalist id="time-zone-suggestions"><option value="Asia/Dhaka"></option><option value="Asia/Kolkata"></option><option value="UTC"></option><option value="Europe/London"></option><option value="America/New_York"></option></datalist>
-            <div class="form-text">Use a standard time zone name so meeting times display correctly.</div>
-            @Html.ValidationMessageFor(m => m.TimeZoneId, "", new { @class = "text-danger" })
+            <div class="form-text tw:mt-1 tw:block tw:text-sm tw:text-sb-muted tw:dark:text-sb-night-ink/70">Use a standard time zone name so meeting times display correctly.</div>
+            @Html.ValidationMessageFor(m => m.TimeZoneId, "", new { @class = "text-danger tw:text-[#a34f42]" })
         </div>
-        <div class="mb-3">
-            @Html.LabelFor(m => m.MeetingFormat, new { @class = "form-label" })
-            @Html.DropDownListFor(m => m.MeetingFormat, new SelectList(new[] { "Either", "Online", "In person" }, Model.MeetingFormat), new { @class = "form-select" })
+        <div class="mb-3 tw:mb-4">
+            @Html.LabelFor(m => m.MeetingFormat, new { @class = "form-label tw:mb-1 tw:block tw:font-bold" })
+            @Html.DropDownListFor(m => m.MeetingFormat, new SelectList(new[] { "Either", "Online", "In person" }, Model.MeetingFormat), new { @class = "form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" })
         </div>
 
         <hr />
 
         <h4>Skills You Want to Learn</h4>
-        <div class="row" id="skillsToLearnContainer">
+        <div class="row tw:grid tw:grid-cols-12 tw:gap-4" id="skillsToLearnContainer">
             @foreach (var category in Model.AllSkillCategories)
             {
-                <div class="col-md-4 mb-3">
+                <div class="col-md-4 tw:col-span-12 tw:md:col-span-4 mb-3 tw:mb-4">
                     <h5>@category.Name</h5>
-                    <ul class="list-group">
+                    <ul class="list-group tw:flex tw:flex-col tw:gap-2">
                         @foreach (var skill in category.Skills)
                         {
                             var selected = toLearnSkillIds.Contains(skill.Id) ? "active" : "";
-                            <li class="list-group-item skill-learn @selected" data-skill-id="@skill.Id" tabindex="0" role="button" aria-pressed="@(selected == "active" ? "true" : "false")">
+                            <li class="list-group-item tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card skill-learn @selected" data-skill-id="@skill.Id" tabindex="0" role="button" aria-pressed="@(selected == "active" ? "true" : "false")">
                                 @skill.Name
                             </li>
                         }
@@ -126,17 +126,17 @@
         <hr />
 
         <h4>Skills You Know</h4>
-        <div id="skillsIKnowContainer" class="row">
+        <div id="skillsIKnowContainer" class="row tw:grid tw:grid-cols-12 tw:gap-4">
             @foreach (var category in Model.AllSkillCategories)
             {
-                <div class="col-md-4 mb-3 skill-category-container" data-category="@category.Name">
+                <div class="col-md-4 tw:col-span-12 tw:md:col-span-4 mb-3 tw:mb-4 skill-category-container" data-category="@category.Name">
                     <h5>@category.Name</h5>
-                    <ul class="list-group">
+                    <ul class="list-group tw:flex tw:flex-col tw:gap-2">
                         @foreach (var skill in category.Skills)
                         {
                             var knownSkill = Model.SkillsIKnow.FirstOrDefault(s => s.SkillId == skill.Id);
                             var selected = knownSkill != null ? "active" : "";
-                            <li class="list-group-item skill-know @selected" tabindex="0" role="button" aria-pressed="@(selected == "active" ? "true" : "false")"
+                            <li class="list-group-item tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card skill-know @selected" tabindex="0" role="button" aria-pressed="@(selected == "active" ? "true" : "false")"
                                 data-skill-id="@skill.Id"
                                 data-skill-name="@skill.Name"
                                 data-known-stage="@(knownSkill?.KnownUpToStage ?? 1)">
@@ -148,11 +148,11 @@
             }
         </div>
 
-        <div id="skillStagesSelectionContainer" class="mt-3"></div>
+        <div id="skillStagesSelectionContainer" class="mt-3 tw:mt-4"></div>
 
-        <div class="mt-4">
-            <button type="submit" class="btn btn-success">Save Changes</button>
-            <a href="@Url.Action("Index", "Profile")" class="btn btn-secondary ms-2">Cancel</a>
+        <div class="mt-4 tw:mt-6">
+            <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success tw:bg-sb-sage-deep tw:text-sb-ink">Save Changes</button>
+            <a href="@Url.Action("Index", "Profile")" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-secondary tw:bg-sb-sage tw:text-sb-ink ms-2 tw:ms-2">Cancel</a>
         </div>
     }
 </main>
@@ -192,15 +192,15 @@
                 $('<strong>').text('Stages you know for ' + skillName + ':').appendTo($container);
                 $('<br>').appendTo($container);
                 stages.forEach(function (st) {
-                    $('<button type="button">').addClass('badge badge-secondary text-dark stage-option mr-1 mb-1')
+                    $('<button type="button">').addClass('sb-stage-option stage-option tw:mr-1 tw:mb-1')
                         .attr({ 'data-stage': st.id, 'data-skill-id': skillId, 'aria-pressed': 'false' })
                         .text(st.name).appendTo($container);
                 });
                 $("#skillStagesSelectionContainer").append($container);
                 var stage = selectedSkillsIKnow[skillId] || 1;
                 $('#stage-selection-' + skillId + ' .stage-option').each(function () {
-                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary').attr('aria-pressed', 'true');
-                    else $(this).removeClass('badge-primary').addClass('badge-secondary').attr('aria-pressed', 'false');
+                    if ($(this).data("stage") <= stage) $(this).addClass('is-selected').attr('aria-pressed', 'true');
+                    else $(this).removeClass('is-selected').attr('aria-pressed', 'false');
                 });
             }
 
@@ -235,8 +235,8 @@
                 var $this = $(this), skillId = String($this.data("skill-id")), stage = $this.data("stage");
                 selectedSkillsIKnow[skillId] = stage;
                 $('#stage-selection-' + skillId + ' .stage-option').each(function () {
-                    if ($(this).data("stage") <= stage) $(this).removeClass('badge-secondary').addClass('badge-primary').attr('aria-pressed', 'true');
-                    else $(this).removeClass('badge-primary').addClass('badge-secondary').attr('aria-pressed', 'false');
+                    if ($(this).data("stage") <= stage) $(this).addClass('is-selected').attr('aria-pressed', 'true');
+                    else $(this).removeClass('is-selected').attr('aria-pressed', 'false');
                 });
                 var $knownInput = $form.find('input[data-skill-id="' + skillId + '"][name$=".KnownUpToStage"]');
                 if ($knownInput.length) $knownInput.val(stage);

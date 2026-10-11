@@ -18,25 +18,25 @@
     var otherUserProfile = ViewBag.OtherUserProfile as ChatPartnerViewModel;
 }
 
-<div class="container-fluid mt-3 sb-chat">
-    <div class="row">
+<div class="container-fluid tw:w-full tw:px-4 mt-3 tw:mt-4 sb-chat">
+    <div class="row tw:grid tw:grid-cols-12 tw:gap-4">
         <!-- Left column: conversation list -->
-        <div class="col-md-3 border-end sb-chat-list" style="height:80vh; overflow-y:auto;">
-            <h5 class="mb-3">Conversations</h5>
-            <ul class="list-group">
+        <div class="col-md-3 tw:col-span-12 tw:md:col-span-3 border-end sb-chat-list" style="height:80vh; overflow-y:auto;">
+            <h5 class="mb-3 tw:mb-4">Conversations</h5>
+            <ul class="list-group tw:flex tw:flex-col tw:gap-2">
                 @foreach (var convo in allConversations)
                 {
                     var partnerId = convo.User1Id == currentUserId ? convo.User2Id : convo.User1Id;
 
-                    <li class="list-group-item @(convo.Id == Model.Id ? "active" : "")" data-conversation-id="@convo.Id">
-                        <a class="d-block text-decoration-none text-dark @(convo.Id == Model.Id ? "text-white" : "")"
+                    <li class="list-group-item tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card @(convo.Id == Model.Id ?"active" : "")" data-conversation-id="@convo.Id">
+                        <a class="d-block tw:block text-decoration-none text-dark tw:text-sb-ink tw:dark:text-sb-night-ink @(convo.Id == Model.Id ?"text-white" : "")"
                            href="@Url.Action("Chat", "Messages", new { id = convo.Id })">
                             @(partnerNames.TryGetValue(partnerId, out var partnerName) ? partnerName : "Member")
                             @if (unreadByConversation.TryGetValue(convo.Id, out var unread) && unread > 0)
-                            { <span class="badge bg-danger conversation-unread">@unread unread</span> }
+                            { <span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:px-2.5 tw:py-1 tw:text-xs tw:font-bold bg-danger tw:bg-sb-coral conversation-unread">@unread unread</span> }
                             <br />
-                            <small class="d-block text-truncate conversation-preview">@(lastMessagePreviews.TryGetValue(convo.Id, out var preview) ? preview : "No messages yet")</small>
-                            <small class="text-muted conversation-last-activity">@convo.LastMessageAt?.ToString("g")</small>
+                            <small class="d-block tw:block text-truncate conversation-preview">@(lastMessagePreviews.TryGetValue(convo.Id, out var preview) ? preview : "No messages yet")</small>
+                            <small class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 conversation-last-activity">@convo.LastMessageAt?.ToString("g")</small>
                         </a>
                     </li>
                 }
@@ -44,8 +44,8 @@
         </div>
 
         <!-- Middle column: chat history -->
-        <div class="col-md-6 d-flex flex-column sb-chat-main" style="height:80vh;">
-            <div id="messagePane" class="flex-grow-1 border p-2 mb-2" style="overflow-y:auto;">
+        <div class="col-md-6 tw:col-span-12 tw:md:col-span-6 d-flex tw:flex flex-column tw:flex-col sb-chat-main" style="height:80vh;">
+            <div id="messagePane" class="flex-grow-1 tw:flex-1 border tw:border-2 tw:border-sb-ink p-2 tw:p-2 mb-2 tw:mb-2" style="overflow-y:auto;">
                 <h5>@otherUserProfile?.FullName</h5>
                 <hr />
                 <div id="messageList">
@@ -55,60 +55,60 @@
                         {
                             if (m.IsMine)
                             {
-                                <div class="text-end mb-2" data-message-id="@m.Id">
-                                    @if (!string.IsNullOrWhiteSpace(m.Text)) { <span class="badge bg-primary">@m.Text</span> }
+                                <div class="text-end tw:text-right mb-2 tw:mb-2" data-message-id="@m.Id">
+                                    @if (!string.IsNullOrWhiteSpace(m.Text)) { <span class="sb-chat-bubble sb-chat-bubble-mine">@m.Text</span> }
                                     @if (m.HasImage) { <a href="@Url.Action("Image", "Messages", new { id = m.Id })" target="_blank" rel="noopener"><img src="@Url.Action("Image", "Messages", new { id = m.Id })" alt="Image sent in chat" class="sb-chat-image" loading="lazy" /></a> }
                                     <br />
-                                    <small class="text-muted">@m.CreatedAt · <span class="read-state">@(m.IsRead ? "Read" : "Sent")</span></small>
+                                    <small class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">@m.CreatedAt · <span class="read-state">@(m.IsRead ? "Read" : "Sent")</span></small>
                                 </div>
                             }
                             else
                             {
-                                <div class="text-start mb-2" data-message-id="@m.Id">
-                                    @if (!string.IsNullOrWhiteSpace(m.Text)) { <span class="badge bg-secondary">@m.Text</span> }
+                                <div class="text-start tw:text-left mb-2 tw:mb-2" data-message-id="@m.Id">
+                                    @if (!string.IsNullOrWhiteSpace(m.Text)) { <span class="sb-chat-bubble sb-chat-bubble-other">@m.Text</span> }
                                     @if (m.HasImage) { <a href="@Url.Action("Image", "Messages", new { id = m.Id })" target="_blank" rel="noopener"><img src="@Url.Action("Image", "Messages", new { id = m.Id })" alt="Image sent in chat" class="sb-chat-image" loading="lazy" /></a> }
                                     <br />
-                                    <small class="text-muted">@m.CreatedAt</small>
+                                    <small class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">@m.CreatedAt</small>
                                 </div>
                             }
                         }
                     }
                     else
                     {
-                        <p class="text-muted">No messages yet. Start the conversation.</p>
+                        <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">No messages yet. Start the conversation.</p>
                     }
                 </div>
             </div>
 
-            <form id="sendMessageForm" class="d-flex align-items-center gap-2" method="post" enctype="multipart/form-data" autocomplete="off" action="@Url.Action("Send", "Messages")">
+            <form id="sendMessageForm" class="d-flex tw:flex align-items-center tw:items-center gap-2 tw:gap-2" method="post" enctype="multipart/form-data" autocomplete="off" action="@Url.Action("Send", "Messages")">
                 @Html.AntiForgeryToken()
                 @Html.Hidden("conversationId", (string)conversationId)
 
-                <label class="btn btn-outline-secondary mb-0" for="chatImage" title="Attach an image">📷</label>
+                <label class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink mb-0 tw:mb-0" for="chatImage" title="Attach an image">📷</label>
                 <input type="file" id="chatImage" name="image" class="visually-hidden" accept="image/jpeg,image/png,image/webp" aria-label="Attach an image (up to 5 MB)" />
                 <div class="sb-chat-composer">
                     <div id="chatImagePreview" class="sb-chat-image-preview" hidden>
                         <img id="chatImageThumbnail" alt="Selected image preview" />
                         <span id="chatImageName"></span>
-                        <button id="removeChatImage" type="button" class="btn btn-sm btn-outline-secondary" aria-label="Remove attached image">Remove</button>
+                        <button id="removeChatImage" type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm btn-outline-secondary tw:bg-sb-card tw:text-sb-ink" aria-label="Remove attached image">Remove</button>
                     </div>
-                    <textarea id="messageText" name="messageText" class="form-control" rows="1" maxlength="4000" autocomplete="off" autocorrect="on" spellcheck="true" placeholder="Type your message..."></textarea>
+                    <textarea id="messageText" name="messageText" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" rows="1" maxlength="4000" autocomplete="off" autocorrect="on" spellcheck="true" placeholder="Type your message..."></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary">Send</button>
+                <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white">Send</button>
             </form>
         </div>
 
         <!-- Right column: profile info -->
-        <div class="col-md-3 border-start sb-chat-profile" style="height:80vh; overflow-y:auto;">
+        <div class="col-md-3 tw:col-span-12 tw:md:col-span-3 border-start sb-chat-profile" style="height:80vh; overflow-y:auto;">
             <h5>Profile Info</h5>
             <hr />
             @if (otherUserProfile != null)
             {
-                <div class="text-center mb-3">
+                <div class="text-center tw:text-center mb-3 tw:mb-4">
                     <img src="@Url.Content(otherUserProfile.ProfileImageUrl)"
-                         class="rounded-circle" style="width:100px; height:100px; object-fit:cover;" />
-                    <h6 class="mt-2">@otherUserProfile.FullName</h6>
-                    <p class="text-muted">@otherUserProfile.Profession | @otherUserProfile.Location</p>
+                         class="rounded-circle tw:rounded-full" style="width:100px; height:100px; object-fit:cover;" />
+                    <h6 class="mt-2 tw:mt-2">@otherUserProfile.FullName</h6>
+                    <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">@otherUserProfile.Profession | @otherUserProfile.Location</p>
                 </div>
                 <p>@otherUserProfile.Bio</p>
             }
@@ -164,10 +164,10 @@
                 var mine = msg.fromUserId === myId;
                 updateConversationPreview(msg.text, msg.hasImage, mine, msg.sentAt);
                 var css = mine ? 'text-end' : 'text-start';
-                var badge = mine ? 'bg-primary' : 'bg-secondary';
+                var bubble = mine ? 'sb-chat-bubble-mine' : 'sb-chat-bubble-other';
 
                 var row = $("<div>").addClass(css + " mb-2").attr("data-message-id", msg.id);
-                if (msg.text) $("<span>").addClass("badge " + badge).text(msg.text).appendTo(row);
+                if (msg.text) $("<span>").addClass("sb-chat-bubble " + bubble).text(msg.text).appendTo(row);
                 if (msg.hasImage) {
                     var imageUrl = '@Url.Action("Image", "Messages")?id=' + encodeURIComponent(msg.id);
                     $("<a>").attr({href: imageUrl, target: '_blank', rel: 'noopener'})

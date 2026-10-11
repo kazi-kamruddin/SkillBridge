@@ -8,80 +8,80 @@
     <link rel="stylesheet" href="~/Styles/login.css" />
 }
 
-<div class="d-flex justify-content-center align-items-center sb-auth-screen">
-    <div class="card shadow d-flex flex-row overflow-hidden sb-login-card">
+<div class="d-flex tw:flex justify-content-center tw:justify-center align-items-center tw:items-center sb-auth-screen">
+    <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink shadow tw:shadow-sb d-flex tw:flex flex-row tw:flex-row overflow-hidden sb-login-card">
 
         <!-- Left Side (Login Form) -->
-        <div class="p-5 flex-fill sb-auth-form">
+        <div class="p-5 tw:p-8 flex-fill sb-auth-form">
             <span class="sb-eyebrow">PICK UP WHERE YOU LEFT OFF</span>
-            <h1 class="mb-4">Welcome back.</h1>
-            @if (TempData["LoginNotice"] is string loginNotice) { <div class="alert alert-info" role="status">@loginNotice</div> }
+            <h1 class="mb-4 tw:mb-6">Welcome back.</h1>
+            @if (TempData["LoginNotice"] is string loginNotice) { <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink" role="status">@loginNotice</div> }
 
             @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, false, new { role = "form" }))
             {
                 @Html.AntiForgeryToken()
-                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                @Html.ValidationSummary(true, "", new { @class = "text-danger tw:text-[#a34f42]" })
 
                 <!-- Email -->
-                <div class="form-group mb-3">
+                <div class="form-group tw:mb-4 mb-3">
                     @Html.LabelFor(m => m.Email)
                     <div class="input-group">
                         <span class="input-group-text">
-                            <i class="bi bi-envelope"></i>
+                            <i class="fas fa-envelope" aria-hidden="true"></i>
                         </span>
-                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control", placeholder = "Enter your email" })
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", placeholder = "Enter your email" })
                     </div>
-                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger" })
+                    @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-danger tw:text-[#a34f42]" })
                 </div>
 
                 <!-- Password -->
-                <div class="form-group mb-4">
+                <div class="form-group tw:mb-4 mb-4 tw:mb-6">
                     @Html.LabelFor(m => m.Password)
                     <div class="input-group">
                         <span class="input-group-text">
-                            <i class="bi bi-lock"></i>
+                            <i class="fas fa-lock" aria-hidden="true"></i>
                         </span>
-                        @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Enter your password" })
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", placeholder = "Enter your password" })
                     </div>
-                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                    @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger tw:text-[#a34f42]" })
                 </div>
 
                 <!-- Remember Me -->
-                <div class="form-check mb-4">
-                    @Html.CheckBoxFor(m => m.RememberMe, new { @class = "form-check-input" })
-                    @Html.LabelFor(m => m.RememberMe, new { @class = "form-check-label" })
+                <div class="form-check tw:flex tw:items-start tw:gap-2 mb-4 tw:mb-6">
+                    @Html.CheckBoxFor(m => m.RememberMe, new { @class = "form-check-input tw:mt-1 tw:accent-sb-blue-strong" })
+                    @Html.LabelFor(m => m.RememberMe, new { @class = "form-check-label tw:font-semibold" })
                 </div>
 
                 <!-- Sign In button -->
-                <button type="submit" class="btn btn-primary sb-auth-submit w-100">
+                <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white sb-auth-submit w-100 tw:w-full">
                     Sign In
                 </button>
             }
             @if (ViewBag.GoogleEnabled == true)
             {
-                <form method="post" action="@Url.Action("GoogleSignIn", "Account")" class="mt-3">
+                <form method="post" action="@Url.Action("GoogleSignIn", "Account")" class="mt-3 tw:mt-4">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
-                    <button type="submit" class="btn btn-outline-secondary w-100">Continue with Google</button>
+                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink w-100 tw:w-full">Continue with Google</button>
                 </form>
             }
-            <p class="mt-3 mb-1"><a href="@Url.Action("ForgotPassword", "Account")">Forgot password?</a></p>
+            <p class="mt-3 tw:mt-4 mb-1 tw:mb-1"><a href="@Url.Action("ForgotPassword", "Account")">Forgot password?</a></p>
             <details><summary>Need a new email confirmation link?</summary>
-                <form method="post" action="@Url.Action("ResendConfirmation", "Account")" class="mt-2">
+                <form method="post" action="@Url.Action("ResendConfirmation", "Account")" class="mt-2 tw:mt-2">
                     @Html.AntiForgeryToken()
-                    <label for="resend-email" class="form-label">Account email</label>
-                    <input id="resend-email" name="email" type="email" maxlength="254" required class="form-control mb-2" />
-                    <button type="submit" class="btn btn-outline-primary btn-sm">Send link</button>
+                    <label for="resend-email" class="form-label tw:mb-1 tw:block tw:font-bold">Account email</label>
+                    <input id="resend-email" name="email" type="email" maxlength="254" required class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" />
+                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Send link</button>
                 </form>
             </details>
         </div>
 
         <!-- Right Side (Welcome Message + Sign Up button) -->
-        <div class="d-flex flex-column justify-content-center align-items-center text-white flex-fill p-5 sb-auth-aside">
+        <div class="d-flex tw:flex flex-column tw:flex-col justify-content-center tw:justify-center align-items-center tw:items-center text-white tw:text-white flex-fill p-5 tw:p-8 sb-auth-aside">
             <span class="sb-auth-symbol" aria-hidden="true">↔</span>
-            <h2 class="mb-3">Good things are shared.</h2>
+            <h2 class="mb-3 tw:mb-4">Good things are shared.</h2>
             <p>Find someone to learn with and share what you know.</p>
-            @Html.ActionLink("Sign Up", "Register", "Account", null, new { @class = "btn btn-light" })
+            @Html.ActionLink("Sign Up", "Register", "Account", null, new { @class = "btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-light tw:bg-sb-card tw:text-sb-ink" })
         </div>
     </div>
 </div>

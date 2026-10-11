@@ -2,8 +2,8 @@
   "private": true,
   "scripts": {
     "test:e2e": "playwright test",
-    "build:css": "tailwindcss -i SkillBridge.Core/Styles/tailwind.css -o SkillBridge.Core/wwwroot/Content/tailwind-home.css --minify",
-    "watch:css": "tailwindcss -i SkillBridge.Core/Styles/tailwind.css -o SkillBridge.Core/wwwroot/Content/tailwind-home.css --watch"
+    "build:css": "tailwindcss -i SkillBridge.Core/Styles/tailwind.css -o SkillBridge.Core/wwwroot/Content/tailwind-app.css --minify",
+    "watch:css": "tailwindcss -i SkillBridge.Core/Styles/tailwind.css -o SkillBridge.Core/wwwroot/Content/tailwind-app.css --watch"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",

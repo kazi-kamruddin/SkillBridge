@@ -4,51 +4,51 @@
     ViewBag.Title = "Create Post";
 }
 
-<main class="container my-5 sb-post-editor-page">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8 sb-post-editor-page">
     <header class="sb-page-heading sb-post-editor-hero"><span class="sb-eyebrow">A PLACE TO THINK OUT LOUD</span><h1>Start a conversation.</h1><p>Ask a question, share a breakthrough, or show what you are making.</p></header>
     <div class="sb-post-editor-layout">
-        <div class="card sb-post-editor-card">
-                <div class="card-body p-4">
+        <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink sb-post-editor-card">
+                <div class="card-body tw:p-5 p-4 tw:p-6">
                     <span class="sb-eyebrow">NEW COMMUNITY POST / 01</span>
-                    <h2 class="h3 mt-2 mb-3">What is on your mind?</h2>
-                    <p class="text-muted small">Community posts can be read by signed-out visitors. Avoid sharing private contact details.</p>
+                    <h2 class="h3 mt-2 tw:mt-2 mb-3 tw:mb-4">What is on your mind?</h2>
+                    <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 small tw:text-sm">Community posts can be read by signed-out visitors. Avoid sharing private contact details.</p>
                     @using (Html.BeginForm("CreatePost", "Communities", FormMethod.Post, new { enctype = "multipart/form-data" }))
                     {
                         @Html.AntiForgeryToken()
                         @Html.HiddenFor(m => m.CommunityId)
 
                         <!-- Title -->
-                        <div class="mb-3">
-                            @Html.LabelFor(m => m.Title, new { @class = "form-label fw-bold" })
-                            @Html.TextBoxFor(m => m.Title, new { @class = "form-control form-control-lg", placeholder = "Give your post a clear title...", maxlength = "200" })
-                            @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger small" })
+                        <div class="mb-3 tw:mb-4">
+                            @Html.LabelFor(m => m.Title, new { @class = "form-label tw:mb-1 tw:block tw:font-bold fw-bold" })
+                            @Html.TextBoxFor(m => m.Title, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-control-lg", placeholder = "Give your post a clear title...", maxlength = "200" })
+                            @Html.ValidationMessageFor(m => m.Title, "", new { @class = "text-danger tw:text-[#a34f42] small tw:text-sm" })
                         </div>
 
                         <!-- Content -->
-                        <div class="mb-3">
-                            @Html.LabelFor(m => m.Content, new { @class = "form-label fw-bold" })
+                        <div class="mb-3 tw:mb-4">
+                            @Html.LabelFor(m => m.Content, new { @class = "form-label tw:mb-1 tw:block tw:font-bold fw-bold" })
                             <div class="sb-editor-toolbar" role="toolbar" aria-label="Post formatting">
                                 <button type="button" data-format="bold" aria-label="Bold selected text" title="Bold"><strong>B</strong></button>
                                 <button type="button" data-format="italic" aria-label="Italic selected text" title="Italic"><em>I</em></button>
                                 <button type="button" data-format="heading" aria-label="Turn line into heading" title="Heading">H2</button>
                             </div>
-                            @Html.TextAreaFor(m => m.Content, 8, 60, new { @class = "form-control sb-editor-textarea", placeholder = "Share your idea, question, or progress...", maxlength = "2000" })
-                            <p class="form-text">Bold, italic, and headings are available. New lines stay as you write them.</p>
-                            @Html.ValidationMessageFor(m => m.Content, "", new { @class = "text-danger small" })
+                            @Html.TextAreaFor(m => m.Content, 8, 60, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink sb-editor-textarea", placeholder = "Share your idea, question, or progress...", maxlength = "2000" })
+                            <p class="form-text tw:mt-1 tw:block tw:text-sm tw:text-sb-muted tw:dark:text-sb-night-ink/70">Bold, italic, and headings are available. New lines stay as you write them.</p>
+                            @Html.ValidationMessageFor(m => m.Content, "", new { @class = "text-danger tw:text-[#a34f42] small tw:text-sm" })
                         </div>
-                        <div class="mb-3">
-                            <label for="Image" class="form-label fw-bold">Image (optional, up to 5 MB)</label>
-                            <input type="file" id="Image" name="Image" class="form-control" accept="image/jpeg,image/png,image/webp" />
-                            @Html.ValidationMessageFor(m => m.Image, "", new { @class = "text-danger small" })
+                        <div class="mb-3 tw:mb-4">
+                            <label for="Image" class="form-label tw:mb-1 tw:block tw:font-bold fw-bold">Image (optional, up to 5 MB)</label>
+                            <input type="file" id="Image" name="Image" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" accept="image/jpeg,image/png,image/webp" />
+                            @Html.ValidationMessageFor(m => m.Image, "", new { @class = "text-danger tw:text-[#a34f42] small tw:text-sm" })
                         </div>
 
                         <!-- Buttons -->
-                        <div class="d-flex justify-content-end mt-4">
-                            <a href="@Url.Action("Landing", "Communities", new { id = Model.CommunityId })" class="btn btn-outline-secondary me-2">
+                        <div class="d-flex tw:flex justify-content-end tw:justify-end mt-4 tw:mt-6">
+                            <a href="@Url.Action("Landing", "Communities", new { id = Model.CommunityId })" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink me-2 tw:me-2">
                                 Cancel
                             </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-send-fill me-1"></i> Create Post
+                            <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white">
+                                <i class="fas fa-paper-plane me-1 tw:me-1" aria-hidden="true"></i> Create Post
                             </button>
                         </div>
                     }

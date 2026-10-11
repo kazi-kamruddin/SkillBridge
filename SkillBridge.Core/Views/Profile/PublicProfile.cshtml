@@ -5,9 +5,9 @@
     <link rel="stylesheet" href="~/Styles/publicProfile.css" />
 }
 
-<main class="container mt-5 sb-public-profile sb-profile-redesign" aria-labelledby="title">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 mt-5 tw:mt-8 sb-public-profile sb-profile-redesign" aria-labelledby="title">
     @Html.AntiForgeryToken()
-    @if (TempData["ProfileNotice"] is string notice) { <div class="alert alert-info" role="status">@notice</div> }
+    @if (TempData["ProfileNotice"] is string notice) { <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink" role="status">@notice</div> }
 
     <header class="sb-profile-hero">
         <div class="sb-profile-hero-copy">
@@ -28,10 +28,10 @@
     @if (User.Identity.IsAuthenticated && Model.UserId != User.Identity.GetUserId())
     {
         <div class="sb-profile-actions">
-            <form method="post" action="@Url.Action(Model.IsSaved ? "Remove" : "Save", "SavedProfiles")" class="mb-2">
+            <form method="post" action="@Url.Action(Model.IsSaved ? "Remove" : "Save", "SavedProfiles")" class="mb-2 tw:mb-2">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@Model.UserId" />
-                <button type="submit" class="btn btn-outline-primary btn-sm">@(Model.IsSaved ? "Remove from saved" : "Save member")</button>
+                <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong btn-sm tw:px-3 tw:py-1.5 tw:text-sm">@(Model.IsSaved ? "Remove from saved" : "Save member")</button>
             </form>
             @if (Model.CanKnock)
             {
@@ -39,22 +39,22 @@
                 {
                     @Html.AntiForgeryToken()
                     @Html.Hidden("targetUserId", Model.UserId)
-                    <button type="submit" class="btn btn-success"><i class="fas fa-hand-point-right"></i> Knock</button>
+                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success tw:bg-sb-sage-deep tw:text-sb-ink"><i class="fas fa-hand-point-right"></i> Knock</button>
                 }
             }
-            <details class="mt-3"><summary>Report this profile</summary>
-                <form action="@Url.Action("ReportProfile", "Profile")" method="post" class="mt-2 mx-auto" style="max-width: 500px;">
+            <details class="mt-3 tw:mt-4"><summary>Report this profile</summary>
+                <form action="@Url.Action("ReportProfile", "Profile")" method="post" class="mt-2 tw:mt-2 mx-auto tw:mx-auto" style="max-width: 500px;">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.UserId" />
-                    <label class="form-label" for="profile-report-reason">Reason</label>
-                    <textarea id="profile-report-reason" name="reason" class="form-control mb-2" maxlength="500" required></textarea>
-                    <button class="btn btn-outline-danger btn-sm" type="submit">Send report</button>
+                    <label class="form-label tw:mb-1 tw:block tw:font-bold" for="profile-report-reason">Reason</label>
+                    <textarea id="profile-report-reason" name="reason" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" maxlength="500" required></textarea>
+                    <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43] btn-sm tw:px-3 tw:py-1.5 tw:text-sm" type="submit">Send report</button>
                 </form>
             </details>
-            <form action="@Url.Action("Block", "Profile")" method="post" class="mt-3">
+            <form action="@Url.Action("Block", "Profile")" method="post" class="mt-3 tw:mt-4">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@Model.UserId" />
-                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Block this member? You will no longer be able to contact each other.')">Block member</button>
+                <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43] btn-sm tw:px-3 tw:py-1.5 tw:text-sm" onclick="return confirm('Block this member? You will no longer be able to contact each other.')">Block member</button>
             </form>
         </div>
     }
@@ -62,19 +62,19 @@
     <div class="sb-profile-content-grid">
     <!-- Personal Information -->
     <section class="sb-profile-panel sb-profile-glance">
-        <h2 class="h4 mt-4 mb-3">At a glance</h2>
-        <dl class="row">
-            <dt class="col-sm-4">Profession:</dt>
-            <dd class="col-sm-8">@Model.Profession</dd>
+        <h2 class="h4 mt-4 tw:mt-6 mb-3 tw:mb-4">At a glance</h2>
+        <dl class="row tw:grid tw:grid-cols-12 tw:gap-4">
+            <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4">Profession:</dt>
+            <dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">@Model.Profession</dd>
 
-            <dt class="col-sm-4">Average Rating:</dt>
-            <dd class="col-sm-8">
+            <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4">Average Rating:</dt>
+            <dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">
                 @Model.AverageRating.ToString("0.0") / 10
                 (out of @Model.RatingsReceived rated interaction@(Model.RatingsReceived == 1 ? "" : "s"))
             </dd>
 
-            <dt class="col-sm-4"></dt>
-            <dd class="col-sm-8">
+            <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4"></dt>
+            <dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">
                 Completed total @Model.InteractionsCompleted interaction@(Model.InteractionsCompleted == 1 ? "" : "s")
             </dd>
         </dl>
@@ -82,26 +82,26 @@
 
     <!-- Teaching Skills -->
     <section class="sb-profile-panel sb-profile-teaching">
-    <h2 class="h4 mb-3">What @Model.FullName can teach</h2>
+    <h2 class="h4 mb-3 tw:mb-4">What @Model.FullName can teach</h2>
     <div>
-        <ul id="skillsToTeachList" class="list-unstyled mb-0">
+        <ul id="skillsToTeachList" class="list-unstyled mb-0 tw:mb-0">
             @foreach (var skill in Model.SkillsToTeach)
             {
                 var showButton = skill.RequestStatus != "Hidden";
-                var buttonClass = "btn btn-success"; 
+                var buttonClass = "tw:bg-sb-sage-deep tw:text-sb-ink";
                 var buttonText = "Request";
                 var isDisabled = false;
 
                 if (skill.RequestStatus == "Pending")
                 {
                     buttonText = "Request Sent";
-                    buttonClass = "btn btn-warning"; 
+                    buttonClass = "tw:bg-sb-coral tw:text-sb-ink";
                     isDisabled = true;
                 }
                 else if (skill.RequestStatus == "Declined" || skill.RequestStatus == "Withdrawn")
                 {
                     buttonText = "Request Again";
-                    buttonClass = "btn btn-danger"; 
+                    buttonClass = "tw:bg-sb-coral tw:text-sb-ink";
                 }
                 else if (skill.RequestStatus == "Accepted")
                 {
@@ -111,11 +111,11 @@
 
                 var percent = skill.TotalStages > 0
                     ? Math.Min(100, skill.Stage * 100 / skill.TotalStages) : 0;
-                <li class="mb-4 text-start">
+                <li class="mb-4 tw:mb-6 text-start tw:text-left">
                     <label><strong>@skill.SkillName</strong> (Stage: @skill.Stage of @skill.TotalStages)</label>
 
-                    <div class="progress mt-2" style="height:25px;">
-                        <div class="progress-bar bg-danger" role="progressbar"
+                    <div class="progress tw:overflow-hidden tw:rounded-full tw:border tw:border-sb-ink tw:bg-sb-sage mt-2 tw:mt-2" style="height:25px;">
+                        <div class="progress-bar tw:grid tw:h-full tw:place-items-center tw:bg-sb-blue-strong tw:text-white bg-danger tw:bg-sb-coral" role="progressbar"
                              style="width:@(percent)%;"
                              aria-valuenow="@(percent)"
                              aria-valuemin="0" aria-valuemax="100">
@@ -125,23 +125,23 @@
 
                     @if (User.Identity.IsAuthenticated && showButton)
                     {
-                        <div class="text-center mt-3">
-                            @if (isDisabled) { <span class="badge bg-warning text-dark">@buttonText</span> }
+                        <div class="text-center tw:text-center mt-3 tw:mt-4">
+                            @if (isDisabled) { <span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:px-2.5 tw:py-1 tw:text-xs tw:font-bold bg-warning tw:bg-sb-coral text-dark tw:text-sb-ink tw:dark:text-sb-night-ink">@buttonText</span> }
                             else
                             {
-                                <details class="text-start"><summary class="btn @buttonClass">@buttonText</summary>
-                                    <form class="requestSkillForm mt-3">
+                                <details class="text-start tw:text-left"><summary class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink @buttonClass">@buttonText</summary>
+                                    <form class="requestSkillForm mt-3 tw:mt-4">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="userSkillId" value="@skill.UserSkillId" />
                                         <input type="hidden" name="profileId" value="@Model.UserId" />
-                                        <label class="form-label" for="goal-@skill.UserSkillId">What would you like to achieve?</label>
-                                        <textarea id="goal-@skill.UserSkillId" name="goal" class="form-control mb-2" maxlength="500" required></textarea>
-                                        <label class="form-label" for="pace-@skill.UserSkillId">Preferred pace</label>
-                                        <select id="pace-@skill.UserSkillId" name="pace" class="form-select mb-2" required><option value="">Choose a pace</option><option>Weekly</option><option>Twice weekly</option><option>Flexible</option></select>
-                                        <label class="form-label" for="meeting-@skill.UserSkillId">First meeting idea (optional)</label>
-                                        <input id="meeting-@skill.UserSkillId" name="firstMeetingIdea" class="form-control mb-2" maxlength="300" placeholder="For example, discuss goals over chat" />
-                                        <button type="submit" class="btn btn-primary">Send proposal</button>
-                                        <span class="request-result ms-2" role="status"></span>
+                                        <label class="form-label tw:mb-1 tw:block tw:font-bold" for="goal-@skill.UserSkillId">What would you like to achieve?</label>
+                                        <textarea id="goal-@skill.UserSkillId" name="goal" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" maxlength="500" required></textarea>
+                                        <label class="form-label tw:mb-1 tw:block tw:font-bold" for="pace-@skill.UserSkillId">Preferred pace</label>
+                                        <select id="pace-@skill.UserSkillId" name="pace" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" required><option value="">Choose a pace</option><option>Weekly</option><option>Twice weekly</option><option>Flexible</option></select>
+                                        <label class="form-label tw:mb-1 tw:block tw:font-bold" for="meeting-@skill.UserSkillId">First meeting idea (optional)</label>
+                                        <input id="meeting-@skill.UserSkillId" name="firstMeetingIdea" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" maxlength="300" placeholder="For example, discuss goals over chat" />
+                                        <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white">Send proposal</button>
+                                        <span class="request-result ms-2 tw:ms-2" role="status"></span>
                                     </form>
                                 </details>
                             }
@@ -155,12 +155,12 @@
 
     <!-- Learning Skills -->
     <section class="sb-profile-panel sb-profile-learning">
-    <h2 class="h4 mb-3">What @Model.FullName wants to learn</h2>
-    <div class="d-flex flex-wrap gap-3">
+    <h2 class="h4 mb-3 tw:mb-4">What @Model.FullName wants to learn</h2>
+    <div class="d-flex tw:flex flex-wrap tw:flex-wrap gap-3 tw:gap-4">
         @foreach (var skill in Model.SkillsToLearn)
         {
-            <div class="card sb-learning-skill">
-                <div class="card-body p-2 text-center">
+            <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink sb-learning-skill">
+                <div class="card-body tw:p-5 p-2 tw:p-2 text-center tw:text-center">
                     <span>@skill.SkillName (Stage: @skill.Stage)</span>
                 </div>
             </div>
