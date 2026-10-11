@@ -1,7 +1,7 @@
 @{
     ViewBag.Title = "How Exchanges Work";
 }
-<main class="container my-5 sb-guide-page">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8 sb-guide-page">
     <header class="sb-page-heading">
         <span class="sb-eyebrow">The exchange, explained</span>
         <h1>Teach one thing.<br />Learn another.</h1>
@@ -20,10 +20,10 @@
         <p>If an exchange cannot continue, either member can end it early and give a reason. It will not count as completed.</p>
     </aside>
     <div class="sb-hero-actions">
-        <a class="btn btn-primary" href="@Url.Action("Skills", "Explore")">Browse skills</a>
+        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white" href="@Url.Action("Skills", "Explore")">Browse skills</a>
         @if (!User.Identity.IsAuthenticated)
         {
-            <a class="btn btn-outline-primary" href="@Url.Action("Register", "Account")">Create an account</a>
+            <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong" href="@Url.Action("Register", "Account")">Create an account</a>
         }
     </div>
 </main>

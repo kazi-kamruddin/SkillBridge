@@ -8,10 +8,10 @@
 }
 
 
-<main class="container mt-5 sb-public-profile sb-own-profile sb-profile-redesign" aria-labelledby="title">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 mt-5 tw:mt-8 sb-public-profile sb-own-profile sb-profile-redesign" aria-labelledby="title">
 
-    <p class="text-success">@ViewBag.StatusMessage</p>
-    @if (TempData["AccountNotice"] is string accountNotice) { <div class="alert alert-info" role="status">@accountNotice</div> }
+    <p class="text-success tw:text-[#397d6c]">@ViewBag.StatusMessage</p>
+    @if (TempData["AccountNotice"] is string accountNotice) { <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink" role="status">@accountNotice</div> }
 
     <header class="sb-profile-hero">
         <div class="sb-profile-hero-copy">
@@ -25,53 +25,53 @@
     </header>
     @if (Model.TeachingSkills.Count == 0 || Model.LearningSkills.Count == 0)
     {
-        <div class="alert alert-info text-start mx-auto" style="max-width:700px">You can browse SkillBridge now. Add a skill you can teach and one you want to learn before starting an exchange or conversation. <a href="@Url.Action("UpdateProfile", "Profile")">Add skills</a>.</div>
+        <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink text-start tw:text-left mx-auto tw:mx-auto" style="max-width:700px">You can browse SkillBridge now. Add a skill you can teach and one you want to learn before starting an exchange or conversation. <a href="@Url.Action("UpdateProfile", "Profile")">Add skills</a>.</div>
     }
-    @if (Model.IsHidden) { <div class="alert alert-warning">Your profile is currently hidden from discovery. Contact the site moderator if you believe this is a mistake.</div> }
-    <p class="small text-muted">Your profile is @(Model.IsPublic ? "visible to signed-out visitors" : "visible only to signed-in members"). <a href="@Url.Action("UpdateProfile", "Profile")">Change visibility</a></p>
-    <nav aria-label="Profile actions" class="d-flex flex-wrap justify-content-center gap-2 my-3">
-        <a class="btn btn-primary btn-sm" href="@Url.Action("UpdateProfile", "Profile")">Edit profile and skills</a>
-        <a class="btn btn-outline-primary btn-sm" href="@Url.Action("Requests", "Profile")">Exchange proposals</a>
-        <a class="btn btn-outline-primary btn-sm" href="@Url.Action("Index", "SavedProfiles")">Saved members</a>
-        <a class="btn btn-outline-secondary btn-sm" href="@Url.Action("BlockedMembers", "Profile")">Blocked members</a>
+    @if (Model.IsHidden) { <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-warning tw:bg-sb-coral tw:text-sb-ink">Your profile is currently hidden from discovery. Contact the site moderator if you believe this is a mistake.</div> }
+    <p class="small tw:text-sm text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">Your profile is @(Model.IsPublic ? "visible to signed-out visitors" : "visible only to signed-in members"). <a href="@Url.Action("UpdateProfile", "Profile")">Change visibility</a></p>
+    <nav aria-label="Profile actions" class="d-flex tw:flex flex-wrap tw:flex-wrap justify-content-center tw:justify-center gap-2 tw:gap-2 my-3 tw:my-4">
+        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white btn-sm tw:px-3 tw:py-1.5 tw:text-sm" href="@Url.Action("UpdateProfile", "Profile")">Edit profile and skills</a>
+        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong btn-sm tw:px-3 tw:py-1.5 tw:text-sm" href="@Url.Action("Requests", "Profile")">Exchange proposals</a>
+        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong btn-sm tw:px-3 tw:py-1.5 tw:text-sm" href="@Url.Action("Index", "SavedProfiles")">Saved members</a>
+        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm" href="@Url.Action("BlockedMembers", "Profile")">Blocked members</a>
     </nav>
     @if (Model.GoogleEnabled && !Model.GoogleLinked)
     {
         <form method="post" action="@Url.Action("LinkGoogle", "Account")">
             @Html.AntiForgeryToken()
-            <button type="submit" class="btn btn-outline-primary btn-sm">Link Google sign-in</button>
+            <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Link Google sign-in</button>
         </form>
     }
-    else if (Model.GoogleLinked) { <p class="small">Google sign-in linked.</p> }
-    <p class="small">Email @(Model.EmailConfirmed ? "confirmed" : "not confirmed")</p>
+    else if (Model.GoogleLinked) { <p class="small tw:text-sm">Google sign-in linked.</p> }
+    <p class="small tw:text-sm">Email @(Model.EmailConfirmed ? "confirmed" : "not confirmed")</p>
 
     <div class="sb-profile-content-grid">
 
     <!-- Personal Information Section -->
     <section class="sb-profile-panel sb-profile-glance">
-        <h4 class="mt-4 mb-3">Personal Information</h4>
-        <dl class="row">
-            <dt class="col-sm-4">Profession:</dt>
-            <dd class="col-sm-8">@Model.Profession</dd>
+        <h4 class="mt-4 tw:mt-6 mb-3 tw:mb-4">Personal Information</h4>
+        <dl class="row tw:grid tw:grid-cols-12 tw:gap-4">
+            <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4">Profession:</dt>
+            <dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">@Model.Profession</dd>
 
-            <dt class="col-sm-4">Age:</dt>
-            <dd class="col-sm-8">@(Model.Age?.ToString() ?? "Not added")</dd>
-            <dt class="col-sm-4">Availability:</dt>
-            <dd class="col-sm-8">@(string.IsNullOrWhiteSpace(Model.AvailabilityNotes) ? "Not set" : Model.AvailabilityNotes)</dd>
-            <dt class="col-sm-4">Usual days:</dt>
-            <dd class="col-sm-8">@(Model.AvailableDaysMask == 0 ? "Not set" : AvailabilityHelper.DescribeDays(Model.AvailableDaysMask))</dd>
-            <dt class="col-sm-4">Time zone:</dt>
-            <dd class="col-sm-8">@(Model.TimeZoneId ?? "Not set")</dd>
-            <dt class="col-sm-4">Meeting format:</dt>
-            <dd class="col-sm-8">@Model.MeetingFormat</dd>
+            <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4">Age:</dt>
+            <dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">@(Model.Age?.ToString() ?? "Not added")</dd>
+            <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4">Availability:</dt>
+            <dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">@(string.IsNullOrWhiteSpace(Model.AvailabilityNotes) ? "Not set" : Model.AvailabilityNotes)</dd>
+            <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4">Usual days:</dt>
+            <dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">@(Model.AvailableDaysMask == 0 ? "Not set" : AvailabilityHelper.DescribeDays(Model.AvailableDaysMask))</dd>
+            <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4">Time zone:</dt>
+            <dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">@(Model.TimeZoneId ?? "Not set")</dd>
+            <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4">Meeting format:</dt>
+            <dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">@Model.MeetingFormat</dd>
 
-            <dt class="col-sm-4">Average Rating:</dt>
-            <dd class="col-sm-8">
+            <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4">Average Rating:</dt>
+            <dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">
                 @Model.AverageRating.ToString("0.0") / 10
                 (out of @Model.RatingsReceived rated interaction@(Model.RatingsReceived == 1 ? "" : "s"))
             </dd>
-            <dt class="col-sm-4"></dt>
-            <dd class="col-sm-8">
+            <dt class="col-sm-4 tw:col-span-12 tw:sm:col-span-4"></dt>
+            <dd class="col-sm-8 tw:col-span-12 tw:sm:col-span-8">
                 Completed total @Model.InteractionsCompleted interaction@(Model.InteractionsCompleted == 1 ? "" : "s")
             </dd>
 
@@ -80,7 +80,7 @@
 
     <!-- Teaching Skills -->
     <section class="sb-profile-panel sb-profile-teaching">
-    <h4 class="mb-3">Teaching Skills</h4>
+    <h4 class="mb-3 tw:mb-4">Teaching Skills</h4>
     <div>
         @if (Model.TeachingSkills != null && Model.TeachingSkills.Count > 0)
         {
@@ -88,10 +88,10 @@
             {
                 var percent = skill.TotalStages > 0
                     ? Math.Min(100, skill.KnownUpToStage * 100 / skill.TotalStages) : 0;
-                <div class="mb-3 text-start">
+                <div class="mb-3 tw:mb-4 text-start tw:text-left">
                     <label><strong>@skill.SkillName (@skill.CategoryName)</strong> — Stage @skill.KnownUpToStage of @skill.TotalStages</label>
-                    <div class="progress" style="height: 25px;">
-                        <div class="progress-bar bg-danger" role="progressbar"
+                    <div class="progress tw:overflow-hidden tw:rounded-full tw:border tw:border-sb-ink tw:bg-sb-sage" style="height: 25px;">
+                        <div class="progress-bar tw:grid tw:h-full tw:place-items-center tw:bg-sb-blue-strong tw:text-white bg-danger tw:bg-sb-coral" role="progressbar"
                              style="width:@(percent)%;"
                              aria-valuenow="@(percent)"
                              aria-valuemin="0" aria-valuemax="100">
@@ -110,14 +110,14 @@
 
     <!-- Learning Skills -->
     <section class="sb-profile-panel sb-profile-learning">
-    <h4 class="mb-3">Seeking to Learn</h4>
-    <div class="d-flex flex-wrap gap-3">
+    <h4 class="mb-3 tw:mb-4">Seeking to Learn</h4>
+    <div class="d-flex tw:flex flex-wrap tw:flex-wrap gap-3 tw:gap-4">
         @if (Model.LearningSkills != null && Model.LearningSkills.Count > 0)
         {
             foreach (var skill in Model.LearningSkills)
             {
-                <div class="card sb-learning-skill">
-                    <div class="card-body p-2 text-center">
+                <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink sb-learning-skill">
+                    <div class="card-body tw:p-5 p-2 tw:p-2 text-center tw:text-center">
                         <span>@skill.SkillName </span>
                     </div>
                 </div>
@@ -131,7 +131,7 @@
     </section>
     </div>
 
-    <div class="mt-4 d-flex justify-content-center gap-2 flex-wrap">
-        <a class="btn btn-outline-primary" href="@Url.Action(Model.HasPassword ? "ChangePassword" : "SetPassword", "Profile")">@(Model.HasPassword ? "Change Password" : "Set Password")</a>
+    <div class="mt-4 tw:mt-6 d-flex tw:flex justify-content-center tw:justify-center gap-2 tw:gap-2 flex-wrap tw:flex-wrap">
+        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong" href="@Url.Action(Model.HasPassword ? "ChangePassword" : "SetPassword", "Profile")">@(Model.HasPassword ? "Change Password" : "Set Password")</a>
     </div>
 </main>

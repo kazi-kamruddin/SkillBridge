@@ -10,20 +10,20 @@
 
     @Html.Hidden("InteractionId", Model.RatingModel.InteractionId)
 
-    <div class="form-group">
+    <div class="form-group tw:mb-4">
         <label for="RatingValue">Rating (1-10):</label>
-        <input type="number" class="form-control" id="RatingValue" name="RatingValue" min="1" max="10" required />
+        <input type="number" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" id="RatingValue" name="RatingValue" min="1" max="10" required />
     </div>
 
-    <div class="form-group">
+    <div class="form-group tw:mb-4">
         <label for="Comment">Comment (optional):</label>
-        <textarea class="form-control" id="Comment" name="Comment" maxlength="250"></textarea>
+        <textarea class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" id="Comment" name="Comment" maxlength="250"></textarea>
     </div>
 
-    <button type="submit" class="btn btn-primary">Submit Rating</button>
+    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white">Submit Rating</button>
 </form>
 
-<div id="rating-result" class="mt-2"></div>
+<div id="rating-result" class="mt-2 tw:mt-2"></div>
 
 <style>
     /* Container */

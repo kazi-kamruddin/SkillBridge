@@ -354,8 +354,8 @@
             <h3 class="filter-title"><i class="fas fa-filter"></i>Filter Results</h3>
             <div class="filter-row">
                 <div class="filter-group">
-                    <label class="form-label fw-semibold">Skill I'm Learning</label>
-                    <select id="skillFilter" class="form-select form-select-modern">
+                    <label class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Skill I'm Learning</label>
+                    <select id="skillFilter" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-select-modern">
                         <option value="">All Skills</option>
                         @foreach (var skill in userLearningSkills)
                         {
@@ -365,8 +365,8 @@
                 </div>
 
                 <div class="filter-group">
-                    <label class="form-label fw-semibold">Minimum Skill Phase</label>
-                    <select id="phaseFilter" class="form-select form-select-modern">
+                    <label class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Minimum Skill Phase</label>
+                    <select id="phaseFilter" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-select-modern">
                         <option value="">Any Phase</option>
                         @for (int i = 1; i <= Model.MaxCatalogStage; i++)
                         {
@@ -376,8 +376,8 @@
                 </div>
 
                 <div class="filter-group">
-                    <label class="form-label fw-semibold">Location</label>
-                    <select id="locationFilter" class="form-select form-select-modern">
+                    <label class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Location</label>
+                    <select id="locationFilter" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-select-modern">
                         <option value="">All Locations</option>
                         @foreach (var loc in Model.Locations)
                         {
@@ -386,16 +386,16 @@
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="formatFilter" class="form-label fw-semibold">Meeting format</label>
-                    <select id="formatFilter" class="form-select form-select-modern">
+                    <label for="formatFilter" class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Meeting format</label>
+                    <select id="formatFilter" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-select-modern">
                         <option value="">Any format</option>
                         <option value="Online">Online</option>
                         <option value="In person">In person</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="dayFilter" class="form-label fw-semibold">Available day</label>
-                    <select id="dayFilter" class="form-select form-select-modern">
+                    <label for="dayFilter" class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Available day</label>
+                    <select id="dayFilter" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-select-modern">
                         <option value="">Any day</option>
                         @for (var day = 0; day < 7; day++)
                         {
@@ -404,8 +404,8 @@
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="timeZoneFilter" class="form-label fw-semibold">Time zone</label>
-                    <select id="timeZoneFilter" class="form-select form-select-modern">
+                    <label for="timeZoneFilter" class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Time zone</label>
+                    <select id="timeZoneFilter" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-select-modern">
                         <option value="">Any time zone</option>
                         @foreach (var zone in Model.TimeZones)
                         {
@@ -421,7 +421,7 @@
         {
             <div class="matches-container">
                 <h3 class="section-title"><i class="fas fa-fire"></i>Best Matches</h3>
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="bestMatches">
+                <div class="row tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:lg:grid-cols-3 tw:gap-6" id="bestMatches">
                     @foreach (var person in Model.BestMatches)
                     {
                         <div class="col person-card"
@@ -430,7 +430,7 @@
                              data-maxstage="@person.SkillsToTeach.Max(s => s.Stage)"
                              data-skill-stages="@System.Text.Json.JsonSerializer.Serialize(person.SkillsToTeach.Select(s => new { name = s.SkillName, stage = s.Stage }))"
                              data-format="@person.MeetingFormat" data-days="@person.AvailableDaysMask" data-timezone="@person.TimeZoneId">
-                            <div class="card card-modern h-100 position-relative">
+                            <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink card-modern h-100 tw:h-full position-relative">
                                 <div class="card-body-modern">
                                     <div class="user-info">
                                         <div class="avatar-container">
@@ -450,8 +450,8 @@
                                     </div>
 
                                     <div class="skills-section">
-                                        <div class="small mb-3"><strong>Why this match:</strong> They can teach you @person.YouCanLearn. You can teach them @person.TheyCanLearn.</div>
-                                        <div class="mb-3">
+                                        <div class="small tw:text-sm mb-3 tw:mb-4"><strong>Why this match:</strong> They can teach you @person.YouCanLearn. You can teach them @person.TheyCanLearn.</div>
+                                        <div class="mb-3 tw:mb-4">
                                             <div class="skills-title">
                                                 <i class="fas fa-gift"></i>Offers to Teach
                                             </div>
@@ -477,15 +477,15 @@
                                     </div>
 
                                     <!-- Knock button -->
-                                    <div class="mt-3 text-center">
-                                        <a class="btn btn-sm btn-outline-primary me-2" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })">View Profile</a>
+                                    <div class="mt-3 tw:mt-4 text-center tw:text-center">
+                                        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong me-2 tw:me-2" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })">View Profile</a>
                                         @if (person.CanKnock)
                                         {
                                             using (Html.BeginForm("Knock", "Messages", FormMethod.Post))
                                             {
                                                 @Html.AntiForgeryToken()
                                                 @Html.Hidden("targetUserId", person.UserId)
-                                                <button type="submit" class="btn btn-sm btn-success">Knock</button>
+                                                <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm btn-success tw:bg-sb-sage-deep tw:text-sb-ink">Knock</button>
                                             }
                                         }
                                     </div>
@@ -512,7 +512,7 @@
         {
             <div class="matches-container">
                 <h3 class="section-title"><i class="fas fa-user-friends"></i>@(Model.LearningSkillNames.Any() ? "Partial Matches" : "Explore members")</h3>
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4" id="partialMatches">
+                <div class="row tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:lg:grid-cols-4 tw:gap-6" id="partialMatches">
                     @foreach (var person in Model.PartialMatches)
                     {
                         <div class="col person-card"
@@ -521,7 +521,7 @@
                              data-maxstage="@person.SkillsToTeach.Max(s => s.Stage)"
                              data-skill-stages="@System.Text.Json.JsonSerializer.Serialize(person.SkillsToTeach.Select(s => new { name = s.SkillName, stage = s.Stage }))"
                              data-format="@person.MeetingFormat" data-days="@person.AvailableDaysMask" data-timezone="@person.TimeZoneId">
-                            <div class="card card-modern h-100">
+                            <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink card-modern h-100 tw:h-full">
                                 <div class="card-body-modern">
                                     <div class="user-info">
                                         <div class="avatar-container">
@@ -541,7 +541,7 @@
                                     </div>
 
                                     <div class="skills-section">
-                                        <div class="small mb-3"><strong>Why this match:</strong> They can teach you @person.YouCanLearn. Your skills do not yet match what they want to learn.</div>
+                                        <div class="small tw:text-sm mb-3 tw:mb-4"><strong>Why this match:</strong> They can teach you @person.YouCanLearn. Your skills do not yet match what they want to learn.</div>
                                         <div>
                                             <div class="skills-title">
                                                 <i class="fas fa-gift"></i>Offers to Teach
@@ -556,15 +556,15 @@
                                     </div>
 
                                     <!-- Knock button -->
-                                    <div class="mt-3 text-center">
-                                        <a class="btn btn-sm btn-outline-primary me-2" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })">View Profile</a>
+                                    <div class="mt-3 tw:mt-4 text-center tw:text-center">
+                                        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong me-2 tw:me-2" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })">View Profile</a>
                                         @if (person.CanKnock)
                                         {
                                             using (Html.BeginForm("Knock", "Messages", FormMethod.Post))
                                             {
                                                 @Html.AntiForgeryToken()
                                                 @Html.Hidden("targetUserId", person.UserId)
-                                                <button type="submit" class="btn btn-sm btn-success">Knock</button>
+                                                <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm btn-success tw:bg-sb-sage-deep tw:text-sb-ink">Knock</button>
                                             }
                                         }
                                     </div>

@@ -8,15 +8,15 @@
 
 <h2>Your Conversations</h2>
 
-<ul class="list-group">
+<ul class="list-group tw:flex tw:flex-col tw:gap-2">
     @foreach (var convo in Model)
     {
         var otherUserId = convo.User1Id == currentUserId ? convo.User2Id : convo.User1Id;
-        <li class="list-group-item">
+        <li class="list-group-item tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">
             <a href="@Url.Action("Chat", "Messages", new { id = convo.Id })">
                 Conversation with @otherUserId
             </a>
-            <span class="text-muted pull-right">
+            <span class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 pull-right">
                 @convo.LastMessageAt?.ToString("g")
             </span>
         </li>

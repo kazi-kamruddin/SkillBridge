@@ -37,7 +37,7 @@ test('guest can follow a skill into its detail and community pages', async ({ pa
 
 test('guest navigation offers browsing and keeps private areas out of view', async ({ page }) => {
   await page.goto('/');
-  const navigation = page.locator('nav.navbar');
+  const navigation = page.locator('nav').first();
   await expect(navigation.getByRole('link', { name: 'Explore' })).toBeVisible();
   await expect(navigation.getByRole('link', { name: 'Communities' })).toBeVisible();
   await expect(navigation.getByRole('link', { name: 'Interactions' })).toHaveCount(0);

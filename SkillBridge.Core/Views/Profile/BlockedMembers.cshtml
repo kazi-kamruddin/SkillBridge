@@ -3,17 +3,17 @@
     ViewBag.Title = "Blocked Members";
     var names = ViewBag.Names as Dictionary<string, string> ?? new Dictionary<string, string>();
 }
-<main class="container my-5" style="max-width: 750px;">
-    <h1 class="h2 mb-4">Blocked members</h1>
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8" style="max-width: 750px;">
+    <h1 class="h2 mb-4 tw:mb-6">Blocked members</h1>
     @if (!Model.Any()) { <p>You have not blocked anyone.</p> }
     @foreach (var block in Model)
     {
-        <div class="card mb-2"><div class="card-body d-flex justify-content-between align-items-center">
+        <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2"><div class="card-body tw:p-5 d-flex tw:flex justify-content-between tw:justify-between align-items-center tw:items-center">
             <span>@(names.TryGetValue(block.BlockedId, out var name) ? name : "SkillBridge member")</span>
             <form method="post" action="@Url.Action("Unblock", "Profile")">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@block.BlockedId" />
-                <button type="submit" class="btn btn-outline-primary btn-sm">Unblock</button>
+                <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Unblock</button>
             </form>
         </div></div>
     }

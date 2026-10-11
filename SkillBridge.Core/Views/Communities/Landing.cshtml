@@ -4,9 +4,9 @@
     ViewBag.Title = Model.CommunityName + " - Community";
 }
 
-<main class="container my-5 sb-community-landing">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8 sb-community-landing">
     <!-- Header -->
-    <header class="sb-page-heading sb-community-landing-hero d-flex justify-content-between align-items-center mb-4">
+    <header class="sb-page-heading sb-community-landing-hero d-flex tw:flex justify-content-between tw:justify-between align-items-center tw:items-center mb-4 tw:mb-6">
         <div>
             <span class="sb-eyebrow">Skill community</span>
             <h1>@Model.CommunityName</h1>
@@ -16,20 +16,20 @@
         @if (Model.IsMember)
         {
             <a href="@Url.Action("CreatePost", "Communities", new { communityId = Model.CommunityId })"
-               class="btn btn-success px-4">
-                <i class="fas fa-plus me-2"></i> Create Post
+               class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success tw:bg-sb-sage-deep tw:text-sb-ink px-4 tw:px-6">
+                <i class="fas fa-plus me-2 tw:me-2"></i> Create Post
             </a>
         }
         else if (!User.Identity.IsAuthenticated)
         {
-            <a class="btn btn-outline-primary" href="@Url.Action("Register", "Account")">Join to post</a>
+            <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong" href="@Url.Action("Register", "Account")">Join to post</a>
         }
     </header>
 
-    <form method="get" action="@Url.Action("Landing", "Communities", new { id = Model.CommunityId })" class="row g-2 mb-4 sb-community-post-search" role="search">
-        <div class="col-sm-7"><label for="post-search" class="form-label">Search posts</label><input id="post-search" name="q" value="@Model.SearchQuery" maxlength="100" class="form-control" placeholder="Title or content" /></div>
-        <div class="col-sm-3"><label for="post-sort" class="form-label">Sort posts</label><select id="post-sort" name="sort" class="form-select"><option value="newest" selected="@(Model.Sort == "newest")">Newest</option><option value="active" selected="@(Model.Sort == "active")">Most active</option></select></div>
-        <div class="col-sm-2 align-self-end"><button class="btn btn-outline-primary w-100" type="submit">Apply</button></div>
+    <form method="get" action="@Url.Action("Landing", "Communities", new { id = Model.CommunityId })" class="row tw:grid tw:grid-cols-12 tw:gap-4 g-2 tw:gap-2 mb-4 tw:mb-6 sb-community-post-search" role="search">
+        <div class="col-sm-7 tw:col-span-12 tw:sm:col-span-7"><label for="post-search" class="form-label tw:mb-1 tw:block tw:font-bold">Search posts</label><input id="post-search" name="q" value="@Model.SearchQuery" maxlength="100" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" placeholder="Title or content" /></div>
+        <div class="col-sm-3 tw:col-span-12 tw:sm:col-span-3"><label for="post-sort" class="form-label tw:mb-1 tw:block tw:font-bold">Sort posts</label><select id="post-sort" name="sort" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink"><option value="newest" selected="@(Model.Sort == "newest")">Newest</option><option value="active" selected="@(Model.Sort == "active")">Most active</option></select></div>
+        <div class="col-sm-2 tw:col-span-12 tw:sm:col-span-2 align-self-end tw:self-end"><button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong w-100 tw:w-full" type="submit">Apply</button></div>
     </form>
 
     <!-- Posts -->
@@ -40,15 +40,15 @@
                 @foreach (var post in Model.Posts)
                 {
                     <a href="@Url.Action("PostDetails", "Communities", new { id = post.PostId })"
-                       class="post-card d-block p-3 mb-3 rounded text-decoration-none">
-                        <h5 class="mb-1 text-dark">@post.Title</h5>
-                        @if (!string.IsNullOrWhiteSpace(post.ImageUrl)) { <img src="@post.ImageUrl" alt="Image attached to @post.Title" class="img-fluid rounded mb-2" style="max-height:180px;object-fit:cover" loading="lazy" /> }
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">
+                       class="post-card d-block tw:block p-3 tw:p-4 mb-3 tw:mb-4 rounded tw:rounded-xl text-decoration-none">
+                        <h5 class="mb-1 tw:mb-1 text-dark tw:text-sb-ink tw:dark:text-sb-night-ink">@post.Title</h5>
+                        @if (!string.IsNullOrWhiteSpace(post.ImageUrl)) { <img src="@post.ImageUrl" alt="Image attached to @post.Title" class="img-fluid rounded tw:rounded-xl mb-2 tw:mb-2" style="max-height:180px;object-fit:cover" loading="lazy" /> }
+                        <div class="d-flex tw:flex justify-content-between tw:justify-between align-items-center tw:items-center">
+                            <small class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">
                                 by <strong>@post.CreatedByFullName</strong>
                                 posted @post.CreatedAt.ToString("MMM dd, yyyy")
                             </small>
-                            <span class="badge bg-light text-dark">@post.CommentCount comment@(post.CommentCount == 1 ? "" : "s")</span>
+                            <span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:px-2.5 tw:py-1 tw:text-xs tw:font-bold bg-light tw:bg-sb-card text-dark tw:text-sb-ink tw:dark:text-sb-night-ink">@post.CommentCount comment@(post.CommentCount == 1 ? "" : "s")</span>
                         </div>
                     </a>
                 }

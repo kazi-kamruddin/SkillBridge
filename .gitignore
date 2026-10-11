@@ -55,6 +55,7 @@ packages/*
 node_modules/
 .npm-cache/
 SkillBridge.Core/wwwroot/Content/tailwind-home.css
+SkillBridge.Core/wwwroot/Content/tailwind-app.css
 .dotnet/
 .dotnet-install.ps1
 .nuget-packages/
