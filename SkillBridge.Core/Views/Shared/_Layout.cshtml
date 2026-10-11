@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewBag.Title - SkillBridge</title>
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" asp-append-version="true" />
     <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
     <link rel="stylesheet" href="~/Content/Site.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -395,6 +396,7 @@
         }
     </style>
     <link rel="stylesheet" href="~/Content/skillbridge-refresh.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Content/skillbridge-overhaul.css" asp-append-version="true" />
 </head>
 <body>
     <a class="sb-skip-link" href="#main-content">Skip to content</a>
@@ -439,9 +441,9 @@
                     @if (User.Identity.IsAuthenticated)
                     {
                         <li class="nav-item">
-                            <a class="nav-link position-relative" href="@Url.Action("Index", "Notifications")" title="Notifications">
+                            <a class="nav-link sb-notification-link" href="@Url.Action("Index", "Notifications")" title="Notifications">
                                 <i class="fas fa-bell "></i>
-                                <span id="notifBadge" class="notification-badge badge bg-danger position-absolute top-0 start-100 translate-middle" style="display:none;"></span>
+                                <span id="notifBadge" class="notification-badge badge bg-danger sb-notification-badge" style="display:none;"></span>
                             </a>
                         </li>
                     }

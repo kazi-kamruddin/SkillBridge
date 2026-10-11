@@ -120,10 +120,11 @@ namespace SkillBridge.Controllers
                 .Include(i => i.Sessions).ThenInclude(s => s.Skill)
                 .Include(i => i.SkillFromRequester.SkillStages)
                 .Include(i => i.SkillFromTeacher.SkillStages)
-                .FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
+                .FirstOrDefault(i => i.Id == id &&
                     (i.User1Id == userId || i.User2Id == userId));
 
             if (interaction == null) return NotFound();
+            if (interaction.Status != "Ongoing") return RedirectToAction(nameof(Details), new { id });
 
             var model = new InteractionSessionsViewModel
             {

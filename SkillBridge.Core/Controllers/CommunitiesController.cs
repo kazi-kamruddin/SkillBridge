@@ -1,5 +1,6 @@
 
 using SkillBridge.Models;
+using SkillBridge.Helpers;
 using SkillBridge.Services;
 using System;
 using Microsoft.EntityFrameworkCore;
@@ -210,6 +211,9 @@ namespace SkillBridge.Controllers
 
             var currentUserId = User.Identity.GetUserId();
             bool isMember = db.UserSkills.Any(us => us.UserId == currentUserId && us.SkillId == post.Community.SkillId);
+            var commentAuthorIds = post.Comments.Where(c => !c.IsHidden).Select(c => c.CreatedByUserId).Distinct().ToList();
+            var commentAuthors = db.UserInformations.Where(info => commentAuthorIds.Contains(info.UserId))
+                .ToDictionary(info => info.UserId);
 
             var model = new PostDetailsViewModel
             {
@@ -229,6 +233,10 @@ namespace SkillBridge.Controllers
                     Content = c.Content,
                     ImageUrl = c.ImageUrl,
                     CreatedByFullName = DisplayName(c.CreatedByUserId),
+                    ProfileImageUrl = commentAuthors.TryGetValue(c.CreatedByUserId, out var author) &&
+                        !author.IsHidden && (User.Identity.IsAuthenticated || author.IsPublic)
+                        ? ProfileImageHelper.GetProfileImage(author.ProfileImageUrl, author.FullName)
+                        : ProfileImageHelper.GetProfileImage(null, "SkillBridge member"),
                     CreatedAt = c.CreatedAt,
                     IsAuthor = c.CreatedByUserId == currentUserId
                 }).ToList(),
@@ -316,21 +324,6 @@ namespace SkillBridge.Controllers
             db.SaveChanges();
             TempData["CommunityNotice"] = "Post updated.";
             return RedirectToAction(nameof(PostDetails), new { id = postId });
-        }
-
-        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        public ActionResult EditComment(int commentId, string content)
-        {
-            var comment = db.CommunityComments.Include(c => c.Post).FirstOrDefault(c => c.Id == commentId &&
-                !c.IsHidden && !c.Post.IsHidden && c.CreatedByUserId == User.Identity.GetUserId());
-            if (comment == null) return NotFound();
-            content = (content ?? "").Trim();
-            if (content.Length > 1000 || (content.Length == 0 && string.IsNullOrWhiteSpace(comment.ImageUrl)))
-                return BadRequest("Keep the comment within 1000 characters and include text or an image.");
-            comment.Content = content;
-            db.SaveChanges();
-            TempData["CommunityNotice"] = "Comment updated.";
-            return RedirectToAction(nameof(PostDetails), new { id = comment.PostId });
         }
 
         [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]

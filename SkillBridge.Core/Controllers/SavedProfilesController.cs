@@ -37,6 +37,9 @@ public class SavedProfilesController : Controller
             UserId = s.TargetUserId,
             FullName = profiles.TryGetValue(s.TargetUserId, out var profile) ? profile.FullName : "SkillBridge member",
             Profession = profile?.Profession,
+            Location = profile?.Location,
+            ProfileImageUrl = profile != null && !profile.IsHidden && !blockedIds.Contains(s.TargetUserId)
+                ? ProfileImageHelper.GetProfileImage(profile.ProfileImageUrl, profile.FullName) : null,
             CanView = profile != null && !profile.IsHidden && !blockedIds.Contains(s.TargetUserId),
             MatchSummary = string.Join(", ", skills.Where(skill => skill.UserId == s.TargetUserId)
                 .Select(skill => skill.Name).Distinct())

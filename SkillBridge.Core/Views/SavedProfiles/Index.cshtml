@@ -1,33 +1,39 @@
 @model List<SkillBridge.Models.SavedProfileItemViewModel>
 @{ ViewBag.Title = "Saved members"; }
-<main class="container mt-4">
-    <h2>Saved members</h2>
-    <p class="text-muted">Keep a shortlist while you decide who to contact.</p>
+<main class="container my-5 sb-saved-page">
+    <header class="sb-page-heading sb-saved-hero">
+        <span class="sb-eyebrow">YOUR PEOPLE / YOUR PACE</span>
+        <h1>Saved members <span aria-hidden="true">✳</span></h1>
+        <p>Keep promising learning partners close while you decide who to contact.</p>
+        <a class="btn btn-primary mt-3" href="@Url.Action("Index", "Explore")">Explore more people ↗</a>
+    </header>
     @if (!Model.Any())
     {
-        <p>You have not saved anyone yet. <a href="@Url.Action("Index", "Explore")">Explore skills</a>.</p>
+        <div class="sb-empty-panel"><span aria-hidden="true" class="sb-empty-spark">✳</span><h2>No one saved yet</h2><p>Find a skill you want to learn, then save someone you would like to meet.</p><a class="btn btn-primary" href="@Url.Action("Index", "Explore")">Find a partner</a></div>
     }
-    @foreach (var member in Model)
-    {
-        <div class="card p-3 mb-3">
-            <div class="d-flex justify-content-between align-items-center gap-2">
-                <div>
-                    @if (member.CanView)
-                    {
-                        <a href="@Url.Action("PublicProfile", "Profile", new { id = member.UserId })">@member.FullName</a>
-                        <div class="small text-muted">@member.Profession</div>
-                        @if (!string.IsNullOrWhiteSpace(member.MatchSummary))
-                        { <div class="small">Can teach you: @member.MatchSummary</div> }
-                    }
-                    else { <span>This profile is currently unavailable.</span> }
-                </div>
-                <form method="post" action="@Url.Action("Remove", "SavedProfiles")">
+    <div class="sb-saved-grid">
+        @foreach (var member in Model)
+        {
+            <article class="sb-saved-card">
+                <div class="sb-saved-card-top"><span class="sb-eyebrow">SAVED PARTNER</span><span aria-hidden="true">↗</span></div>
+                @if (member.CanView)
+                {
+                    <img src="@member.ProfileImageUrl" alt="" class="sb-saved-avatar" loading="lazy" />
+                    <h2><a href="@Url.Action("PublicProfile", "Profile", new { id = member.UserId })">@member.FullName</a></h2>
+                    @if (!string.IsNullOrWhiteSpace(member.Profession) || !string.IsNullOrWhiteSpace(member.Location))
+                    { <p class="sb-saved-meta">@string.Join(" · ", new[] { member.Profession, member.Location }.Where(s => !string.IsNullOrWhiteSpace(s)))</p> }
+                    @if (!string.IsNullOrWhiteSpace(member.MatchSummary))
+                    { <p class="sb-saved-match"><span>CAN TEACH YOU</span><strong>@member.MatchSummary</strong></p> }
+                    <a class="btn btn-primary" href="@Url.Action("PublicProfile", "Profile", new { id = member.UserId })">View profile</a>
+                }
+                else { <div class="sb-saved-unavailable"><span aria-hidden="true">◌</span><h2>Profile unavailable</h2><p>This member cannot currently be viewed.</p></div> }
+                <form method="post" action="@Url.Action("Remove", "SavedProfiles")" class="sb-saved-remove">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@member.UserId" />
                     <input type="hidden" name="fromList" value="true" />
-                    <button type="submit" class="btn btn-outline-secondary btn-sm">Remove</button>
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">Remove from saved</button>
                 </form>
-            </div>
-        </div>
-    }
+            </article>
+        }
+    </div>
 </main>
