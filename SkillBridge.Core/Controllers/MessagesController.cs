@@ -18,13 +18,16 @@ namespace SkillBridge.Controllers
         private readonly ApplicationDbContext db;
         private readonly Microsoft.AspNetCore.SignalR.IHubContext<SkillBridge.Hubs.ChatHub> hubContext;
         private readonly CloudinaryImageService images;
+        private readonly ILogger<MessagesController> logger;
 
         public MessagesController(ApplicationDbContext db,
-            Microsoft.AspNetCore.SignalR.IHubContext<SkillBridge.Hubs.ChatHub> hubContext, CloudinaryImageService images)
+            Microsoft.AspNetCore.SignalR.IHubContext<SkillBridge.Hubs.ChatHub> hubContext, CloudinaryImageService images,
+            ILogger<MessagesController> logger)
         {
             this.db = db;
             this.hubContext = hubContext;
             this.images = images;
+            this.logger = logger;
         }
 
         // GET: /Messages
@@ -190,9 +193,7 @@ namespace SkillBridge.Controllers
             conversation.LastMessageAt = DateTime.Now;
             await db.SaveChangesAsync();
 
-            var groupName = $"convo-{conversation.Id}";
-
-            await hubContext.Clients.Group(groupName).SendAsync("receiveMessage", new
+            var payload = new
             {
                 id = msg.Id,
                 conversationId = conversation.Id,
@@ -201,15 +202,17 @@ namespace SkillBridge.Controllers
                 text = messageText,
                 hasImage = uploaded != null,
                 sentAt = msg.CreatedAt.ToString("o")
-            });
-
-            return Ok(new
+            };
+            try
             {
-                id = msg.Id,
-                text = messageText,
-                hasImage = uploaded != null,
-                sentAt = msg.CreatedAt.ToString("o")
-            });
+                await hubContext.Clients.Group($"convo-{conversation.Id}").SendAsync("receiveMessage", payload);
+            }
+            catch (Exception ex)
+            {
+                // The message is already durable; a transient broadcast failure must not invite a duplicate retry.
+                logger.LogWarning(ex, "Could not broadcast saved chat message {MessageId}", msg.Id);
+            }
+            return Ok(payload);
         }
 
         [HttpGet]

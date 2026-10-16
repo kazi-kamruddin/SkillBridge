@@ -133,13 +133,13 @@
     @if (!Model.Any())
     {
         <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink">
-            You have no exchanges yet. <a href="@Url.Action("Index", "Explore")">Explore matching members</a> to get started.
+            You have no current exchanges. <a href="@Url.Action("History", "Interactions")">View your completed exchanges</a>, or <a href="@Url.Action("Index", "Explore")">explore matching members</a> to start another.
         </div>
     }
     <div class="row tw:grid tw:grid-cols-12 tw:gap-4">
         @foreach (var interaction in Model)
         {
-            <div class="interaction-card">
+            <div class="interaction-card tw:col-span-12 tw:md:col-span-6 tw:xl:col-span-4">
                 <h4>@interaction.OtherUserName</h4>
                 <p><strong>Teaching:</strong> @interaction.SkillYouTeach</p>
                 <p><strong>Learning:</strong> @interaction.SkillYouLearn</p>

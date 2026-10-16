@@ -340,7 +340,7 @@ namespace SkillBridge.Controllers
             var notifications = notificationsFromDb.Select(n => new
             {
                 n.Id,
-                n.Message,
+                Message = MemberNames.NotificationText(n.Message),
                 n.IsRead,
                 n.Type,
                 CreatedAt = n.CreatedAt.ToString("g"),

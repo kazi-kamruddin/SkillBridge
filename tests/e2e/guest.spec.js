@@ -62,6 +62,28 @@ test('floating navigation centers the brand and opens on mobile', async ({ page 
   await expect(navigation.getByRole('link', { name: 'Explore' })).toBeVisible();
 });
 
+test('public pages fit a phone and the full menu remains reachable', async ({ page }) => {
+  test.setTimeout(90_000);
+  for (const width of [320, 390]) {
+    await page.setViewportSize({ width, height: 700 });
+    for (const path of ['/', '/Explore/Skills', '/Communities', '/Home/HowItWorks', '/Home/About', '/Account/Login']) {
+      await page.goto(path);
+      await expect(page.locator('main, #main-content').first()).toBeVisible();
+      const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+      expect(pageWidth, `${path} overflows at ${width}px`).toBeLessThanOrEqual(width + 1);
+    }
+    const navigation = page.getByRole('navigation', { name: 'Main navigation' });
+    const toggle = navigation.getByRole('button', { name: 'Toggle navigation' });
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await navigation.getByRole('button', { name: 'More' }).click();
+    await expect(navigation.getByRole('link', { name: 'About' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  }
+});
+
 test('public help pages provide working destinations', async ({ page }) => {
   await page.goto('/Home/Contact');
   await expect(page.getByRole('heading', { name: "Let's sort it out." })).toBeVisible();

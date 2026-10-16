@@ -35,7 +35,7 @@ namespace SkillBridge.Controllers
                 .ToList();
 
             var teachingSkillsIds = currentUserSkills
-                .Where(us => us.Status == "Teaching")
+                .Where(us => us.Status == "Teaching" && us.KnownUpToStage > 0)
                 .Select(us => us.SkillId)
                 .ToList();
 
@@ -45,27 +45,30 @@ namespace SkillBridge.Controllers
                 .ToList();
 
 
-            var otherUsers = db.Users
-                .Where(u => u.Id != currentUserId)
+            var otherUsers = db.UserInformations
+                .Where(info => info.UserId != currentUserId && !info.IsHidden)
+                .Where(info => !db.MemberBlocks.Any(block =>
+                    (block.BlockerId == currentUserId && block.BlockedId == info.UserId) ||
+                    (block.BlockedId == currentUserId && block.BlockerId == info.UserId)))
+                .Select(info => new { Id = info.UserId, Info = info })
                 .ToList();
+            var otherIds = otherUsers.Select(user => user.Id).ToList();
+            var skillsByUser = db.UserSkills.Include(us => us.Skill.SkillStages)
+                .Where(us => otherIds.Contains(us.UserId)).ToList()
+                .ToLookup(us => us.UserId);
+            var ratingsByUser = db.UserRatings.Where(rating => otherIds.Contains(rating.UserId))
+                .ToDictionary(rating => rating.UserId);
 
             var bestMatches = new List<PublicProfileViewModel>();
             var partialMatches = new List<PublicProfileViewModel>();
 
             foreach (var user in otherUsers)
             {
-                if (BlockRules.EitherBlocked(db, currentUserId, user.Id)) continue;
-                var userInfo = db.UserInformations.FirstOrDefault(ui => ui.UserId == user.Id);
-                if (userInfo == null || userInfo.IsHidden) continue;
-
-                var userSkills = db.UserSkills
-                    .Include(us => us.Skill.SkillCategory)
-                    .Include(us => us.Skill.SkillStages)
-                    .Where(us => us.UserId == user.Id)
-                    .ToList();
+                var userInfo = user.Info;
+                var userSkills = skillsByUser[user.Id].ToList();
 
                 var userTeachingSkills = userSkills
-                    .Where(us => us.Status == "Teaching")
+                    .Where(us => us.Status == "Teaching" && us.KnownUpToStage > 0)
                     .ToList();
 
                 var userLearningSkills = userSkills
@@ -79,7 +82,7 @@ namespace SkillBridge.Controllers
                 bool isPartialMatch = !isBestMatch && userTeachingSkills.Any(t => t.KnownUpToStage > 0 &&
                     learningSkills.Any(wanted => wanted.SkillId == t.SkillId));
 
-                var userRating = db.UserRatings.FirstOrDefault(ur => ur.UserId == user.Id);
+                ratingsByUser.TryGetValue(user.Id, out var userRating);
                 double averageRating = (userRating != null && userRating.RatingsReceived > 0)
                     ? (double)userRating.AccumulatedRating / userRating.RatingsReceived
                     : 0;
@@ -124,16 +127,13 @@ namespace SkillBridge.Controllers
 
 
 
-                if (!string.IsNullOrEmpty(skillFilter) &&
-                    !profileVm.SkillsToTeach.Any(s => s.SkillName == skillFilter))
-                    continue;
-
-                if (stageFilter > 0 &&
-                    !profileVm.SkillsToTeach.Any(s => s.Stage >= stageFilter))
+                if ((!string.IsNullOrEmpty(skillFilter) || stageFilter > 0) &&
+                    !profileVm.SkillsToTeach.Any(s =>
+                        (string.IsNullOrEmpty(skillFilter) || s.SkillName == skillFilter) && s.Stage >= stageFilter))
                     continue;
 
                 if (!string.IsNullOrEmpty(locationFilter) &&
-                    profileVm.Location != locationFilter)
+                    !string.Equals(profileVm.Location, locationFilter, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 if (isBestMatch) bestMatches.Add(profileVm);

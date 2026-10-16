@@ -1,0 +1,19 @@
+<form id="logoutForm" method="post" action="@Url.Action("LogOff", "Account")" hidden>
+    @Html.AntiForgeryToken()
+</form>
+<div class="sb-modal" id="logoutModal" role="dialog" tabindex="-1"
+     aria-labelledby="logoutModalLabel" aria-hidden="true">
+    <div class="sb-modal-dialog">
+        <div class="modal-content">
+            <div class="sb-modal-header">
+                <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
+                <button type="button" class="sb-modal-close" data-ui-dismiss="modal" aria-label="Close">×</button>
+            </div>
+            <div class="modal-body">Are you sure you want to log out?</div>
+            <div class="sb-modal-footer">
+                <button type="button" class="btn tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:bg-sb-sage tw:text-sb-ink" data-ui-dismiss="modal">Cancel</button>
+                <button type="submit" form="logoutForm" class="btn tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:bg-sb-coral tw:text-sb-ink">Log Out</button>
+            </div>
+        </div>
+    </div>
+</div>

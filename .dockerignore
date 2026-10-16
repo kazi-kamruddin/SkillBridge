@@ -1,4 +1,11 @@
 .git/
+.artifacts/
+.project-context/
+reference/
+test-results/
+playwright-report/
+tests/**/bin/
+tests/**/obj/
 .dotnet/
 .dotnet-cli-home/
 .nuget-packages/

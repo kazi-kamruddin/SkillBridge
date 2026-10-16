@@ -1,66 +1,23 @@
-
 @using SkillBridge.Helpers
 @using SkillBridge.Models
 @inject ApplicationDbContext ProfileDb
 
 @if (User.Identity.IsAuthenticated)
 {
-    using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right tw:flex tw:items-center" }))
-    {
-        @Html.AntiForgeryToken()
-
-        <ul class="navbar-nav navbar-right tw:flex tw:items-center tw:gap-2 tw:m-0 tw:list-none tw:p-0">
-            <!-- Profile Picture -->
-            <li class="nav-item tw:list-none">
-                <a class="nav-link tw:flex tw:items-center" href="@Url.Action("Index", "Profile")" title="Manage">
-                    @{ var navProfile = ProfileDb.UserInformations.FirstOrDefault(info => info.UserId == User.Identity.GetUserId()); }
-                    <img src="@ProfileImageHelper.GetProfileImage(navProfile?.ProfileImageUrl, navProfile?.FullName)"
-                         alt="Profile Image"
-                         class="tw:rounded-full tw:me-2"
-                         width="40" height="40" />
-                </a>
-            </li>
-
-            <!-- Logout Button -->
-            <li class="nav-item tw:list-none">
-                <a class="nav-link"
-                   href="javascript:void(0);"
-                   data-ui-toggle="modal"
-                   data-ui-target="#logoutModal"
-                   aria-haspopup="dialog">
-                    Log off
-                </a>
-            </li>
-        </ul>
-    }
-
-    <!-- Logout Confirmation Modal -->
-    <div class="sb-modal"
-         id="logoutModal"
-         tabindex="-1"
-         aria-labelledby="logoutModalLabel"
-         aria-hidden="true">
-        <div class="sb-modal-dialog">
-            <div class="modal-content">
-                <div class="sb-modal-header">
-                    <h5 class="modal-title" id="logoutModalLabel">Confirm Logout</h5>
-                    <button type="button" class="sb-modal-close" data-ui-dismiss="modal" aria-label="Close">×</button>
-                </div>
-                <div class="modal-body">
-                    Are you sure you want to log out?
-                </div>
-                <div class="sb-modal-footer">
-                    <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-secondary tw:bg-sb-sage tw:text-sb-ink" data-ui-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-danger tw:bg-sb-coral tw:text-sb-ink" onclick="document.getElementById('logoutForm').submit()">Log Out</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <li class="nav-item tw:list-none">
+        <a class="nav-link tw:flex tw:items-center" href="@Url.Action("Index", "Profile")" title="Manage">
+            @{ var navProfile = ProfileDb.UserInformations.FirstOrDefault(info => info.UserId == User.Identity.GetUserId()); }
+            <img src="@ProfileImageHelper.GetProfileImage(navProfile?.ProfileImageUrl, navProfile?.FullName)"
+                 alt="Profile Image" class="tw:rounded-full" width="40" height="40" />
+        </a>
+    </li>
+    <li class="nav-item tw:list-none">
+        <button type="button" class="nav-link sb-more-toggle" data-ui-toggle="modal"
+                data-ui-target="#logoutModal" aria-haspopup="dialog">Log off</button>
+    </li>
 }
 else
 {
-    <ul class="navbar-nav navbar-right tw:flex tw:items-center tw:gap-2 tw:m-0 tw:list-none tw:p-0">
-        <li class="tw:list-none">@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink", @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
-        <li class="tw:list-none">@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink", @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
-    </ul>
+    <li class="nav-item tw:list-none">@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink", @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
+    <li class="nav-item tw:list-none">@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink", @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
 }

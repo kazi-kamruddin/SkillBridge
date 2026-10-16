@@ -43,13 +43,15 @@ namespace SkillBridge.Controllers
                     vm.NextActionDescription = "Review the exchange proposal and decide whether to connect.";
                     vm.NextActionUrl = Url.Action("Requests", "Profile");
                 }
-                else if (db.Messages.Any(m => m.ToUserId == userId && !m.IsRead))
+                else if (db.Messages.Any(m => m.ToUserId == userId && !m.IsRead &&
+                    !db.MemberBlocks.Any(b => (b.BlockerId == userId && b.BlockedId == m.FromUserId) ||
+                        (b.BlockedId == userId && b.BlockerId == m.FromUserId))))
                 {
                     vm.NextActionTitle = "You have an unread message";
                     vm.NextActionDescription = "Pick up the conversation with your learning partner.";
                     vm.NextActionUrl = Url.Action("Index", "Messages");
                 }
-                else if (!vm.MySkills.Any(s => s.Status == "Teaching") || !vm.MySkills.Any(s => s.Status == "Learning"))
+                else if (!vm.MySkills.Any(s => s.Status == "Teaching" && s.KnownUpToStage > 0) || !vm.MySkills.Any(s => s.Status == "Learning"))
                 {
                     vm.NextActionTitle = "Add skills to start exchanging";
                     vm.NextActionDescription = "Choose something you can teach and something you want to learn.";
