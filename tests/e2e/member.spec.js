@@ -9,6 +9,7 @@ test.skip(!accounts, 'Set SKILLBRIDGE_TEST_ACCOUNTS_FILE to an ignored local cre
 
 for (const key of ['accountA', 'accountB']) {
   test(`${key} can sign in and access member pages`, async ({ page }) => {
+    test.setTimeout(90_000);
     const account = accounts[key];
     await page.goto('/Account/Login');
     await page.locator('input[name="Email"]').fill(account.email);

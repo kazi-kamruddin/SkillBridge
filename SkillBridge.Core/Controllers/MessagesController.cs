@@ -152,7 +152,8 @@ namespace SkillBridge.Controllers
             if ((string.IsNullOrWhiteSpace(messageText) && image?.Length is not > 0) || messageText.Length > 4000)
                 return StatusCode(400, "Add a message or an image; text can be at most 4000 characters.");
             if (image?.Length > 0 && string.IsNullOrWhiteSpace(messageText)) messageText = "";
-            var imageError = CloudinaryImageService.Validate(image);
+            const long maxChatImageBytes = 4 * 1024 * 1024; // 4 MB limit
+            var imageError = CloudinaryImageService.Validate(image, maxChatImageBytes);
             if (imageError != null) return BadRequest(imageError);
 
             var userId = User.Identity.GetUserId();

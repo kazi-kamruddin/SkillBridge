@@ -354,7 +354,7 @@ body .sb-auth-aside { min-width: 40%; padding: 3rem !important; text-align: cent
 body .sb-auth-aside h2 { max-width: 320px; font-size: clamp(2.1rem, 3.4vw, 3.3rem); font-weight: 900; line-height: 1.05; }
 body .sb-auth-aside p { max-width: 300px; }
 body .sb-auth-symbol { display: grid; place-items: center; width: 90px; height: 90px; margin-bottom: 1.5rem; border: 2px solid rgba(255,255,255,.8); border-radius: 50%; font-size: 3.2rem; line-height: 1; }
-body .sb-register-card { width: min(100%, 510px) !important; padding: clamp(1.5rem, 4vw, 3rem) !important; border-radius: 20px !important; }
+body .sb-register-card { width: min(100%, 940px); border-radius: 20px !important; }
 body .sb-register-card .sb-eyebrow { margin-bottom: .4rem; }
 body .sb-auth-screen .input-group-text { background: var(--bg-color); color: var(--text-color); border-color: var(--border-color); border-radius: 11px 0 0 11px; }
 body .sb-auth-screen .input-group .form-control { border-radius: 0 11px 11px 0; }

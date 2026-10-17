@@ -10,19 +10,20 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
-    --color-sb-paper: #f7f4eb;
-    --color-sb-card: #fffdf8;
-    --color-sb-sage: #dce9df;
-    --color-sb-sage-deep: #b9d0c0;
-    --color-sb-blue: #dfe5f8;
-    --color-sb-blue-strong: #324db2;
-    --color-sb-coral: #e6b6a2;
-    --color-sb-ink: #17242a;
-    --color-sb-muted: #526166;
-    --color-sb-night: #182326;
-    --color-sb-night-card: #243438;
-    --color-sb-night-ink: #f3f0e8;
+    --color-sb-paper: var(--sb-paper);
+    --color-sb-card: var(--sb-card);
+    --color-sb-sage: var(--sb-sage);
+    --color-sb-sage-deep: var(--sb-sage-deep);
+    --color-sb-blue: var(--sb-blue);
+    --color-sb-blue-strong: var(--sb-blue-strong);
+    --color-sb-coral: var(--sb-coral);
+    --color-sb-ink: var(--sb-ink);
+    --color-sb-muted: var(--sb-muted);
+    --color-sb-line: var(--sb-line);
+    --color-sb-night: #0f1416;
+    --color-sb-night-card: #182024;
+    --color-sb-night-ink: #edeae2;
     --font-display: "Trebuchet MS", "Segoe UI", sans-serif;
-    --shadow-sb: 6px 6px 0 #17242a;
-    --shadow-sb-small: 4px 4px 0 #17242a;
+    --shadow-sb: var(--sb-card-shadow);
+    --shadow-sb-small: var(--sb-card-shadow-small);
 }

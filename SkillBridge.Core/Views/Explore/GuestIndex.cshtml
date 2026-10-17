@@ -67,14 +67,14 @@
                         <div class="col-md-6 tw:col-span-12 tw:md:col-span-6 col-lg-4 tw:lg:col-span-4">
                             <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink h-100 tw:h-full shadow-sm">
                                 <div class="card-body tw:p-5">
-                                    <h3 class="h5"><a href="@Url.Action("Detail", "Explore", new { id = skill.SkillId })">@skill.SkillName</a></h3>
+                                    <h3 class="h5"><a class="tw:text-sb-blue-strong tw:dark:text-[#9db2ff] tw:font-extrabold tw:no-underline tw:hover:underline" href="@Url.Action("Detail", "Explore", new { id = skill.SkillId })">@skill.SkillName</a></h3>
                                     @if (skill.Teachers.Any())
                                     {
                                         <p class="small tw:text-sm text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 mb-2 tw:mb-2">Members sharing this skill:</p>
                                         <ul class="mb-0 tw:mb-0">
                                             @foreach (var teacher in skill.Teachers)
                                             {
-                                                <li><a href="@Url.Action("PublicProfile", "Profile", new { id = teacher.UserId })">@teacher.FullName</a></li>
+                                                <li><a class="tw:text-sb-blue-strong tw:dark:text-[#9db2ff] tw:hover:underline" href="@Url.Action("PublicProfile", "Profile", new { id = teacher.UserId })">@teacher.FullName</a></li>
                                             }
                                         </ul>
                                     }
