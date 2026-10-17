@@ -29,6 +29,66 @@ for (const key of ['accountA', 'accountB']) {
   });
 }
 
+test('member routes and chat composer fit a narrow phone', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/Account/Login');
+  await page.locator('input[name="Email"]').fill(accounts.accountA.email);
+  await page.locator('input[name="Password"]').fill(accounts.accountA.password);
+  await page.getByRole('button', { name: 'Sign In' }).click();
+  await expect(page).not.toHaveURL(/\/Account\/Login/i);
+
+  for (const path of ['/', '/Profile', '/Profile/UpdateProfile', '/Explore', '/Interactions', '/Messages', '/Notifications', '/SavedProfiles', '/Communities']) {
+    const response = await page.goto(path);
+    expect(response.status(), `${path} HTTP status`).toBe(200);
+    const pageWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+    expect(pageWidth, `${path} overflows at 320px`).toBeLessThanOrEqual(321);
+    if (path === '/Messages' && await page.locator('.sb-chat-composer').count()) {
+      const composer = await page.locator('.sb-chat-composer').boundingBox();
+      expect(composer.width).toBeGreaterThan(100);
+      expect(composer.x + composer.width).toBeLessThanOrEqual(321);
+    }
+  }
+});
+
+test('phone navigation hides empty badges and logout uses the full viewport', async ({ page }) => {
+  test.setTimeout(60_000);
+  let unreadCount = 0;
+  await page.route('**/Notifications/GetNotifications', route => route.fulfill({ json: { unreadCount, notifications: [] } }));
+  await page.route('**/Messages/UnreadCount', route => route.fulfill({ json: { count: unreadCount } }));
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto('/Account/Login');
+  await page.locator('[name="Email"]').fill(accounts.accountA.email);
+  await page.locator('[name="Password"]').fill(accounts.accountA.password);
+  await page.getByRole('button', { name: 'Sign In' }).click();
+  const navigation = page.getByRole('navigation', { name: 'Main navigation' });
+  await navigation.getByRole('button', { name: 'Toggle navigation' }).click();
+  await expect(page.locator('#messageBadge')).toBeHidden();
+  await expect(page.locator('#notifBadge')).toBeHidden();
+
+  unreadCount = 3;
+  await page.reload();
+  await navigation.getByRole('button', { name: 'Toggle navigation' }).click();
+  await expect(page.locator('#messageBadge')).toHaveText('3');
+  await expect(page.locator('#notifBadge')).toHaveText('3');
+  await navigation.getByRole('button', { name: 'Log off', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Confirm Logout' });
+  await expect(dialog).toBeVisible();
+  const box = await dialog.boundingBox();
+  expect(box.x).toBe(0);
+  expect(box.y).toBe(0);
+  expect(box.width).toBe(320);
+  expect(box.height).toBe(700);
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+  await expect(dialog).toBeHidden();
+  await navigation.getByRole('button', { name: 'Log off', exact: true }).click();
+  await dialog.getByRole('button', { name: 'Log Out', exact: true }).click();
+  await navigation.getByRole('button', { name: 'Toggle navigation' }).click();
+  await expect(navigation.getByRole('link', { name: 'Log in', exact: true })).toBeVisible();
+  await page.goto('/Profile');
+  await expect(page).toHaveURL(/\/Account\/Login/i);
+});
+
 test('exchange pages show profile names without exposing login emails', async ({ browser }) => {
   test.setTimeout(90_000);
   for (const key of ['accountA', 'accountB']) {
@@ -198,6 +258,48 @@ test('accepted test exchange opens its plan and members can chat', async ({ brow
 
   await pages.accountA.close();
   await pages.accountB.close();
+});
+
+test('chat sends stay visible without SignalR and do not duplicate after reconnecting', async ({ browser }) => {
+  test.skip(!allowWrites, 'Set SKILLBRIDGE_MUTATING_TESTS=1 for disposable-account writes.');
+  test.setTimeout(120_000);
+  const partner = await browser.newPage();
+  await partner.goto('/Account/Login');
+  await partner.locator('[name="Email"]').fill(accounts.accountB.email);
+  await partner.locator('[name="Password"]').fill(accounts.accountB.password);
+  await partner.getByRole('button', { name: 'Sign In' }).click();
+  await partner.goto('/Profile');
+  const partnerName = await partner.locator('main h1').first().innerText();
+  await partner.close();
+
+  const page = await browser.newPage();
+  await page.goto('/Account/Login');
+  await page.locator('[name="Email"]').fill(accounts.accountA.email);
+  await page.locator('[name="Password"]').fill(accounts.accountA.password);
+  await page.getByRole('button', { name: 'Sign In' }).click();
+  await page.route('**/chatHub/**', route => route.abort());
+  await page.goto('/Messages');
+  const conversation = page.locator('.sb-chat-list a').filter({ hasText: partnerName });
+  test.skip(await conversation.count() !== 1, 'A conversation between the disposable accounts is required.');
+  await conversation.click();
+  await expect(page.locator('.sb-chat-profile h6')).toHaveText(partnerName);
+
+  const marker = Date.now();
+  for (const mode of ['offline', 'reconnected']) {
+    if (mode === 'reconnected') {
+      await page.unroute('**/chatHub/**');
+      await page.reload();
+      await page.waitForFunction(() => [...performance.getEntriesByType('resource')].some(entry => entry.name.includes('/chatHub/negotiate')));
+    }
+    const text = `Audit chat delivery ${marker} ${mode}`;
+    await page.locator('#messageText').fill(text);
+    await page.locator('#sendMessageForm').getByRole('button', { name: 'Send' }).click();
+    await expect(page.locator('#sendMessageForm button[type="submit"]')).toBeEnabled();
+    await expect(page.locator('.sb-chat-message-mine .sb-chat-bubble').filter({ hasText: text })).toHaveCount(1);
+    await page.reload();
+    await expect(page.locator('.sb-chat-message-mine .sb-chat-bubble').filter({ hasText: text })).toHaveCount(1);
+  }
+  await page.close();
 });
 
 test('test exchange supports meeting planning and milestone notes', async ({ browser }) => {

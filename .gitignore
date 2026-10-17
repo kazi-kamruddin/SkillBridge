@@ -68,6 +68,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Portable project context (kept locally)
+/.project-context/
+/reference/
+
 # Logs
 *.log
 

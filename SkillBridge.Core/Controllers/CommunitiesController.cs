@@ -99,26 +99,34 @@ namespace SkillBridge.Controllers
             var currentUserId = User.Identity.GetUserId();
             bool isMember = db.UserSkills.Any(us => us.UserId == currentUserId && us.SkillId == community.SkillId);
 
-            var posts = db.CommunityPosts
+            var postRows = db.CommunityPosts
                 .Where(p => p.CommunityId == id && !p.IsHidden)
                 .Where(p => q == "" || EF.Functions.ILike(p.Title, "%" + q + "%") ||
                     EF.Functions.ILike(p.Content, "%" + q + "%"))
-                .Include(p => p.Comments)
-                .ToList()
-                .OrderByDescending(p => sort == "active"
-                    ? p.Comments.Where(c => !c.IsHidden).Select(c => c.CreatedAt)
-                        .DefaultIfEmpty(p.CreatedAt).Max()
-                    : p.CreatedAt)
-                .Select(p => new CommunityPostListItemViewModel
+                .Select(p => new
                 {
-                    PostId = p.Id,
+                    p.Id,
                     CommentCount = p.Comments.Count(c => !c.IsHidden),
-                    Title = p.Title,
-                    ImageUrl = p.ImageUrl,
-                    CreatedByFullName = DisplayName(p.CreatedByUserId),
-                    CreatedAt = p.CreatedAt
+                    p.Title,
+                    p.ImageUrl,
+                    p.CreatedByUserId,
+                    p.CreatedAt,
+                    LastActivity = p.Comments.Where(c => !c.IsHidden).Select(c => (DateTime?)c.CreatedAt).Max() ?? p.CreatedAt
                 })
+                .OrderByDescending(p => sort == "active" ? p.LastActivity : p.CreatedAt)
+                .ThenByDescending(p => p.Id)
                 .ToList();
+            var authorIds = postRows.Select(p => p.CreatedByUserId).Distinct().ToList();
+            var authors = db.UserInformations.Where(info => authorIds.Contains(info.UserId)).ToDictionary(info => info.UserId);
+            var posts = postRows.Select(p => new CommunityPostListItemViewModel
+            {
+                PostId = p.Id,
+                CommentCount = p.CommentCount,
+                Title = p.Title,
+                ImageUrl = p.ImageUrl,
+                CreatedByFullName = DisplayName(authors.GetValueOrDefault(p.CreatedByUserId)),
+                CreatedAt = p.CreatedAt
+            }).ToList();
 
 
 
@@ -211,7 +219,8 @@ namespace SkillBridge.Controllers
 
             var currentUserId = User.Identity.GetUserId();
             bool isMember = db.UserSkills.Any(us => us.UserId == currentUserId && us.SkillId == post.Community.SkillId);
-            var commentAuthorIds = post.Comments.Where(c => !c.IsHidden).Select(c => c.CreatedByUserId).Distinct().ToList();
+            var commentAuthorIds = post.Comments.Where(c => !c.IsHidden).Select(c => c.CreatedByUserId)
+                .Append(post.CreatedByUserId).Distinct().ToList();
             var commentAuthors = db.UserInformations.Where(info => commentAuthorIds.Contains(info.UserId))
                 .ToDictionary(info => info.UserId);
 
@@ -222,7 +231,7 @@ namespace SkillBridge.Controllers
                 Title = post.Title,
                 Content = post.Content,
                 ImageUrl = post.ImageUrl,
-                CreatedByUserName = DisplayName(post.CreatedByUserId),
+                CreatedByUserName = DisplayName(commentAuthors.GetValueOrDefault(post.CreatedByUserId)),
                         CreatedAt = post.CreatedAt,
                         IsMember = isMember,
                         IsAuthor = post.CreatedByUserId == currentUserId,
@@ -232,7 +241,7 @@ namespace SkillBridge.Controllers
                     CommentId = c.Id,
                     Content = c.Content,
                     ImageUrl = c.ImageUrl,
-                    CreatedByFullName = DisplayName(c.CreatedByUserId),
+                    CreatedByFullName = DisplayName(commentAuthors.GetValueOrDefault(c.CreatedByUserId)),
                     ProfileImageUrl = commentAuthors.TryGetValue(c.CreatedByUserId, out var author) &&
                         !author.IsHidden && (User.Identity.IsAuthenticated || author.IsPublic)
                         ? ProfileImageHelper.GetProfileImage(author.ProfileImageUrl, author.FullName)
@@ -251,12 +260,6 @@ namespace SkillBridge.Controllers
         }
 
 
-
-        //[HttpGet]
-        //public ActionResult CreateComment()
-        //{
-        //    return RedirectToAction("Index");
-        //}
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -384,9 +387,8 @@ namespace SkillBridge.Controllers
             return RedirectToAction("PostDetails", new { id = postId });
         }
 
-        private string DisplayName(string userId)
+        private string DisplayName(UserInformation info)
         {
-            var info = db.UserInformations.FirstOrDefault(ui => ui.UserId == userId);
             return !User.Identity.IsAuthenticated && (info?.IsPublic != true || info.IsHidden)
                 ? "SkillBridge member" : info?.FullName ?? "SkillBridge member";
         }

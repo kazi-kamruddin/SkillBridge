@@ -4,7 +4,7 @@
 }
 <main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8 sb-community-directory">
     <header class="sb-page-heading sb-community-hero">
-        <span class="sb-eyebrow">Learn out loud</span>
+        <div class="sb-hero-kicker"><span class="sb-icon-tile sb-icon-tile-blue" aria-hidden="true"><svg class="sb-icon"><use href="#sb-i-chat" /></svg></span><span class="sb-eyebrow">Learn out loud</span></div>
         <h1>Find your people.</h1>
         <p>Every skill has a conversation. Explore ideas, ask questions, and grow alongside people learning the same thing.</p>
         @if (Model.IsGuest)
@@ -35,13 +35,13 @@
     {
         categoryIndex++;
         var categoryName = category.Key.ToLowerInvariant();
-        var icon = categoryName.Contains("design") || categoryName.Contains("art") ? "fa-palette"
-            : categoryName.Contains("program") || categoryName.Contains("tech") || categoryName.Contains("software") ? "fa-code"
-            : categoryName.Contains("language") || categoryName.Contains("communication") ? "fa-language"
-            : categoryName.Contains("business") || categoryName.Contains("management") ? "fa-briefcase"
-            : categoryName.Contains("science") || categoryName.Contains("math") ? "fa-flask" : "fa-shapes";
+        var symbol = categoryName.Contains("design") || categoryName.Contains("art") ? "✦"
+            : categoryName.Contains("program") || categoryName.Contains("tech") || categoryName.Contains("software") ? "</>"
+            : categoryName.Contains("language") || categoryName.Contains("communication") ? "文"
+            : categoryName.Contains("business") || categoryName.Contains("management") ? "▣"
+            : categoryName.Contains("science") || categoryName.Contains("math") ? "⚗" : "✳";
         <details class="sb-community-category" open>
-            <summary><span class="sb-category-symbol" aria-hidden="true"><i class="fas @icon"></i></span><span class="sb-category-title"><span class="sb-eyebrow">CATEGORY @categoryIndex.ToString("00")</span><strong>@category.Key</strong></span><span class="sb-category-count">@category.Count() communities</span><span class="sb-category-toggle" aria-hidden="true">⌄</span></summary>
+            <summary><span class="sb-category-symbol" aria-hidden="true">@symbol</span><span class="sb-category-title"><span class="sb-eyebrow">CATEGORY @categoryIndex.ToString("00")</span><strong>@category.Key</strong></span><span class="sb-category-count">@category.Count() communities</span><span class="sb-category-toggle" aria-hidden="true">⌄</span></summary>
             <div class="sb-community-grid">
                 @foreach (var item in category)
                 {

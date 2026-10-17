@@ -531,6 +531,7 @@ namespace SkillBridge.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult EndInteraction(int id)
         {
+            using var transaction = db.Database.BeginTransaction();
             var interaction = db.Interactions
                 .Include(i => i.Sessions)
                 .Include(i => i.User1)
@@ -547,26 +548,31 @@ namespace SkillBridge.Controllers
                 interaction.Sessions.Any(s => !s.User1Confirmed || !s.User2Confirmed))
                 return StatusCode(409);
 
+            var completedAt = DateTime.Now;
+            var claimed = db.Interactions.Where(i => i.Id == id && i.Status == "Ongoing")
+                .ExecuteUpdate(setters => setters.SetProperty(i => i.Status, "Completed")
+                    .SetProperty(i => i.EndedAt, completedAt));
+            if (claimed != 1) return StatusCode(409);
+
             UpdateUserSkill(interaction.User1Id, interaction.SkillFromRequesterId, interaction);
             UpdateUserSkill(interaction.User2Id, interaction.SkillFromTeacherId, interaction);
 
             interaction.Status = "Completed";
-            interaction.EndedAt = DateTime.Now;
+            interaction.EndedAt = completedAt;
+            db.UserRatings.Where(r => r.UserId == interaction.User1Id || r.UserId == interaction.User2Id)
+                .ExecuteUpdate(setters => setters.SetProperty(r => r.InteractionsCompleted, r => r.InteractionsCompleted + 1));
 
-            var user1Rating = db.UserRatings.FirstOrDefault(r => r.UserId == interaction.User1Id);
-            var user2Rating = db.UserRatings.FirstOrDefault(r => r.UserId == interaction.User2Id);
-
-            if (user1Rating != null) user1Rating.InteractionsCompleted += 1;
-            if (user2Rating != null) user2Rating.InteractionsCompleted += 1;
-
-            db.SaveChanges();
             CreateFeedbackNotification(interaction);
+            db.SaveChanges();
+            transaction.Commit();
             return RedirectToAction("Index");
         }
 
         private void UpdateUserSkill(string userId, int skillId, Interaction interaction)
         {
             if (skillId == 0) return;
+            var completedLevel = MaxStageCompleted(interaction, skillId);
+            if (completedLevel == 0) return;
 
             var userSkill = db.UserSkills.FirstOrDefault(us => us.UserId == userId && us.SkillId == skillId && us.Status == "Teaching");
 
@@ -581,7 +587,7 @@ namespace SkillBridge.Controllers
                 db.UserSkills.Add(userSkill);
             }
 
-            userSkill.KnownUpToStage = Math.Max(userSkill.KnownUpToStage ?? 0, MaxStageCompleted(interaction, skillId));
+            userSkill.KnownUpToStage = Math.Max(userSkill.KnownUpToStage ?? 0, completedLevel);
             userSkill.Status = "Teaching";
         }
 
@@ -644,6 +650,7 @@ namespace SkillBridge.Controllers
             }
 
             var currentUserId = User.Identity.GetUserId();
+            using var transaction = db.Database.BeginTransaction();
             var interaction = db.Interactions.Find(model.InteractionId);
             if (interaction == null)
                 return Json(new { success = false, errors = new[] { "Interaction not found." } });
@@ -667,13 +674,19 @@ namespace SkillBridge.Controllers
             };
 
             db.Ratings.Add(rating);
-
-            var recipientStats = db.UserRatings.FirstOrDefault(ur => ur.UserId == recipientId);
-            if (recipientStats != null)
+            try
             {
-                recipientStats.RatingsReceived += 1;
-                recipientStats.AccumulatedRating += rating.RatingValue;
+                db.SaveChanges();
             }
+            catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException
+                { SqlState: Npgsql.PostgresErrorCodes.UniqueViolation })
+            {
+                return Json(new { success = false, errors = new[] { "You already rated this interaction." } });
+            }
+            db.UserRatings.Where(ur => ur.UserId == recipientId)
+                .ExecuteUpdate(setters => setters
+                    .SetProperty(ur => ur.RatingsReceived, ur => ur.RatingsReceived + 1)
+                    .SetProperty(ur => ur.AccumulatedRating, ur => ur.AccumulatedRating + rating.RatingValue));
 
             db.Notifications.Add(new Notification
             {
@@ -690,6 +703,7 @@ namespace SkillBridge.Controllers
             if (notif != null) db.Notifications.Remove(notif);
 
             db.SaveChanges();
+            transaction.Commit();
 
             return Json(new { success = true });
         }
@@ -708,6 +722,10 @@ namespace SkillBridge.Controllers
                 .Where(n => n.InteractionSession.InteractionId == interaction.Id)
                 .ToList().GroupBy(n => n.InteractionSessionId)
                 .ToDictionary(group => group.Key, group => group.ToList());
+            var fallbackSkillIds = interaction.Sessions.Where(s => s.Title == null).Select(s => s.SkillId).Distinct().ToList();
+            var descriptions = db.SkillStages.Where(s => fallbackSkillIds.Contains(s.SkillId))
+                .Select(s => new { s.SkillId, s.StageNumber, s.Description }).ToList()
+                .ToDictionary(s => (s.SkillId, s.StageNumber), s => s.Description);
 
             var sessionsBySkill = interaction.Sessions
                 .OrderBy(s => s.StageNumber)
@@ -718,10 +736,7 @@ namespace SkillBridge.Controllers
                 bool nextStagePending = true;
                 foreach (var session in skillGroup)
                 {
-                    var stageEntity = db.SkillStages
-                        .FirstOrDefault(st => st.SkillId == session.SkillId && st.StageNumber == session.StageNumber);
-
-                    string description = stageEntity != null ? stageEntity.Description : "(no description)";
+                    var description = descriptions.GetValueOrDefault((session.SkillId, session.CatalogStageNumber ?? session.StageNumber), "(no description)");
 
                     bool confirmed = (session.Interaction.User1Id == userId && session.User1Confirmed) ||
                                      (session.Interaction.User2Id == userId && session.User2Confirmed);
@@ -813,7 +828,6 @@ namespace SkillBridge.Controllers
 
             db.Notifications.Add(notif1);
             db.Notifications.Add(notif2);
-            db.SaveChanges();
         }
 
 

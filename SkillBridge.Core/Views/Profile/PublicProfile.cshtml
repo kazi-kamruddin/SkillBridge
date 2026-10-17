@@ -11,7 +11,7 @@
 
     <header class="sb-profile-hero">
         <div class="sb-profile-hero-copy">
-            <span class="sb-eyebrow">MEET YOUR NEXT LEARNING PARTNER</span>
+            <div class="sb-hero-kicker"><span class="sb-icon-tile sb-icon-tile-blue" aria-hidden="true"><svg class="sb-icon"><use href="#sb-i-people" /></svg></span><span class="sb-eyebrow">MEET YOUR NEXT LEARNING PARTNER</span></div>
             <h1 id="title">@Model.FullName</h1>
             @if (!string.IsNullOrWhiteSpace(Model.Profession) || !string.IsNullOrWhiteSpace(Model.Location)) { <p class="sb-profile-meta">@string.Join(" · ", new[] { Model.Profession, Model.Location }.Where(s => !string.IsNullOrWhiteSpace(s)))</p> }
             @if (!string.IsNullOrWhiteSpace(Model.Bio)) { <p class="sb-profile-bio">@Model.Bio</p> }
