@@ -79,3 +79,14 @@ yarn-error.log*
 *.coverage
 *.coveragexml
 TestResult*/
+
+# AI Agent files and skills
+.agents/
+.agent/
+_agents/
+_agent/
+skills/
+AGENTS.md
+AGENT.md
+agent.md
+GEMINI.md

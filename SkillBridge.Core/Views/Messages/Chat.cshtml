@@ -85,11 +85,17 @@
                 @Html.Hidden("conversationId", (string)conversationId)
 
                 <label class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink mb-0 tw:mb-0" for="chatImage" title="Attach an image">📷</label>
-                <input type="file" id="chatImage" name="image" class="sb-chat-file-input" accept="image/jpeg,image/png,image/webp" aria-label="Attach an image (up to 5 MB)" />
+                <input type="file" id="chatImage" name="image" class="sb-chat-file-input" accept="image/jpeg,image/png,image/webp" aria-label="Attach an image (up to 4 MB)" />
                 <div class="sb-chat-composer">
+                    <div id="chatImageError" class="sb-chat-image-error" hidden role="alert">
+                        <span class="sb-chat-error-icon" aria-hidden="true">⚠️</span>
+                        <span id="chatImageErrorText" class="sb-chat-error-text"></span>
+                        <button id="dismissChatImageError" type="button" class="btn sb-chat-error-dismiss" aria-label="Dismiss error" title="Dismiss error"><span aria-hidden="true">×</span></button>
+                    </div>
                     <div id="chatImagePreview" class="sb-chat-image-preview" hidden>
                         <img id="chatImageThumbnail" alt="Selected image preview" />
                         <span id="chatImageName"></span>
+                        <span id="chatImageSize" class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 ms-1 small"></span>
                         <button id="removeChatImage" type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm btn-outline-secondary tw:bg-sb-card tw:text-sb-ink" aria-label="Remove attached image" title="Remove attached image"><span aria-hidden="true">×</span></button>
                     </div>
                     <textarea id="messageText" name="messageText" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" rows="1" maxlength="4000" autocomplete="off" autocorrect="on" spellcheck="true" placeholder="Type your message..."></textarea>
@@ -131,6 +137,8 @@
             var token = $('#sendMessageForm input[name="__RequestVerificationToken"]').val();
             var imagePreviewUrl = null;
             var sending = false;
+            var MAX_IMAGE_BYTES = 4 * 1024 * 1024; // 4 MB limit
+
             function scrollToLatest() {
                 var pane = document.getElementById('messagePane');
                 if (pane) pane.scrollTop = pane.scrollHeight;
@@ -138,6 +146,7 @@
             scrollToLatest();
             $(window).on('load', scrollToLatest);
             $('#messagePane img').on('load', scrollToLatest);
+
             function updateConversationPreview(text, hasImage, mine, sentAt) {
                 var preview = (text || '').trim();
                 if (preview) preview = mine ? 'You: ' + preview : preview;
@@ -148,6 +157,22 @@
                 var list = item.parent();
                 item.prependTo(list);
             }
+
+            function showImageError(msg) {
+                clearImagePreview(true);
+                $('#chatImageErrorText').text(msg);
+                $('#chatImageError').removeAttr('hidden').show();
+            }
+
+            function hideImageError() {
+                $('#chatImageError').prop('hidden', true).hide();
+                $('#chatImageErrorText').text('');
+            }
+
+            $('#dismissChatImageError').on('click', function () {
+                hideImageError();
+            });
+
             function clearImagePreview(clearInput) {
                 if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
                 imagePreviewUrl = null;
@@ -155,7 +180,9 @@
                 $('#chatImagePreview').prop('hidden', true);
                 $('#chatImageThumbnail').removeAttr('src');
                 $('#chatImageName').text('');
+                $('#chatImageSize').text('');
             }
+
             function markRead() {
                 if (document.hidden) return;
                 $.post('@Url.Action("MarkRead", "Messages")',
@@ -165,6 +192,7 @@
                     });
             }
             markRead();
+
             const connection = new signalR.HubConnectionBuilder()
                 .withUrl('/chatHub')
                 .withAutomaticReconnect()
@@ -198,6 +226,7 @@
 
                 if (followLatest) scrollToLatest();
             }
+
             connection.on('receiveMessage', renderMessage);
             document.addEventListener('visibilitychange', function () { if (!document.hidden) markRead(); });
 
@@ -224,6 +253,16 @@
                 var $form = $(this);
                 if (sending) return;
                 if (!$('#messageText').val().trim() && !$('#chatImage')[0].files.length) return;
+
+                if ($('#chatImage')[0].files.length) {
+                    var f = $('#chatImage')[0].files[0];
+                    if (f.size > MAX_IMAGE_BYTES) {
+                        var sizeMB = (f.size / (1024 * 1024)).toFixed(1);
+                        showImageError('Image exceeds the 4 MB limit (selected: ' + sizeMB + ' MB). Please choose a smaller image.');
+                        return;
+                    }
+                }
+
                 var data = new FormData(this);
                 sending = true;
                 $form.find('button, textarea, input[type="file"]').prop('disabled', true);
@@ -232,9 +271,18 @@
                         renderMessage(result);
                         $("#messageText").val("").trigger('input');
                         clearImagePreview(true);
+                        hideImageError();
                     })
                     .fail(function (response) {
-                        alert(response.status === 429 ? "Too many messages. Please wait a minute before trying again." : "Failed to send message. Your draft has been kept.");
+                        if (response.status === 400 && response.responseText) {
+                            showImageError(response.responseText);
+                        } else if (response.status === 429) {
+                            alert("Too many messages. Please wait a minute before trying again.");
+                        } else if (response.status === 502) {
+                            showImageError("The image could not be uploaded. Please try a smaller image.");
+                        } else {
+                            alert("Failed to send message. Your draft has been kept.");
+                        }
                     })
                     .always(function () {
                         sending = false;
@@ -242,21 +290,48 @@
                         $('#messageText').focus();
                     });
             });
+
             $('#chatImage').on('change', function () {
+                hideImageError();
                 if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
                 imagePreviewUrl = null;
                 if (!this.files.length) { clearImagePreview(false); return; }
                 var file = this.files[0];
+
+                if (file.size > MAX_IMAGE_BYTES) {
+                    var sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+                    showImageError('Image exceeds the 4 MB limit (selected: ' + sizeMB + ' MB). Please choose a smaller image.');
+                    return;
+                }
+
+                var ext = (file.name.split('.').pop() || '').toLowerCase();
+                var validExts = ['jpg', 'jpeg', 'png', 'webp'];
+                var validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+                if ((file.type && !validTypes.includes(file.type.toLowerCase())) && !validExts.includes(ext)) {
+                    showImageError('Please choose a valid JPEG, PNG, or WebP image.');
+                    return;
+                }
+
                 imagePreviewUrl = URL.createObjectURL(file);
                 $('#chatImageThumbnail').attr('src', imagePreviewUrl);
                 $('#chatImageName').text(file.name);
+                var formattedSize = file.size >= 1024 * 1024
+                    ? (file.size / (1024 * 1024)).toFixed(1) + ' MB'
+                    : Math.round(file.size / 1024) + ' KB';
+                $('#chatImageSize').text('(' + formattedSize + ')');
                 $('#chatImagePreview').prop('hidden', false);
             });
-            $('#removeChatImage').on('click', function () { clearImagePreview(true); });
+
+            $('#removeChatImage').on('click', function () {
+                hideImageError();
+                clearImagePreview(true);
+            });
+
             $('#messageText').on('input', function () {
                 this.style.height = 'auto';
                 this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             });
+
             $(window).on('beforeunload', function () {
                 if (imagePreviewUrl) URL.revokeObjectURL(imagePreviewUrl);
             });
@@ -285,4 +360,10 @@
     .sb-chat-image-preview img { flex:0 0 auto; width:52px; height:52px; object-fit:cover; border-radius:8px; }
     .sb-chat-image-preview span { min-width:0; flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-color); font-size:.85rem; }
     .sb-chat-image-preview .btn { flex-shrink:0; padding:.35rem .7rem; }
+    .sb-chat-image-error { display:flex; align-items:center; gap:.5rem; padding:.45rem .75rem; margin-bottom:.35rem; background:#fdf2f2; border:2px solid #c93b2b; border-radius:12px; color:#9c271d; font-size:.85rem; font-weight:750; box-shadow:2px 2px 0 rgba(201,59,43,.25); }
+    .sb-chat-image-error[hidden] { display:none !important; }
+    .sb-chat-image-error .sb-chat-error-icon { font-size:1rem; flex:0 0 auto; }
+    .sb-chat-image-error .sb-chat-error-text { flex:1 1 auto; overflow-wrap:anywhere; }
+    .sb-chat-image-error .sb-chat-error-dismiss { flex:0 0 auto; padding:0 .4rem; font-size:1.2rem; line-height:1; border:1px solid currentColor; border-radius:6px; background:transparent; color:inherit; cursor:pointer; }
+    body[data-theme="dark"] .sb-chat-image-error { background:#331a17; border-color:#e05244; color:#ff9e94; box-shadow:2px 2px 0 #180907; }
 </style> }

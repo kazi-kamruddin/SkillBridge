@@ -3,6 +3,21 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem('theme');
+                var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+                if (saved === 'dark' || (!saved && prefersDark)) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) { }
+        })();
+    </script>
     <title>@ViewBag.Title - SkillBridge</title>
     <link rel="icon" type="image/svg+xml" href="~/favicon.svg" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -33,24 +48,27 @@
             --border-radius: 8px;
         }
 
+        :root[data-theme="dark"],
+        html[data-theme="dark"],
+        body[data-theme="dark"],
         [data-theme="dark"] {
             /* Dark theme variables */
-            --primary-color: #5a6cff;
-            --primary-dark: #4a5bd9;
-            --secondary-color: #4a5bd9;
-            --accent-color: #6a8eff;
+            --primary-color: #9cb3ff;
+            --primary-dark: #c0d0ff;
+            --secondary-color: #8fa5ff;
+            --accent-color: #8ab4f8;
             --success-color: #5ed3f0;
             --warning-color: #ff4d8d;
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #e4e4e4;
-            --text-muted: #a0a0a0;
-            --border-color: #2a2a2a;
-            --navbar-bg: #1a1a1a;
-            --footer-bg: #0d0d0d;
-            --footer-text: #e4e4e4;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.3);
+            --bg-color: #0f1416;
+            --card-bg: #182024;
+            --text-color: #edeae2;
+            --text-muted: #93a7ad;
+            --border-color: #3d525a;
+            --navbar-bg: #12181b;
+            --footer-bg: #0b0f11;
+            --footer-text: #edeae2;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
         }
 
         a, button, .btn, .card, .dashboard-card, .interaction-card, .nav-link, .theme-toggle {
@@ -526,6 +544,126 @@
 
     <script>
         // Small site-owned interaction layer; visual styling lives in Tailwind and app CSS.
+        // Show / Hide Password toggle
+        document.addEventListener('click', function (event) {
+            const toggleBtn = event.target.closest('.sb-password-toggle');
+            if (!toggleBtn) return;
+
+            event.preventDefault();
+            const group = toggleBtn.closest('.input-group');
+            if (!group) return;
+
+            const input = group.querySelector('input');
+            if (!input) return;
+
+            const eyeIcon = toggleBtn.querySelector('.sb-eye-icon');
+            const eyeOffIcon = toggleBtn.querySelector('.sb-eye-off-icon');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                toggleBtn.setAttribute('aria-label', 'Hide password');
+                toggleBtn.setAttribute('title', 'Hide password');
+                if (eyeIcon) eyeIcon.classList.add('tw:hidden');
+                if (eyeOffIcon) eyeOffIcon.classList.remove('tw:hidden');
+            } else {
+                input.type = 'password';
+                toggleBtn.setAttribute('aria-label', 'Show password');
+                toggleBtn.setAttribute('title', 'Show password');
+                if (eyeIcon) eyeIcon.classList.remove('tw:hidden');
+                if (eyeOffIcon) eyeOffIcon.classList.add('tw:hidden');
+            }
+        });
+
+        // Smooth sliding & morphing transition between Login and Register
+        (function () {
+            let isTransitioning = false;
+
+            async function switchAuthPage(targetUrl, direction) {
+                if (isTransitioning) return;
+                isTransitioning = true;
+
+                const currentScreen = document.querySelector('.sb-auth-screen');
+                const currentCard = currentScreen?.querySelector('.sb-auth-card');
+                if (!currentScreen || !currentCard) {
+                    window.location.href = targetUrl;
+                    return;
+                }
+
+                try {
+                    const fetchPromise = fetch(targetUrl, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    }).then(res => {
+                        if (!res.ok) throw new Error('Network error');
+                        return res.text();
+                    });
+
+                    const animClass = direction === 'register' ? 'is-switching-to-register' : 'is-switching-to-login';
+                    currentCard.classList.add(animClass);
+
+                    const [html] = await Promise.all([
+                        fetchPromise,
+                        new Promise(resolve => setTimeout(resolve, 360))
+                    ]);
+
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newCard = doc.querySelector('.sb-auth-card');
+                    const newTitle = doc.title;
+
+                    if (!newCard) {
+                        window.location.href = targetUrl;
+                        return;
+                    }
+
+                    newCard.classList.add('is-incoming');
+                    currentCard.replaceWith(newCard);
+
+                    requestAnimationFrame(() => {
+                        newCard.classList.add('is-incoming-active');
+                        setTimeout(() => {
+                            newCard.classList.remove('is-incoming', 'is-incoming-active');
+                            isTransitioning = false;
+                        }, 260);
+                    });
+
+                    if (window.location.pathname.toLowerCase() !== new URL(targetUrl, window.location.href).pathname.toLowerCase()) {
+                        window.history.pushState({ authPage: true }, '', targetUrl);
+                    }
+                    if (newTitle) {
+                        document.title = newTitle;
+                    }
+
+                    if (window.jQuery && window.jQuery.validator && window.jQuery.validator.unobtrusive) {
+                        window.jQuery.validator.unobtrusive.parse('form');
+                    }
+                } catch (err) {
+                    window.location.href = targetUrl;
+                }
+            }
+
+            document.addEventListener('click', function (e) {
+                const switchLink = e.target.closest('.sb-auth-switch-link');
+                if (!switchLink) return;
+
+                if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+
+                e.preventDefault();
+                const targetUrl = switchLink.getAttribute('href');
+                const targetType = switchLink.getAttribute('data-auth-target') ||
+                    (targetUrl.toLowerCase().includes('register') ? 'register' : 'login');
+                switchAuthPage(targetUrl, targetType);
+            });
+
+            window.addEventListener('popstate', function () {
+                const path = window.location.pathname.toLowerCase();
+                if (path.includes('/account/login')) {
+                    switchAuthPage(window.location.href, 'login');
+                } else if (path.includes('/account/register')) {
+                    switchAuthPage(window.location.href, 'register');
+                }
+            });
+        })();
+
         function closeSkillBridgeModal(modal, returnFocus) {
             modal.classList.remove('is-open');
             modal.setAttribute('aria-hidden', 'true');
@@ -667,19 +805,23 @@
             }
 
             function enableDarkMode() {
+                document.documentElement.setAttribute("data-theme", "dark");
+                document.documentElement.classList.add("dark");
                 body.attr("data-theme", "dark");
                 localStorage.setItem("theme", "dark");
                 toggleBtn.attr("title", "Switch to Light Mode");
             }
 
             function enableLightMode() {
+                document.documentElement.removeAttribute("data-theme");
+                document.documentElement.classList.remove("dark");
                 body.removeAttr("data-theme");
                 localStorage.setItem("theme", "light");
                 toggleBtn.attr("title", "Switch to Dark Mode");
             }
 
             toggleBtn.on("click", function () {
-                if (body.attr("data-theme") === "dark") {
+                if (document.documentElement.getAttribute("data-theme") === "dark" || body.attr("data-theme") === "dark") {
                     enableLightMode();
                 } else {
                     enableDarkMode();
