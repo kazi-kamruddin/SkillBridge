@@ -1,8 +1,9 @@
-
 using SkillBridge.Models;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
@@ -20,19 +21,20 @@ namespace SkillBridge.Controllers
 
         ////////////////////////////////////////////////////////////////////////////
         [AllowAnonymous]
-        public ActionResult Index(string skillFilter = "", int stageFilter = 0, string locationFilter = "")
+        public async Task<ActionResult> Index(string skillFilter = "", int stageFilter = 0, string locationFilter = "")
         {
             if (!User.Identity.IsAuthenticated)
-                return Skills("");
+                return await Skills("");
 
             var currentUserId = User.Identity.GetUserId();
-            if (!db.UserInformations.Any(info => info.UserId == currentUserId))
+            if (!await db.UserInformations.AsNoTracking().AnyAsync(info => info.UserId == currentUserId))
                 return RedirectToAction("Index", "CompleteProfile");
 
-            var currentUserSkills = db.UserSkills
+            var currentUserSkills = await db.UserSkills
+                .AsNoTracking()
                 .Include(us => us.Skill.SkillStages)
                 .Where(us => us.UserId == currentUserId)
-                .ToList();
+                .ToListAsync();
 
             var teachingSkillsIds = currentUserSkills
                 .Where(us => us.Status == "Teaching" && us.KnownUpToStage > 0)
@@ -44,20 +46,29 @@ namespace SkillBridge.Controllers
                 .Select(us => new { us.SkillId, us.Skill.Name })
                 .ToList();
 
-
-            var otherUsers = db.UserInformations
+            // Cap candidate pool to avoid unbounded memory exhaustion while preserving high match quality
+            var otherUsers = await db.UserInformations
+                .AsNoTracking()
                 .Where(info => info.UserId != currentUserId && !info.IsHidden)
                 .Where(info => !db.MemberBlocks.Any(block =>
                     (block.BlockerId == currentUserId && block.BlockedId == info.UserId) ||
                     (block.BlockedId == currentUserId && block.BlockerId == info.UserId)))
+                .Take(200)
                 .Select(info => new { Id = info.UserId, Info = info })
-                .ToList();
+                .ToListAsync();
+
             var otherIds = otherUsers.Select(user => user.Id).ToList();
-            var skillsByUser = db.UserSkills.Include(us => us.Skill.SkillStages)
-                .Where(us => otherIds.Contains(us.UserId)).ToList()
-                .ToLookup(us => us.UserId);
-            var ratingsByUser = db.UserRatings.Where(rating => otherIds.Contains(rating.UserId))
-                .ToDictionary(rating => rating.UserId);
+            var skillsByUserRaw = await db.UserSkills
+                .AsNoTracking()
+                .Include(us => us.Skill.SkillStages)
+                .Where(us => otherIds.Contains(us.UserId))
+                .ToListAsync();
+            var skillsByUser = skillsByUserRaw.ToLookup(us => us.UserId);
+
+            var ratingsByUser = await db.UserRatings
+                .AsNoTracking()
+                .Where(rating => otherIds.Contains(rating.UserId))
+                .ToDictionaryAsync(rating => rating.UserId);
 
             var bestMatches = new List<PublicProfileViewModel>();
             var partialMatches = new List<PublicProfileViewModel>();
@@ -125,8 +136,6 @@ namespace SkillBridge.Controllers
                         }).ToList()
                 };
 
-
-
                 if ((!string.IsNullOrEmpty(skillFilter) || stageFilter > 0) &&
                     !profileVm.SkillsToTeach.Any(s =>
                         (string.IsNullOrEmpty(skillFilter) || s.SkillName == skillFilter) && s.Stage >= stageFilter))
@@ -150,9 +159,11 @@ namespace SkillBridge.Controllers
                 .ThenByDescending(p => p.SkillsToTeach.Count)
                 .ToList();
 
+            var maxStage = await db.SkillStages.AsNoTracking().MaxAsync(s => (int?)s.StageNumber);
+
             var model = new ExploreViewModel
             {
-                MaxCatalogStage = db.SkillStages.Max(s => (int?)s.StageNumber) ?? 7,
+                MaxCatalogStage = maxStage ?? 7,
                 TimeZones = bestMatches.Concat(partialMatches)
                     .Select(m => m.TimeZoneId).Where(zone => !string.IsNullOrWhiteSpace(zone))
                     .Distinct().OrderBy(zone => zone).ToList(),
@@ -168,24 +179,35 @@ namespace SkillBridge.Controllers
         }
 
         [AllowAnonymous]
-        public ActionResult Skills(string q = "")
+        public async Task<ActionResult> Skills(string q = "")
         {
             q = (q ?? "").Trim();
             if (q.Length > 100) q = q[..100];
             var currentUserId = User.Identity.GetUserId();
-            var publicTeachers = (from userSkill in db.UserSkills
-                                  join info in db.UserInformations on userSkill.UserId equals info.UserId
+            var publicTeachers = await (from userSkill in db.UserSkills.AsNoTracking()
+                                  join info in db.UserInformations.AsNoTracking() on userSkill.UserId equals info.UserId
                                   where userSkill.Status == "Teaching" && info.IsPublic && !info.IsHidden
-                                  select new { userSkill.SkillId, info.UserId, info.FullName }).ToList();
-            var skills = db.Skills.Include(s => s.SkillCategory).Include(s => s.SkillStages).ToList();
+                                  select new { userSkill.SkillId, info.UserId, info.FullName }).ToListAsync();
+            var skills = await db.Skills.AsNoTracking()
+                .Include(s => s.SkillCategory)
+                .Include(s => s.SkillStages)
+                .ToListAsync();
             var catalogEditorEmail = Environment.GetEnvironmentVariable("SKILLBRIDGE_MODERATOR_EMAIL");
+            var canReview = currentUserId != null && !string.IsNullOrWhiteSpace(catalogEditorEmail) &&
+                await db.Users.AsNoTracking().AnyAsync(u => u.Id == currentUserId && u.Email.ToLower() == catalogEditorEmail.Trim().ToLower());
+
+            List<SkillSuggestion> mySuggestions = currentUserId == null ? new() : await db.SkillSuggestions
+                .AsNoTracking()
+                .Where(s => s.UserId == currentUserId)
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(10)
+                .ToListAsync();
+
             var model = new GuestExploreViewModel
             {
                 Query = q,
-                CanReviewSuggestions = currentUserId != null && !string.IsNullOrWhiteSpace(catalogEditorEmail) &&
-                    db.Users.Any(u => u.Id == currentUserId && u.Email.ToLower() == catalogEditorEmail.Trim().ToLower()),
-                MySuggestions = currentUserId == null ? new() : db.SkillSuggestions
-                    .Where(s => s.UserId == currentUserId).OrderByDescending(s => s.CreatedAt).Take(10).ToList(),
+                CanReviewSuggestions = canReview,
+                MySuggestions = mySuggestions,
                 Skills = SkillSearch.Rank(skills, q).Select(skill => new GuestSkillViewModel
                 {
                     SkillId = skill.Id,
@@ -199,20 +221,30 @@ namespace SkillBridge.Controllers
         }
 
         [AllowAnonymous]
-        public ActionResult Detail(int id)
+        public async Task<ActionResult> Detail(int id)
         {
-            var skill = db.Skills.Include(s => s.SkillCategory).Include(s => s.SkillStages)
-                .FirstOrDefault(s => s.Id == id);
+            var skill = await db.Skills.AsNoTracking()
+                .Include(s => s.SkillCategory)
+                .Include(s => s.SkillStages)
+                .FirstOrDefaultAsync(s => s.Id == id);
             if (skill == null) return NotFound();
             var userId = User.Identity.GetUserId();
-            var teachers = (from userSkill in db.UserSkills
-                            join info in db.UserInformations on userSkill.UserId equals info.UserId
+            var teachersRaw = await (from userSkill in db.UserSkills.AsNoTracking()
+                            join info in db.UserInformations.AsNoTracking() on userSkill.UserId equals info.UserId
                             where userSkill.SkillId == id && userSkill.Status == "Teaching" &&
                                 userSkill.KnownUpToStage > 0 && !info.IsHidden &&
                                 (info.IsPublic || userId != null) && info.UserId != userId
-                            select new { info.UserId, info.FullName }).ToList()
+                            select new { info.UserId, info.FullName }).ToListAsync();
+
+            var teachers = teachersRaw
                 .Where(t => userId == null || !BlockRules.EitherBlocked(db, userId, t.UserId))
                 .Select(t => new GuestTeacherViewModel { UserId = t.UserId, FullName = t.FullName }).ToList();
+
+            var communityId = await db.Communities.AsNoTracking()
+                .Where(c => c.SkillId == id)
+                .Select(c => (int?)c.Id)
+                .FirstOrDefaultAsync();
+
             return View(new SkillDetailViewModel
             {
                 SkillId = skill.Id,
@@ -221,12 +253,12 @@ namespace SkillBridge.Controllers
                 CategoryName = skill.SkillCategory?.Name,
                 Stages = skill.SkillStages.OrderBy(s => s.StageNumber).ToList(),
                 Teachers = teachers,
-                CommunityId = db.Communities.Where(c => c.SkillId == id).Select(c => (int?)c.Id).FirstOrDefault()
+                CommunityId = communityId
             });
         }
 
         [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        public ActionResult SuggestSkill(string name, string categoryName, string reason)
+        public async Task<ActionResult> SuggestSkill(string name, string categoryName, string reason)
         {
             var userId = User.Identity.GetUserId();
             name = (name ?? "").Trim();
@@ -238,12 +270,12 @@ namespace SkillBridge.Controllers
                 TempData["SkillNotice"] = "Add a skill name, category and short reason within the field limits.";
                 return RedirectToAction(nameof(Skills));
             }
-            if (db.Skills.Any(s => s.Name.ToLower() == name.ToLower()))
+            if (await db.Skills.AsNoTracking().AnyAsync(s => s.Name.ToLower() == name.ToLower()))
             {
                 TempData["SkillNotice"] = "That skill is already in the directory.";
                 return RedirectToAction(nameof(Skills));
             }
-            if (db.SkillSuggestions.Any(s => s.UserId == userId && s.Status == "Pending" &&
+            if (await db.SkillSuggestions.AsNoTracking().AnyAsync(s => s.UserId == userId && s.Status == "Pending" &&
                 s.Name.ToLower() == name.ToLower()))
             {
                 TempData["SkillNotice"] = "You already suggested that skill.";
@@ -253,7 +285,7 @@ namespace SkillBridge.Controllers
             {
                 UserId = userId, Name = name, CategoryName = categoryName, Reason = reason
             });
-            db.SaveChanges();
+            await db.SaveChangesAsync();
             TempData["SkillNotice"] = "Thanks. Your suggestion is in review.";
             return RedirectToAction(nameof(Skills));
         }

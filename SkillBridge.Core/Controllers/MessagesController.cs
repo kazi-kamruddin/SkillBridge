@@ -247,7 +247,7 @@ namespace SkillBridge.Controllers
         public async Task<IActionResult> UnreadCount()
         {
             var userId = User.Identity.GetUserId();
-            var count = await db.Messages.CountAsync(m => m.ToUserId == userId && !m.IsRead &&
+            var count = await db.Messages.AsNoTracking().CountAsync(m => m.ToUserId == userId && !m.IsRead &&
                 !db.MemberBlocks.Any(b =>
                     (b.BlockerId == m.FromUserId && b.BlockedId == userId) ||
                     (b.BlockedId == m.FromUserId && b.BlockerId == userId)));

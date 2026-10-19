@@ -96,13 +96,17 @@ builder.Services.AddRateLimiter(options =>
         await httpContext.Response.WriteAsync("Too many requests. Please try again in a minute.", cancellationToken);
     };
 
-    // A shared cap protects account endpoints without trusting forwarded client-IP headers.
-    options.AddFixedWindowLimiter(RateLimitPolicies.AccountWrites, limiter =>
-    {
-        limiter.PermitLimit = 40;
-        limiter.Window = TimeSpan.FromMinutes(1);
-        limiter.QueueLimit = 0;
-    });
+    // Partition account writes by remote IP to prevent a single attacker from globally locking out legitimate users.
+    options.AddPolicy(RateLimitPolicies.AccountWrites, httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
     options.AddPolicy(RateLimitPolicies.MemberWrites, httpContext =>
         RateLimitPartition.GetFixedWindowLimiter(
             httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "unauthenticated",
