@@ -1,28 +1,365 @@
 @model SkillBridge.Models.CommunityIndexViewModel
 @{
-    ViewBag.Title = "Communities";
+    ViewBag.Title = "Community Feed";
 }
+
 <main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-4 tw:my-6 sb-community-directory">
-    <header class="sb-page-heading sb-community-hero">
-        <div class="sb-hero-kicker"><span class="sb-icon-tile sb-icon-tile-blue" aria-hidden="true"><svg class="sb-icon"><use href="#sb-i-chat" /></svg></span><span class="sb-eyebrow">Learn out loud</span></div>
+    <!-- Hero / Header -->
+    <header class="sb-page-heading sb-community-hero mb-4 tw:mb-6">
+        <div class="sb-hero-kicker">
+            <span class="sb-icon-tile sb-icon-tile-blue" aria-hidden="true"><svg class="sb-icon"><use href="#sb-i-chat" /></svg></span>
+            <span class="sb-eyebrow">Real-Time Community Feed</span>
+        </div>
         <h1>Find your people.</h1>
-        <p>Every skill has a conversation. Explore ideas, ask questions, and grow alongside people learning the same thing.</p>
+        <p>Every skill has a conversation. Follow discussions, breakthroughs, and questions across every skill, or share your own journey.</p>
         @if (Model.IsGuest)
         {
-            <div class="sb-hero-actions">
+            <div class="sb-hero-actions tw:flex tw:flex-wrap tw:gap-3 tw:mt-4">
                 <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white" href="@Url.Action("Register", "Account")">Join SkillBridge</a>
-                <span class="sb-community-hint">Read freely. Add a skill to your profile to join in.</span>
+                <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" href="@Url.Action("Login", "Account")">Log In</a>
             </div>
         }
     </header>
-    <form method="get" action="@Url.Action("Index", "Communities")" class="sb-directory-search" role="search">
-        <div><label for="community-search" class="form-label tw:mb-1 tw:block tw:font-bold fw-bold">Search communities</label><input id="community-search" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" name="q" value="@Model.SearchQuery" maxlength="100" placeholder="Try a skill or category" /></div>
-        <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white" type="submit">Search</button>
-    </form>
-    @if (!Model.SkillsYouKnow.Any() && !Model.SkillsYouWantToLearn.Any() && !Model.OtherCommunities.Any())
+
+    @if (TempData["CommunityNotice"] is string notice)
     {
-        <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink">@(string.IsNullOrEmpty(Model.SearchQuery) ? "Communities are being prepared." : "No communities match that search.") <a href="@Url.Action("Skills", "Explore")">Browse skills</a>.</div>
+        <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-success tw:bg-sb-sage tw:text-sb-ink tw:mb-6" role="status">
+            <i class="fas fa-check-circle me-2 tw:me-2" aria-hidden="true"></i>@notice
+        </div>
     }
+    @if (TempData["CommunityError"] is string errorNotice)
+    {
+        <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-danger tw:bg-sb-coral tw:text-sb-ink tw:mb-6" role="alert">
+            <i class="fas fa-exclamation-triangle me-2 tw:me-2" aria-hidden="true"></i>@errorNotice
+        </div>
+    }
+
+    <!-- Top Feed Controls: Tabs & Search -->
+    <div class="tw:flex tw:flex-col tw:md:flex-row tw:items-stretch tw:md:items-center tw:justify-between tw:gap-4 tw:mb-6">
+        <!-- Feed Mode Tabs -->
+        <div class="tw:inline-flex tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-1 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card" role="tablist" aria-label="Feed Tabs">
+            <a href="@Url.Action("Index", "Communities", new { tab = "all", skillId = Model.SelectedSkillId, q = Model.SearchQuery })"
+               class="tw:inline-flex tw:items-center tw:gap-2 tw:rounded-lg tw:px-4 tw:py-2 tw:text-sm tw:font-extrabold tw:transition-all @(Model.ActiveTab == "all" ? "tw:bg-sb-blue-strong tw:text-white tw:shadow-sb-small" : "tw:text-sb-ink tw:hover:bg-sb-paper tw:dark:text-sb-night-ink tw:dark:hover:bg-sb-night")">
+                <i class="fas fa-globe-americas" aria-hidden="true"></i> All Posts
+            </a>
+            <a href="@Url.Action("Index", "Communities", new { tab = "my-skills", skillId = Model.SelectedSkillId, q = Model.SearchQuery })"
+               class="tw:inline-flex tw:items-center tw:gap-2 tw:rounded-lg tw:px-4 tw:py-2 tw:text-sm tw:font-extrabold tw:transition-all @(Model.ActiveTab == "my-skills" ? "tw:bg-sb-blue-strong tw:text-white tw:shadow-sb-small" : "tw:text-sb-ink tw:hover:bg-sb-paper tw:dark:text-sb-night-ink tw:dark:hover:bg-sb-night")">
+                <i class="fas fa-star" aria-hidden="true"></i> My Skills
+            </a>
+        </div>
+
+        <!-- Feed Search Form -->
+        <form method="get" action="@Url.Action("Index", "Communities")" class="tw:flex tw:items-center tw:gap-2 tw:flex-1 tw:max-w-md" role="search">
+            <input type="hidden" name="tab" value="@Model.ActiveTab" />
+            @if (Model.SelectedSkillId.HasValue)
+            {
+                <input type="hidden" name="skillId" value="@Model.SelectedSkillId.Value" />
+            }
+            <div class="tw:relative tw:w-full">
+                <input id="community-search" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink"
+                       name="q" value="@Model.SearchQuery" maxlength="100" placeholder="Search posts, titles, or skills..." aria-label="Search posts" />
+            </div>
+            <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white" type="submit">
+                <i class="fas fa-search" aria-hidden="true"></i> Search
+            </button>
+            @if (!string.IsNullOrEmpty(Model.SearchQuery))
+            {
+                <a href="@Url.Action("Index", "Communities", new { tab = Model.ActiveTab, skillId = Model.SelectedSkillId })" class="btn tw:inline-flex tw:items-center tw:justify-center tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-2 tw:font-extrabold tw:bg-sb-card tw:text-sb-muted tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card" title="Clear search">✕</a>
+            }
+        </form>
+    </div>
+
+    <!-- Skill Filter Pills Bar -->
+    @if (Model.AvailableSkillPills.Any())
+    {
+        <div class="tw:mb-6">
+            <div class="tw:flex tw:items-center tw:justify-between tw:mb-2">
+                <span class="sb-eyebrow tw:text-xs">FILTER BY TOPIC</span>
+                @if (Model.SelectedSkillId.HasValue)
+                {
+                    <a href="@Url.Action("Index", "Communities", new { tab = Model.ActiveTab, q = Model.SearchQuery })" class="tw:text-xs tw:font-bold tw:text-sb-coral tw:hover:underline">Clear topic filter &times;</a>
+                }
+            </div>
+            <div class="tw:flex tw:flex-wrap tw:gap-2 tw:items-center">
+                <a href="@Url.Action("Index", "Communities", new { tab = Model.ActiveTab, q = Model.SearchQuery })"
+                   class="badge tw:inline-flex tw:items-center tw:gap-1 tw:rounded-full tw:border-2 tw:border-sb-ink tw:px-3.5 tw:py-1.5 tw:text-xs tw:font-black tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-0.5 tw:hover:translate-y-0.5 @(!Model.SelectedSkillId.HasValue ? "tw:bg-sb-ink tw:text-sb-paper tw:dark:bg-sb-night-ink tw:dark:text-sb-night" : "tw:bg-sb-card tw:text-sb-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink")">
+                    #All Topics
+                </a>
+                @foreach (var pill in Model.AvailableSkillPills)
+                {
+                    bool isSelected = Model.SelectedSkillId == pill.SkillId;
+                    <a href="@Url.Action("Index", "Communities", new { tab = Model.ActiveTab, skillId = isSelected ? (int?)null : pill.SkillId, q = Model.SearchQuery })"
+                       class="badge tw:inline-flex tw:items-center tw:gap-1.5 tw:rounded-full tw:border-2 tw:border-sb-ink tw:px-3.5 tw:py-1.5 tw:text-xs tw:font-black tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-0.5 tw:hover:translate-y-0.5 @(isSelected ? "tw:bg-sb-yellow tw:text-sb-ink tw:border-sb-ink" : "tw:bg-sb-card tw:text-sb-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink")">
+                        #@pill.SkillName
+                        @if (pill.PostCount > 0)
+                        {
+                            <span class="tw:opacity-70 tw:text-[11px]">(@pill.PostCount)</span>
+                        }
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- In-Feed Post Composer -->
+    @if (!Model.IsGuest)
+    {
+        if (Model.UserPostableSkills.Any())
+        {
+            <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink tw:p-5 tw:mb-6">
+                <div class="tw:flex tw:items-center tw:gap-2 tw:mb-3">
+                    <span class="sb-icon-tile sb-icon-tile-blue" style="width:28px;height:28px;" aria-hidden="true"><svg class="sb-icon"><use href="#sb-i-chat" /></svg></span>
+                    <h3 class="tw:text-base tw:font-black tw:m-0">Share with the Community</h3>
+                </div>
+
+                <form action="@Url.Action("CreatePost", "Communities")" method="post" enctype="multipart/form-data">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@Context.Request.Path@Context.Request.QueryString" />
+
+                    <div class="tw:grid tw:grid-cols-1 tw:md:grid-cols-12 tw:gap-3 tw:mb-3">
+                        <div class="tw:md:col-span-4">
+                            <label for="feed-community-select" class="form-label tw:mb-1 tw:block tw:text-xs tw:font-bold">Skill Community</label>
+                            <select id="feed-community-select" name="CommunityId" required class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-paper tw:px-3 tw:py-2 tw:text-sm tw:font-bold tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night tw:dark:text-sb-night-ink">
+                                <option value="">-- Choose where to post --</option>
+                                @foreach (var s in Model.UserPostableSkills)
+                                {
+                                    bool preselect = Model.SelectedSkillId == s.SkillId;
+                                    <option value="@s.CommunityId" selected="@(preselect ? "selected" : null)">
+                                        @s.SkillName (@s.Role)
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                        <div class="tw:md:col-span-8">
+                            <label for="feed-post-title" class="form-label tw:mb-1 tw:block tw:text-xs tw:font-bold">Post Title</label>
+                            <input id="feed-post-title" name="Title" required maxlength="200" placeholder="What's on your mind? Share a question, tip, or breakthrough..." class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-paper tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night tw:dark:text-sb-night-ink" />
+                        </div>
+                    </div>
+
+                    <div class="tw:mb-3">
+                        <div class="sb-editor-toolbar tw:mb-1" role="toolbar" aria-label="Post formatting">
+                            <button type="button" data-format="bold" data-editor="feed-post-content" aria-label="Bold selected text" title="Bold"><strong>B</strong></button>
+                            <button type="button" data-format="italic" data-editor="feed-post-content" aria-label="Italic selected text" title="Italic"><em>I</em></button>
+                            <button type="button" data-format="heading" data-editor="feed-post-content" aria-label="Turn line into heading" title="Heading">H2</button>
+                        </div>
+                        <textarea id="feed-post-content" name="Content" rows="3" maxlength="2000" placeholder="Write the details of your question or learning update..." class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-paper tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night tw:dark:text-sb-night-ink"></textarea>
+                    </div>
+
+                    <div class="tw:flex tw:flex-col tw:sm:flex-row tw:items-start tw:sm:items-center tw:justify-between tw:gap-3">
+                        <div class="tw:flex tw:items-center tw:gap-2">
+                            <label for="feed-post-image" class="tw:cursor-pointer tw:inline-flex tw:items-center tw:gap-1.5 tw:text-xs tw:font-bold tw:text-sb-muted tw:hover:text-sb-ink tw:dark:text-sb-night-ink/70">
+                                <i class="fas fa-image" aria-hidden="true"></i> Attach image (optional, max 5 MB):
+                            </label>
+                            <input type="file" id="feed-post-image" name="Image" class="tw:text-xs tw:max-w-[200px]" accept="image/jpeg,image/png,image/webp" />
+                        </div>
+                        <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-5 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white">
+                            <i class="fas fa-paper-plane" aria-hidden="true"></i> Publish Post
+                        </button>
+                    </div>
+                </form>
+            </div>
+        }
+        else
+        {
+            <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink tw:p-5 tw:mb-6">
+                <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-3">
+                    <div>
+                        <h4 class="tw:font-black tw:text-base tw:mb-1">Want to share a post in the feed?</h4>
+                        <p class="tw:text-sm tw:text-sb-muted tw:dark:text-sb-night-ink/70 tw:mb-0">Add at least one skill you teach or learn to start posting in its community.</p>
+                    </div>
+                    <a href="@Url.Action("UpdateProfile", "Profile")" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white">
+                        <i class="fas fa-plus me-1" aria-hidden="true"></i> Add Skills to Profile
+                    </a>
+                </div>
+            </div>
+        }
+    }
+
+    <!-- Feed Stream Heading -->
+    <div class="tw:flex tw:items-center tw:justify-between tw:mb-4">
+        <h2 class="tw:text-xl tw:font-black tw:m-0">
+            @if (Model.SelectedSkillId.HasValue && !string.IsNullOrEmpty(Model.SelectedSkillName))
+            {
+                <span>Posts in <span class="tw:text-sb-blue-strong tw:dark:text-sb-blue">#@Model.SelectedSkillName</span></span>
+            }
+            else if (Model.ActiveTab == "my-skills")
+            {
+                <span>Posts from My Skills</span>
+            }
+            else
+            {
+                <span>All Community Conversations</span>
+            }
+            <span class="tw:text-sm tw:font-normal tw:text-sb-muted tw:ml-2">(@Model.TotalPostsCount post@(Model.TotalPostsCount == 1 ? "" : "s"))</span>
+        </h2>
+    </div>
+
+    <!-- Feed Post Cards -->
+    @if (Model.Posts.Any())
+    {
+        <div class="tw:space-y-6">
+            @foreach (var post in Model.Posts)
+            {
+                <article class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink tw:p-5 tw:mb-4">
+                    <!-- Author & Skill Header -->
+                    <div class="tw:flex tw:items-start tw:justify-between tw:gap-3 tw:mb-3">
+                        <div class="tw:flex tw:items-center tw:gap-3">
+                            <a href="@Url.Action("PublicProfile", "Profile", new { id = post.AuthorUserId })" class="tw:shrink-0" title="View @post.AuthorName's profile">
+                                <img src="@post.AuthorAvatarUrl" alt="" class="tw:w-11 tw:h-11 tw:rounded-full tw:border-2 tw:border-sb-ink tw:object-cover" loading="lazy" />
+                            </a>
+                            <div>
+                                <div class="tw:flex tw:items-center tw:gap-2 tw:flex-wrap">
+                                    <a href="@Url.Action("PublicProfile", "Profile", new { id = post.AuthorUserId })" class="tw:font-extrabold tw:text-sb-ink tw:hover:text-sb-blue-strong tw:dark:text-sb-night-ink tw:dark:hover:text-sb-blue">
+                                        @post.AuthorName
+                                    </a>
+                                    <span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:px-2.5 tw:py-0.5 tw:text-[11px] tw:font-bold tw:bg-sb-sage tw:text-sb-ink">
+                                        @post.AuthorRoleBadge
+                                    </span>
+                                </div>
+                                <span class="tw:text-xs tw:text-sb-muted tw:dark:text-sb-night-ink/60" title="@post.CreatedAt.ToString("f")">
+                                    @post.TimeAgo
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Skill Badge -->
+                        <a href="@Url.Action("Index", "Communities", new { tab = Model.ActiveTab, skillId = post.SkillId })"
+                           class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1 tw:text-xs tw:font-black tw:bg-sb-yellow tw:text-sb-ink tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-0.5 tw:hover:translate-y-0.5"
+                           title="Filter by @post.SkillName">
+                            #@post.SkillName
+                        </a>
+                    </div>
+
+                    <!-- Post Body -->
+                    <div class="tw:mb-3">
+                        <h3 class="tw:text-xl tw:font-black tw:mb-2">
+                            <a href="@Url.Action("PostDetails", "Communities", new { id = post.PostId })" class="tw:text-sb-ink tw:hover:text-sb-blue-strong tw:dark:text-sb-night-ink tw:dark:hover:text-sb-blue">
+                                @post.Title
+                            </a>
+                        </h3>
+                        <div class="sb-post-content tw:text-sm tw:leading-relaxed tw:text-sb-ink/90 tw:dark:text-sb-night-ink/90">
+                            @SkillBridge.Helpers.PostTextFormatter.Render(post.Content)
+                        </div>
+
+                        @if (!string.IsNullOrWhiteSpace(post.ImageUrl))
+                        {
+                            <div class="tw:mt-3 tw:mb-2">
+                                <a href="@Url.Action("PostDetails", "Communities", new { id = post.PostId })">
+                                    <img src="@post.ImageUrl" alt="Image attached to @post.Title" class="tw:rounded-xl tw:border-2 tw:border-sb-ink/20 tw:max-h-96 tw:w-full tw:object-cover" loading="lazy" />
+                                </a>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Action Row -->
+                    <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-2 tw:pt-3 tw:border-t tw:border-sb-line/30">
+                        <div class="tw:flex tw:items-center tw:gap-2">
+                            <a href="@Url.Action("PostDetails", "Communities", new { id = post.PostId })" class="btn tw:inline-flex tw:items-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-xs tw:font-extrabold tw:bg-sb-card tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-0.5 tw:hover:translate-y-0.5 tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">
+                                <i class="fas fa-comments" aria-hidden="true"></i> Discuss (@post.CommentCount)
+                            </a>
+                            <a href="@Url.Action("PublicProfile", "Profile", new { id = post.AuthorUserId })" class="btn tw:inline-flex tw:items-center tw:gap-1.5 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-xs tw:font-extrabold tw:bg-sb-card tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-0.5 tw:hover:translate-y-0.5 tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">
+                                <i class="fas fa-user" aria-hidden="true"></i> View Profile
+                            </a>
+                        </div>
+
+                        @if (post.IsAuthor)
+                        {
+                            <span class="tw:text-xs tw:font-bold tw:text-sb-muted">
+                                <a href="@Url.Action("PostDetails", "Communities", new { id = post.PostId })" class="tw:underline tw:hover:text-sb-coral">Manage post</a>
+                            </span>
+                        }
+                    </div>
+
+                    <!-- Top/Latest Comment Preview -->
+                    @if (post.TopComment != null)
+                    {
+                        <div class="tw:mt-3 tw:pt-3 tw:border-t tw:border-sb-line/20 tw:bg-sb-paper/60 tw:dark:bg-sb-night/40 tw:rounded-xl tw:p-3 tw:flex tw:items-start tw:gap-3">
+                            <img src="@post.TopComment.ProfileImageUrl" alt="" class="tw:w-7 tw:h-7 tw:rounded-full tw:border tw:border-sb-ink tw:object-cover" loading="lazy" />
+                            <div class="tw:flex-1 tw:text-xs">
+                                <span class="tw:font-bold tw:text-sb-ink tw:dark:text-sb-night-ink">@post.TopComment.CreatedByFullName</span>
+                                <span class="tw:text-sb-muted tw:ml-1">@post.TopComment.CreatedAt.ToString("MMM dd")</span>
+                                <p class="tw:text-xs tw:mt-0.5 tw:mb-0 tw:text-sb-ink/90 tw:dark:text-sb-night-ink/90">@post.TopComment.Content</p>
+                            </div>
+                            <a href="@Url.Action("PostDetails", "Communities", new { id = post.PostId })" class="tw:text-xs tw:font-extrabold tw:text-sb-blue-strong tw:hover:underline tw:shrink-0">Reply &rarr;</a>
+                        </div>
+                    }
+                </article>
+            }
+        </div>
+
+        <!-- Pagination Controls -->
+        @if (Model.TotalPages > 1)
+        {
+            <div class="tw:flex tw:items-center tw:justify-between tw:my-6 tw:pt-4 tw:border-t tw:border-sb-line">
+                <div>
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <a href="@Url.Action("Index", "Communities", new { tab = Model.ActiveTab, skillId = Model.SelectedSkillId, q = Model.SearchQuery, page = Model.CurrentPage - 1 })" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink">
+                            &larr; Newer Posts
+                        </a>
+                    }
+                </div>
+                <span class="tw:text-sm tw:font-bold tw:text-sb-muted tw:dark:text-sb-night-ink/70">
+                    Page @Model.CurrentPage of @Model.TotalPages
+                </span>
+                <div>
+                    @if (Model.HasMore)
+                    {
+                        <a href="@Url.Action("Index", "Communities", new { tab = Model.ActiveTab, skillId = Model.SelectedSkillId, q = Model.SearchQuery, page = Model.CurrentPage + 1 })" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink">
+                            Older Posts &rarr;
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="sb-community-empty tw:my-8 tw:p-8 tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-center tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">
+            <span aria-hidden="true" class="tw:text-3xl tw:block tw:mb-2">✳</span>
+            <h3 class="tw:text-xl tw:font-black tw:mb-2">No posts found in this feed</h3>
+            <p class="tw:text-sb-muted tw:dark:text-sb-night-ink/70 tw:max-w-md tw:mx-auto tw:mb-4">
+                @if (!string.IsNullOrEmpty(Model.SearchQuery))
+                {
+                    <span>No posts match "<strong>@Model.SearchQuery</strong>". Try clearing your search.</span>
+                }
+                else if (Model.SelectedSkillId.HasValue)
+                {
+                    <span>No posts yet in #@Model.SelectedSkillName. Be the first to start the conversation!</span>
+                }
+                else if (Model.ActiveTab == "my-skills")
+                {
+                    if (Model.IsGuest)
+                    {
+                        <span>Log in to follow discussions tailored to your teaching skills and learning goals.</span>
+                    }
+                    else
+                    {
+                        <span>No posts yet from the skills you teach or learn. Try switching to <strong>All Posts</strong> or start the first discussion!</span>
+                    }
+                }
+                else
+                {
+                    <span>Be the first to share an update or question in the community!</span>
+                }
+            </p>
+            <div class="tw:flex tw:justify-center tw:gap-3">
+                @if (Model.IsGuest && Model.ActiveTab == "my-skills")
+                {
+                    <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white" href="@Url.Action("Register", "Account")">Join SkillBridge</a>
+                    <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" href="@Url.Action("Login", "Account")">Log In</a>
+                }
+                else if (Model.SelectedSkillId.HasValue || !string.IsNullOrEmpty(Model.SearchQuery))
+                {
+                    <a href="@Url.Action("Index", "Communities", new { tab = Model.ActiveTab })" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink">
+                        Clear Filters
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Secondary: Browse Skill Communities by Category -->
     @{
         var communities = Model.SkillsYouKnow.Select(c => new { Community = c, Kind = "known", Label = "YOU TEACH" })
             .Concat(Model.SkillsYouWantToLearn.Select(c => new { Community = c, Kind = "learning", Label = "YOU LEARN" }))
@@ -31,23 +368,74 @@
             .OrderBy(group => group.Key).ToList();
         var categoryIndex = 0;
     }
-    @foreach (var category in communities)
+    @if (communities.Any())
     {
-        categoryIndex++;
-        var categoryName = category.Key.ToLowerInvariant();
-        var symbol = categoryName.Contains("design") || categoryName.Contains("art") ? "✦"
-            : categoryName.Contains("program") || categoryName.Contains("tech") || categoryName.Contains("software") ? "</>"
-            : categoryName.Contains("language") || categoryName.Contains("communication") ? "文"
-            : categoryName.Contains("business") || categoryName.Contains("management") ? "▣"
-            : categoryName.Contains("science") || categoryName.Contains("math") ? "⚗" : "✳";
-        <details class="sb-community-category" open>
-            <summary><span class="sb-category-symbol" aria-hidden="true">@symbol</span><span class="sb-category-title"><span class="sb-eyebrow">CATEGORY @categoryIndex.ToString("00")</span><strong>@category.Key</strong></span><span class="sb-category-count">@category.Count() communities</span><span class="sb-category-toggle" aria-hidden="true">⌄</span></summary>
-            <div class="sb-community-grid">
-                @foreach (var item in category)
-                {
-                    <a href="@Url.Action("Landing", "Communities", new { id = item.Community.CommunityId })" class="sb-community-card sb-community-card-@item.Kind"><span class="sb-community-card-top"><span class="sb-community-monogram" aria-hidden="true">@(item.Community.SkillName.Trim()[0])</span><span class="sb-community-card-label">@item.Label</span></span><strong>@item.Community.SkillName</strong><span class="sb-community-card-bottom">Open community <span aria-hidden="true">↗</span></span></a>
-                }
-            </div>
-        </details>
+        <section class="tw:mt-12 tw:pt-8 tw:border-t-2 tw:border-sb-ink/20">
+            <details class="sb-community-category" open>
+                <summary class="tw:cursor-pointer">
+                    <span class="sb-category-symbol" aria-hidden="true">✦</span>
+                    <span class="sb-category-title">
+                        <span class="sb-eyebrow">SKILL DIRECTORY ARCHIVE</span>
+                        <strong>Browse individual skill communities by category (@communities.Sum(g => g.Count()))</strong>
+                    </span>
+                    <span class="sb-category-count">@communities.Count categories</span>
+                    <span class="sb-category-toggle" aria-hidden="true">⌄</span>
+                </summary>
+                <div class="tw:pt-4">
+                    @foreach (var category in communities)
+                    {
+                        categoryIndex++;
+                        var categoryName = category.Key.ToLowerInvariant();
+                        var symbol = categoryName.Contains("design") || categoryName.Contains("art") ? "✦"
+                            : categoryName.Contains("program") || categoryName.Contains("tech") || categoryName.Contains("software") ? "</>"
+                            : categoryName.Contains("language") || categoryName.Contains("communication") ? "文"
+                            : categoryName.Contains("business") || categoryName.Contains("management") ? "▣"
+                            : categoryName.Contains("science") || categoryName.Contains("math") ? "⚗" : "✳";
+                        <details class="sb-community-category tw:my-3" open>
+                            <summary>
+                                <span class="sb-category-symbol" aria-hidden="true">@symbol</span>
+                                <span class="sb-category-title"><span class="sb-eyebrow">CATEGORY @categoryIndex.ToString("00")</span><strong>@category.Key</strong></span>
+                                <span class="sb-category-count">@category.Count() communities</span>
+                                <span class="sb-category-toggle" aria-hidden="true">⌄</span>
+                            </summary>
+                            <div class="sb-community-grid">
+                                @foreach (var item in category)
+                                {
+                                    <a href="@Url.Action("Landing", "Communities", new { id = item.Community.CommunityId })" class="sb-community-card sb-community-card-@item.Kind">
+                                        <span class="sb-community-card-top"><span class="sb-community-monogram" aria-hidden="true">@(item.Community.SkillName.Trim()[0])</span><span class="sb-community-card-label">@item.Label</span></span>
+                                        <strong>@item.Community.SkillName</strong>
+                                        <span class="sb-community-card-bottom">Open community <span aria-hidden="true">↗</span></span>
+                                    </a>
+                                }
+                            </div>
+                        </details>
+                    }
+                </div>
+            </details>
+        </section>
     }
 </main>
+
+@section Scripts {
+    <script>
+    document.querySelectorAll('.sb-editor-toolbar button').forEach(button => button.addEventListener('click', () => {
+        const editor = document.getElementById(button.dataset.editor);
+        if (!editor) return;
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selected = editor.value.slice(start, end);
+        const kind = button.dataset.format;
+        if (kind === 'heading') {
+            const lineStart = editor.value.lastIndexOf('\n', start - 1) + 1;
+            if (editor.value.slice(lineStart, lineStart + 3) === '## ') return;
+            editor.setRangeText('## ', lineStart, lineStart, 'preserve');
+            editor.focus();
+            return;
+        }
+        const mark = kind === 'bold' ? '**' : '*';
+        const replacement = mark + (selected || 'text') + mark;
+        editor.setRangeText(replacement, start, end, 'select');
+        editor.focus();
+    }));
+    </script>
+}

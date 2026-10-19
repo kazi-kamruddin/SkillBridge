@@ -1,9 +1,9 @@
-
 using SkillBridge.Models;
 using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
@@ -23,23 +23,23 @@ namespace SkillBridge.Controllers
             this.db = db;
         }
 
-
         ////////////////////////////////////////////////////////////////////////////
 
         // Interaction Index Page
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
             var userId = User.Identity.GetUserId();
-            var interactions = db.Interactions
+            var interactions = await db.Interactions
+                .AsNoTracking()
                 .Where(i => i.User1Id == userId || i.User2Id == userId)
                 .Where(i => i.Status != "Completed")
                 .Include(i => i.User1)
                 .Include(i => i.User2)
                 .Include(i => i.SkillFromRequester)
                 .Include(i => i.SkillFromTeacher)
-                .ToList();
+                .ToListAsync();
 
-            var names = MemberNames.For(db, interactions.Select(i => i.User1Id == userId ? i.User2Id : i.User1Id));
+            var names = await MemberNames.ForAsync(db, interactions.Select(i => i.User1Id == userId ? i.User2Id : i.User1Id));
             var model = interactions.Select(i => new InteractionIndexViewModel
             {
                 InteractionId = i.Id,
@@ -54,18 +54,18 @@ namespace SkillBridge.Controllers
             return View(model);
         }
 
-
         ////////////////////////////////////////////////////////////////////////////
-        public ActionResult History()
+        public async Task<ActionResult> History()
         {
             var userId = User.Identity.GetUserId();
-            var exchanges = db.Interactions
+            var exchanges = await db.Interactions
+                .AsNoTracking()
                 .Where(i => (i.User1Id == userId || i.User2Id == userId) && i.Status == "Completed")
                 .Include(i => i.User1).Include(i => i.User2)
                 .Include(i => i.SkillFromRequester).Include(i => i.SkillFromTeacher)
                 .OrderByDescending(i => i.EndedAt ?? i.CreatedAt)
-                .ToList();
-            var names = MemberNames.For(db, exchanges.Select(i => i.User1Id == userId ? i.User2Id : i.User1Id));
+                .ToListAsync();
+            var names = await MemberNames.ForAsync(db, exchanges.Select(i => i.User1Id == userId ? i.User2Id : i.User1Id));
             return View(exchanges.Select(i => new InteractionIndexViewModel
             {
                 InteractionId = i.Id,
@@ -78,29 +78,32 @@ namespace SkillBridge.Controllers
             }).ToList());
         }
 
-        public ActionResult Details(int id)
+        public async Task<ActionResult> Details(int id)
         {
             var userId = User.Identity.GetUserId();
-            var interaction = db.Interactions
+            var interaction = await db.Interactions
+                .AsNoTracking()
                 .Include(i => i.User1).Include(i => i.User2)
                 .Include(i => i.SkillFromRequester).Include(i => i.SkillFromTeacher)
                 .Include(i => i.Sessions).ThenInclude(s => s.Skill)
-                .FirstOrDefault(i => i.Id == id && (i.User1Id == userId || i.User2Id == userId));
+                .FirstOrDefaultAsync(i => i.Id == id && (i.User1Id == userId || i.User2Id == userId));
             if (interaction == null) return NotFound();
             if (interaction.Status == "Ongoing") return RedirectToAction(nameof(Sessions), new { id });
-            var ratings = db.Ratings.Where(r => r.InteractionId == id).ToList();
+            var ratings = await db.Ratings.AsNoTracking().Where(r => r.InteractionId == id).ToListAsync();
+            var otherUserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id;
+            var otherUserName = await MemberNames.GetAsync(db, otherUserId);
             return View(new InteractionHistoryViewModel
             {
                 InteractionId = id,
                 Status = interaction.Status,
-                OtherUserName = MemberNames.Get(db, interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id),
+                OtherUserName = otherUserName,
                 SkillYouLearn = interaction.User1Id == userId ? interaction.SkillFromRequester.Name : interaction.SkillFromTeacher.Name,
                 SkillYouTeach = interaction.User1Id == userId ? interaction.SkillFromTeacher.Name : interaction.SkillFromRequester.Name,
                 EndReason = interaction.EndReason,
                 CreatedAt = interaction.CreatedAt,
                 EndedAt = interaction.EndedAt,
-                SkillBlocks = BuildSkillBlocks(interaction),
-                MeetingHistory = MeetingEvents(id, userId),
+                SkillBlocks = await BuildSkillBlocksAsync(interaction),
+                MeetingHistory = await MeetingEventsAsync(id, userId),
                 Ratings = ratings.Select(r => new HistoryRatingViewModel
                 {
                     IsMine = r.FromUserId == userId,
@@ -112,33 +115,35 @@ namespace SkillBridge.Controllers
         }
 
         // Interaction Sessions Page
-
-        public ActionResult Sessions(int id)
+        public async Task<ActionResult> Sessions(int id)
         {
             var userId = User.Identity.GetUserId();
-            var interaction = db.Interactions
+            var interaction = await db.Interactions
                 .Include(i => i.Sessions).ThenInclude(s => s.Skill)
                 .Include(i => i.SkillFromRequester.SkillStages)
                 .Include(i => i.SkillFromTeacher.SkillStages)
-                .FirstOrDefault(i => i.Id == id &&
+                .FirstOrDefaultAsync(i => i.Id == id &&
                     (i.User1Id == userId || i.User2Id == userId));
 
             if (interaction == null) return NotFound();
             if (interaction.Status != "Ongoing") return RedirectToAction(nameof(Details), new { id });
 
+            var planProposals = await db.InteractionPlanProposals
+                .AsNoTracking()
+                .Where(p => p.InteractionId == id).ToListAsync();
+
             var model = new InteractionSessionsViewModel
             {
                 InteractionId = interaction.Id,
                 UserId = userId,
-                SkillBlocks = BuildSkillBlocks(interaction),
+                SkillBlocks = await BuildSkillBlocksAsync(interaction),
                 MeetingStartUtc = interaction.MeetingStartUtc,
                 MeetingFormat = interaction.MeetingFormat,
                 MeetingNote = interaction.MeetingNote,
                 MeetingStatus = interaction.MeetingStatus,
                 CanRespondToMeeting = interaction.MeetingStatus == "Proposed" && interaction.MeetingProposedByUserId != userId,
-                MeetingHistory = MeetingEvents(id, userId),
-                PlanProposals = db.InteractionPlanProposals
-                    .Where(p => p.InteractionId == id).ToList()
+                MeetingHistory = await MeetingEventsAsync(id, userId),
+                PlanProposals = planProposals
                     .Select(p => new ExchangePlanProposalViewModel
                     {
                         SkillId = p.SkillId,
@@ -151,10 +156,10 @@ namespace SkillBridge.Controllers
         }
 
         [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        public ActionResult ProposeMeeting(int id, string startsAtUtc, string format, string note)
+        public async Task<ActionResult> ProposeMeeting(int id, string startsAtUtc, string format, string note)
         {
             var userId = User.Identity.GetUserId();
-            var interaction = db.Interactions.FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
+            var interaction = await db.Interactions.FirstOrDefaultAsync(i => i.Id == id && i.Status == "Ongoing" &&
                 (i.User1Id == userId || i.User2Id == userId));
             if (interaction == null) return NotFound();
             if (!DateTimeOffset.TryParse(startsAtUtc, out var startsAt) ||
@@ -172,15 +177,15 @@ namespace SkillBridge.Controllers
             interaction.MeetingStatus = "Proposed";
             RecordMeeting(interaction, userId, "Proposed");
             NotifyOther(interaction, userId, "The other member proposed a meeting time. Open your exchange to respond.");
-            db.SaveChanges();
+            await db.SaveChangesAsync();
             return RedirectToAction(nameof(Sessions), new { id });
         }
 
         [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        public ActionResult RespondToMeeting(int id, string decision)
+        public async Task<ActionResult> RespondToMeeting(int id, string decision)
         {
             var userId = User.Identity.GetUserId();
-            var interaction = db.Interactions.FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
+            var interaction = await db.Interactions.FirstOrDefaultAsync(i => i.Id == id && i.Status == "Ongoing" &&
                 (i.User1Id == userId || i.User2Id == userId));
             if (interaction == null) return NotFound();
             if (interaction.MeetingStatus != "Proposed" || interaction.MeetingProposedByUserId == userId)
@@ -190,15 +195,15 @@ namespace SkillBridge.Controllers
             RecordMeeting(interaction, userId, interaction.MeetingStatus);
             NotifyOther(interaction, userId, decision == "Accept" ?
                 "Your meeting time was accepted." : "Your meeting time was declined. You can propose another.");
-            db.SaveChanges();
+            await db.SaveChangesAsync();
             return RedirectToAction(nameof(Sessions), new { id });
         }
 
         [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        public ActionResult CancelMeeting(int id)
+        public async Task<ActionResult> CancelMeeting(int id)
         {
             var userId = User.Identity.GetUserId();
-            var interaction = db.Interactions.FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
+            var interaction = await db.Interactions.FirstOrDefaultAsync(i => i.Id == id && i.Status == "Ongoing" &&
                 (i.User1Id == userId || i.User2Id == userId));
             if (interaction == null) return NotFound();
             if (interaction.MeetingStatus != "Confirmed" && interaction.MeetingStatus != "Proposed")
@@ -206,15 +211,15 @@ namespace SkillBridge.Controllers
             interaction.MeetingStatus = "Cancelled";
             RecordMeeting(interaction, userId, "Cancelled");
             NotifyOther(interaction, userId, "The planned meeting was cancelled. Open your exchange to propose a new time.");
-            db.SaveChanges();
+            await db.SaveChangesAsync();
             return RedirectToAction(nameof(Sessions), new { id });
         }
 
         [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        public ActionResult CompleteMeeting(int id)
+        public async Task<ActionResult> CompleteMeeting(int id)
         {
             var userId = User.Identity.GetUserId();
-            var interaction = db.Interactions.FirstOrDefault(i => i.Id == id && i.Status == "Ongoing" &&
+            var interaction = await db.Interactions.FirstOrDefaultAsync(i => i.Id == id && i.Status == "Ongoing" &&
                 (i.User1Id == userId || i.User2Id == userId));
             if (interaction == null) return NotFound();
             if (interaction.MeetingStatus != "Confirmed" || !interaction.MeetingStartUtc.HasValue ||
@@ -223,23 +228,23 @@ namespace SkillBridge.Controllers
             interaction.MeetingStatus = "Completed";
             RecordMeeting(interaction, userId, "Completed");
             NotifyOther(interaction, userId, "Your partner marked the planned meeting as completed.");
-            db.SaveChanges();
+            await db.SaveChangesAsync();
             return RedirectToAction(nameof(Sessions), new { id });
         }
 
         [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        public ActionResult SaveStageNote(int sessionId, string whatWeCovered, string nextStep)
+        public async Task<ActionResult> SaveStageNote(int sessionId, string whatWeCovered, string nextStep)
         {
             var userId = User.Identity.GetUserId();
-            var session = db.InteractionSessions.Include(s => s.Interaction)
-                .FirstOrDefault(s => s.Id == sessionId && s.Interaction.Status == "Ongoing" &&
+            var session = await db.InteractionSessions.Include(s => s.Interaction)
+                .FirstOrDefaultAsync(s => s.Id == sessionId && s.Interaction.Status == "Ongoing" &&
                     (s.Interaction.User1Id == userId || s.Interaction.User2Id == userId));
             if (session == null) return NotFound();
             whatWeCovered = (whatWeCovered ?? "").Trim();
             nextStep = (nextStep ?? "").Trim();
             if (whatWeCovered.Length is < 1 or > 1000 || nextStep.Length > 500)
                 return BadRequest("Keep your note within the field limits.");
-            var note = db.InteractionSessionNotes.FirstOrDefault(n => n.InteractionSessionId == sessionId && n.UserId == userId);
+            var note = await db.InteractionSessionNotes.FirstOrDefaultAsync(n => n.InteractionSessionId == sessionId && n.UserId == userId);
             if (note == null)
             {
                 note = new InteractionSessionNote { InteractionSessionId = sessionId, UserId = userId };
@@ -248,24 +253,24 @@ namespace SkillBridge.Controllers
             note.WhatWeCovered = whatWeCovered;
             note.NextStep = nextStep;
             note.UpdatedAt = DateTime.Now;
-            db.SaveChanges();
+            await db.SaveChangesAsync();
             return RedirectToAction(nameof(Sessions), new { id = session.InteractionId });
         }
 
         [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        public ActionResult ProposePlan(int interactionId, int skillId, List<PlanStepInput> steps)
+        public async Task<ActionResult> ProposePlan(int interactionId, int skillId, List<PlanStepInput> steps)
         {
             var userId = User.Identity.GetUserId();
-            var interaction = db.Interactions.FirstOrDefault(i => i.Id == interactionId &&
+            var interaction = await db.Interactions.FirstOrDefaultAsync(i => i.Id == interactionId &&
                 i.Status == "Ongoing" && (i.User1Id == userId || i.User2Id == userId));
             if (interaction == null) return NotFound();
             if (skillId != interaction.SkillFromRequesterId && skillId != interaction.SkillFromTeacherId)
                 return BadRequest();
-            if (db.InteractionPlanProposals.Any(p => p.InteractionId == interactionId && p.SkillId == skillId))
+            if (await db.InteractionPlanProposals.AnyAsync(p => p.InteractionId == interactionId && p.SkillId == skillId))
                 return Conflict("Respond to the current plan proposal before suggesting another.");
 
-            var current = db.InteractionSessions.Where(s => s.InteractionId == interactionId && s.SkillId == skillId)
-                .OrderBy(s => s.StageNumber).ToList();
+            var current = await db.InteractionSessions.Where(s => s.InteractionId == interactionId && s.SkillId == skillId)
+                .OrderBy(s => s.StageNumber).ToListAsync();
             var editable = current.Where(s => !s.User1Confirmed && !s.User2Confirmed).ToList();
             if (editable.Count == 0) return Conflict("No upcoming milestones can be changed.");
             steps ??= new();
@@ -287,7 +292,7 @@ namespace SkillBridge.Controllers
             var removedIds = editable.Select(s => s.Id).Except(retainedIds).ToList();
             if (steps.Count(s => s.SessionId == 0) > 3 || removedIds.Count > 3)
                 return BadRequest("Add or remove up to three milestones at a time.");
-            if (db.InteractionSessionNotes.Any(n => removedIds.Contains(n.InteractionSessionId)))
+            if (await db.InteractionSessionNotes.AnyAsync(n => removedIds.Contains(n.InteractionSessionId)))
                 return Conflict("A milestone with notes cannot be removed. Rename or move it instead.");
             if (steps.Count == editable.Count && Enumerable.Range(0, steps.Count).All(index =>
                 steps[index].SessionId == editable[index].Id &&
@@ -309,19 +314,19 @@ namespace SkillBridge.Controllers
                 ReferenceId = interactionId,
                 Message = "Your partner suggested changes to your exchange plan. Open the exchange to review them."
             });
-            db.SaveChanges();
+            await db.SaveChangesAsync();
             TempData["PlanNotice"] = "Your partner can now review the proposed plan.";
             return RedirectToAction(nameof(Sessions), new { id = interactionId });
         }
 
         [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        public ActionResult RespondToPlan(int interactionId, int skillId, string decision)
+        public async Task<ActionResult> RespondToPlan(int interactionId, int skillId, string decision)
         {
             var userId = User.Identity.GetUserId();
-            using var transaction = db.Database.BeginTransaction(System.Data.IsolationLevel.Serializable);
-            var interaction = db.Interactions.FirstOrDefault(i => i.Id == interactionId &&
+            await using var transaction = await db.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+            var interaction = await db.Interactions.FirstOrDefaultAsync(i => i.Id == interactionId &&
                 i.Status == "Ongoing" && (i.User1Id == userId || i.User2Id == userId));
-            var proposal = db.InteractionPlanProposals.FirstOrDefault(p =>
+            var proposal = await db.InteractionPlanProposals.FirstOrDefaultAsync(p =>
                 p.InteractionId == interactionId && p.SkillId == skillId);
             if (interaction == null || proposal == null) return NotFound();
             if (decision != "Accept" && decision != "Decline" && decision != "Withdraw") return BadRequest();
@@ -330,21 +335,21 @@ namespace SkillBridge.Controllers
 
             if (decision == "Accept")
             {
-                var current = db.InteractionSessions.Where(s => s.InteractionId == interactionId && s.SkillId == skillId)
-                    .OrderBy(s => s.StageNumber).ToList();
+                var current = await db.InteractionSessions.Where(s => s.InteractionId == interactionId && s.SkillId == skillId)
+                    .OrderBy(s => s.StageNumber).ToListAsync();
                 if (JsonSerializer.Serialize(PlanSnapshot(current)) != proposal.OriginalStepsJson)
                     return Conflict("The exchange changed since this proposal. Withdraw it and create a new plan.");
                 var steps = JsonSerializer.Deserialize<List<PlanStepInput>>(proposal.StepsJson) ?? new();
                 var editable = current.Where(s => !s.User1Confirmed && !s.User2Confirmed).ToList();
                 var retainedIds = steps.Where(s => s.SessionId != 0).Select(s => s.SessionId).ToHashSet();
                 var removedIds = editable.Where(s => !retainedIds.Contains(s.Id)).Select(s => s.Id).ToList();
-                if (db.InteractionSessionNotes.Any(n => removedIds.Contains(n.InteractionSessionId)))
+                if (await db.InteractionSessionNotes.AnyAsync(n => removedIds.Contains(n.InteractionSessionId)))
                     return Conflict("A milestone now has notes. Withdraw the proposal and create a new one.");
 
                 db.InteractionSessions.RemoveRange(editable.Where(s => !retainedIds.Contains(s.Id)));
                 foreach (var session in editable.Where(s => retainedIds.Contains(s.Id)))
                     session.StageNumber = 1000 + session.Id;
-                db.SaveChanges();
+                await db.SaveChangesAsync();
 
                 var nextNumber = current.Count - editable.Count + 1;
                 foreach (var step in steps)
@@ -377,8 +382,8 @@ namespace SkillBridge.Controllers
                     : decision == "Decline" ? "Your partner declined the exchange plan changes."
                     : "Your partner withdrew the proposed exchange plan."
             });
-            db.SaveChanges();
-            transaction.Commit();
+            await db.SaveChangesAsync();
+            await transaction.CommitAsync();
             TempData["PlanNotice"] = decision == "Accept" ? "The shared plan has been updated."
                 : decision == "Decline" ? "The proposal was declined." : "The proposal was withdrawn.";
             return RedirectToAction(nameof(Sessions), new { id = interactionId });
@@ -417,32 +422,36 @@ namespace SkillBridge.Controllers
             });
         }
 
-        private List<MeetingEventViewModel> MeetingEvents(int interactionId, string userId) =>
-            db.InteractionMeetingEvents.Where(e => e.InteractionId == interactionId)
+        private async Task<List<MeetingEventViewModel>> MeetingEventsAsync(int interactionId, string userId)
+        {
+            var events = await db.InteractionMeetingEvents
+                .AsNoTracking()
+                .Where(e => e.InteractionId == interactionId)
                 .OrderByDescending(e => e.CreatedAt).ThenByDescending(e => e.Id)
-                .Select(e => new MeetingEventViewModel
-                {
-                    EventType = e.EventType,
-                    StartsAtUtc = e.StartsAtUtc,
-                    Format = e.Format,
-                    Note = e.Note,
-                    IsMine = e.ActorUserId == userId,
-                    CreatedAt = e.CreatedAt
-                }).ToList();
+                .ToListAsync();
 
-
+            return events.Select(e => new MeetingEventViewModel
+            {
+                EventType = e.EventType,
+                StartsAtUtc = e.StartsAtUtc,
+                Format = e.Format,
+                Note = e.Note,
+                IsMine = e.ActorUserId == userId,
+                CreatedAt = e.CreatedAt
+            }).ToList();
+        }
 
         ////////////////////////////////////////////////////////////////////////////
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult MarkStageDone(int stageNumber, int interactionId, int skillId)
+        public async Task<ActionResult> MarkStageDone(int stageNumber, int interactionId, int skillId)
         {
             var userId = User.Identity.GetUserId();
-            var session = db.InteractionSessions
+            var session = await db.InteractionSessions
                 .Include(s => s.Interaction)
                 .Include(s => s.Skill)
-                .FirstOrDefault(s => s.InteractionId == interactionId
+                .FirstOrDefaultAsync(s => s.InteractionId == interactionId
                                      && s.SkillId == skillId
                                      && s.StageNumber == stageNumber);
 
@@ -452,7 +461,7 @@ namespace SkillBridge.Controllers
                 (session.Interaction.User1Id != userId && session.Interaction.User2Id != userId))
                 return StatusCode(403);
 
-            if (db.InteractionSessions.Any(s => s.InteractionId == interactionId &&
+            if (await db.InteractionSessions.AnyAsync(s => s.InteractionId == interactionId &&
                 s.SkillId == skillId && s.StageNumber < stageNumber &&
                 (!s.User1Confirmed || !s.User2Confirmed)))
                 return StatusCode(409);
@@ -486,7 +495,7 @@ namespace SkillBridge.Controllers
                 });
             }
 
-            db.SaveChanges();
+            await db.SaveChangesAsync();
 
             return Json(new
             {
@@ -495,17 +504,15 @@ namespace SkillBridge.Controllers
             });
         }
 
-
-
         ////////////////////////////////////////////////////////////////////////////
         // End Interaction
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult StopInteraction(int id, string reason)
+        public async Task<ActionResult> StopInteraction(int id, string reason)
         {
             var userId = User.Identity.GetUserId();
-            var interaction = db.Interactions.FirstOrDefault(i => i.Id == id &&
+            var interaction = await db.Interactions.FirstOrDefaultAsync(i => i.Id == id &&
                 (i.User1Id == userId || i.User2Id == userId));
             if (interaction == null) return NotFound();
             if (interaction.Status != "Ongoing") return StatusCode(409);
@@ -523,22 +530,22 @@ namespace SkillBridge.Controllers
                 Message = "The other member ended your exchange. Open Interactions to see the reason.",
                 CreatedAt = DateTime.Now
             });
-            db.SaveChanges();
+            await db.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult EndInteraction(int id)
+        public async Task<ActionResult> EndInteraction(int id)
         {
-            using var transaction = db.Database.BeginTransaction();
-            var interaction = db.Interactions
+            await using var transaction = await db.Database.BeginTransactionAsync();
+            var interaction = await db.Interactions
                 .Include(i => i.Sessions)
                 .Include(i => i.User1)
                 .Include(i => i.User2)
                 .Include(i => i.SkillFromRequester)
                 .Include(i => i.SkillFromTeacher)
-                .FirstOrDefault(i => i.Id == id);
+                .FirstOrDefaultAsync(i => i.Id == id);
 
             if (interaction == null) return NotFound();
             var userId = User.Identity.GetUserId();
@@ -549,32 +556,32 @@ namespace SkillBridge.Controllers
                 return StatusCode(409);
 
             var completedAt = DateTime.Now;
-            var claimed = db.Interactions.Where(i => i.Id == id && i.Status == "Ongoing")
-                .ExecuteUpdate(setters => setters.SetProperty(i => i.Status, "Completed")
+            var claimed = await db.Interactions.Where(i => i.Id == id && i.Status == "Ongoing")
+                .ExecuteUpdateAsync(setters => setters.SetProperty(i => i.Status, "Completed")
                     .SetProperty(i => i.EndedAt, completedAt));
             if (claimed != 1) return StatusCode(409);
 
-            UpdateUserSkill(interaction.User1Id, interaction.SkillFromRequesterId, interaction);
-            UpdateUserSkill(interaction.User2Id, interaction.SkillFromTeacherId, interaction);
+            await UpdateUserSkillAsync(interaction.User1Id, interaction.SkillFromRequesterId, interaction);
+            await UpdateUserSkillAsync(interaction.User2Id, interaction.SkillFromTeacherId, interaction);
 
             interaction.Status = "Completed";
             interaction.EndedAt = completedAt;
-            db.UserRatings.Where(r => r.UserId == interaction.User1Id || r.UserId == interaction.User2Id)
-                .ExecuteUpdate(setters => setters.SetProperty(r => r.InteractionsCompleted, r => r.InteractionsCompleted + 1));
+            await db.UserRatings.Where(r => r.UserId == interaction.User1Id || r.UserId == interaction.User2Id)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.InteractionsCompleted, r => r.InteractionsCompleted + 1));
 
-            CreateFeedbackNotification(interaction);
-            db.SaveChanges();
-            transaction.Commit();
+            await CreateFeedbackNotificationAsync(interaction);
+            await db.SaveChangesAsync();
+            await transaction.CommitAsync();
             return RedirectToAction("Index");
         }
 
-        private void UpdateUserSkill(string userId, int skillId, Interaction interaction)
+        private async Task UpdateUserSkillAsync(string userId, int skillId, Interaction interaction)
         {
             if (skillId == 0) return;
             var completedLevel = MaxStageCompleted(interaction, skillId);
             if (completedLevel == 0) return;
 
-            var userSkill = db.UserSkills.FirstOrDefault(us => us.UserId == userId && us.SkillId == skillId && us.Status == "Teaching");
+            var userSkill = await db.UserSkills.FirstOrDefaultAsync(us => us.UserId == userId && us.SkillId == skillId && us.Status == "Teaching");
 
             if (userSkill == null)
             {
@@ -591,29 +598,30 @@ namespace SkillBridge.Controllers
             userSkill.Status = "Teaching";
         }
 
-
-
         ////////////////////////////////////////////////////////////////////////////
 
         // Show rating page
-        public ActionResult RateInteraction(int interactionId)
+        public async Task<ActionResult> RateInteraction(int interactionId)
         {
             var userId = User.Identity.GetUserId();
-            var interaction = db.Interactions
+            var interaction = await db.Interactions
                 .Include(i => i.SkillFromRequester)
                 .Include(i => i.SkillFromTeacher)
                 .Include(i => i.User1)
                 .Include(i => i.User2)
-                .FirstOrDefault(i => i.Id == interactionId && i.Status == "Completed" &&
+                .FirstOrDefaultAsync(i => i.Id == interactionId && i.Status == "Completed" &&
                     (i.User1Id == userId || i.User2Id == userId));
 
             if (interaction == null) return NotFound();
+
+            var otherUserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id;
+            var otherUserName = await MemberNames.GetAsync(db, otherUserId);
 
             var ratingModel = new InteractionRatingViewModel
             {
                 InteractionId = interaction.Id,
                 SkillName = interaction.User1Id == userId ? interaction.SkillFromRequester.Name : interaction.SkillFromTeacher.Name,
-                FromUserName = MemberNames.Get(db, interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id)
+                FromUserName = otherUserName
             };
 
             var indexModel = new InteractionIndexViewModel
@@ -634,14 +642,11 @@ namespace SkillBridge.Controllers
             return View(model);
         }
 
-
-
-
         ////////////////////////////////////////////////////////////////////////////
         // Submit rating via AJAX
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult SubmitRating(InteractionRatingViewModel model)
+        public async Task<ActionResult> SubmitRating(InteractionRatingViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -650,15 +655,15 @@ namespace SkillBridge.Controllers
             }
 
             var currentUserId = User.Identity.GetUserId();
-            using var transaction = db.Database.BeginTransaction();
-            var interaction = db.Interactions.Find(model.InteractionId);
+            await using var transaction = await db.Database.BeginTransactionAsync();
+            var interaction = await db.Interactions.FindAsync(model.InteractionId);
             if (interaction == null)
                 return Json(new { success = false, errors = new[] { "Interaction not found." } });
 
             if (interaction.Status != "Completed" ||
                 (interaction.User1Id != currentUserId && interaction.User2Id != currentUserId))
                 return StatusCode(403);
-            if (db.Ratings.Any(r => r.InteractionId == model.InteractionId && r.FromUserId == currentUserId))
+            if (await db.Ratings.AnyAsync(r => r.InteractionId == model.InteractionId && r.FromUserId == currentUserId))
                 return Json(new { success = false, errors = new[] { "You already rated this interaction." } });
 
             var recipientId = interaction.User1Id == currentUserId ? interaction.User2Id : interaction.User1Id;
@@ -676,56 +681,59 @@ namespace SkillBridge.Controllers
             db.Ratings.Add(rating);
             try
             {
-                db.SaveChanges();
+                await db.SaveChangesAsync();
             }
             catch (DbUpdateException ex) when (ex.InnerException is Npgsql.PostgresException
                 { SqlState: Npgsql.PostgresErrorCodes.UniqueViolation })
             {
                 return Json(new { success = false, errors = new[] { "You already rated this interaction." } });
             }
-            db.UserRatings.Where(ur => ur.UserId == recipientId)
-                .ExecuteUpdate(setters => setters
+            await db.UserRatings.Where(ur => ur.UserId == recipientId)
+                .ExecuteUpdateAsync(setters => setters
                     .SetProperty(ur => ur.RatingsReceived, ur => ur.RatingsReceived + 1)
                     .SetProperty(ur => ur.AccumulatedRating, ur => ur.AccumulatedRating + rating.RatingValue));
 
+            var currentUserName = await MemberNames.GetAsync(db, currentUserId);
             db.Notifications.Add(new Notification
             {
                 UserId = recipientId,
                 Type = "Exchange",
                 ReferenceId = model.InteractionId,
-                Message = $"{MemberNames.Get(db, currentUserId)} rated you {model.RatingValue}/10. Comment: \"{model.Comment}\"",
+                Message = $"{currentUserName} rated you {model.RatingValue}/10. Comment: \"{model.Comment}\"",
                 CreatedAt = DateTime.Now,
                 IsRead = false
             });
 
-            var notif = db.Notifications.FirstOrDefault(n =>
+            var notif = await db.Notifications.FirstOrDefaultAsync(n =>
                 n.UserId == currentUserId && n.Type == "Feedback" && n.ReferenceId == model.InteractionId);
             if (notif != null) db.Notifications.Remove(notif);
 
-            db.SaveChanges();
-            transaction.Commit();
+            await db.SaveChangesAsync();
+            await transaction.CommitAsync();
 
             return Json(new { success = true });
         }
 
-
-
-
         ////////////////////////////////////////////////////////////////////////////
         // Helper Methods
 
-        private List<SkillStageBlock> BuildSkillBlocks(Interaction interaction)
+        private async Task<List<SkillStageBlock>> BuildSkillBlocksAsync(Interaction interaction)
         {
             var userId = User.Identity.GetUserId();
             var blocks = new List<SkillStageBlock>();
-            var notes = db.InteractionSessionNotes
+            var notesList = await db.InteractionSessionNotes
+                .AsNoTracking()
                 .Where(n => n.InteractionSession.InteractionId == interaction.Id)
-                .ToList().GroupBy(n => n.InteractionSessionId)
+                .ToListAsync();
+            var notes = notesList.GroupBy(n => n.InteractionSessionId)
                 .ToDictionary(group => group.Key, group => group.ToList());
             var fallbackSkillIds = interaction.Sessions.Where(s => s.Title == null).Select(s => s.SkillId).Distinct().ToList();
-            var descriptions = db.SkillStages.Where(s => fallbackSkillIds.Contains(s.SkillId))
-                .Select(s => new { s.SkillId, s.StageNumber, s.Description }).ToList()
-                .ToDictionary(s => (s.SkillId, s.StageNumber), s => s.Description);
+            var descriptionsList = await db.SkillStages
+                .AsNoTracking()
+                .Where(s => fallbackSkillIds.Contains(s.SkillId))
+                .Select(s => new { s.SkillId, s.StageNumber, s.Description })
+                .ToListAsync();
+            var descriptions = descriptionsList.ToDictionary(s => (s.SkillId, s.StageNumber), s => s.Description);
 
             var sessionsBySkill = interaction.Sessions
                 .OrderBy(s => s.StageNumber)
@@ -786,9 +794,6 @@ namespace SkillBridge.Controllers
             return blocks.OrderBy(b => b.SkillId).ThenBy(b => b.StageNumber).ToList();
         }
 
-
-
-
         ////////////////////////////////////////////////////////////////////////////
         private int MaxStageCompleted(Interaction interaction, int skillId)
         {
@@ -804,17 +809,19 @@ namespace SkillBridge.Controllers
             return level;
         }
 
-
         ////////////////////////////////////////////////////////////////////////////
 
-        private void CreateFeedbackNotification(Interaction interaction)
+        private async Task CreateFeedbackNotificationAsync(Interaction interaction)
         {
+            var user2Name = await MemberNames.GetAsync(db, interaction.User2Id);
+            var user1Name = await MemberNames.GetAsync(db, interaction.User1Id);
+
             var notif1 = new Notification
             {
                 UserId = interaction.User1Id,
                 Type = "Feedback",
                 ReferenceId = interaction.Id,
-                Message = $"You have successfully completed the interaction with {MemberNames.Get(db, interaction.User2Id)}. You taught {interaction.SkillFromTeacher.Name} and learned {interaction.SkillFromRequester.Name}. Click below to rate this interaction."
+                Message = $"You have successfully completed the interaction with {user2Name}. You taught {interaction.SkillFromTeacher.Name} and learned {interaction.SkillFromRequester.Name}. Click below to rate this interaction."
             };
 
             var notif2 = new Notification
@@ -822,18 +829,13 @@ namespace SkillBridge.Controllers
                 UserId = interaction.User2Id,
                 Type = "Feedback",
                 ReferenceId = interaction.Id,
-                Message = $"You have successfully completed the interaction with {MemberNames.Get(db, interaction.User1Id)}. You taught {interaction.SkillFromRequester.Name} and learned {interaction.SkillFromTeacher.Name}. Click below to rate this interaction."
+                Message = $"You have successfully completed the interaction with {user1Name}. You taught {interaction.SkillFromRequester.Name} and learned {interaction.SkillFromTeacher.Name}. Click below to rate this interaction."
             };
-
 
             db.Notifications.Add(notif1);
             db.Notifications.Add(notif2);
         }
 
-
-
-
         ////////////////////////////////////////////////////////////////////////////
-
     }
 }

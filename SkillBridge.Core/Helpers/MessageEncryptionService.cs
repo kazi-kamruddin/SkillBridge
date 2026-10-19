@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -35,27 +35,34 @@ namespace SkillBridge.Helpers
 
         public static string Decrypt(byte[] cipherText, byte[] iv, byte[] hmac)
         {
-            if (cipherText == null || iv == null || hmac == null || iv.Length != 16 || hmac.Length != 32)
-                throw new CryptographicException("Invalid message payload.");
-
-            var expected = ComputeHmac(iv, cipherText);
-            var difference = 0;
-            for (var i = 0; i < expected.Length; i++)
-                difference |= expected[i] ^ hmac[i];
-            if (difference != 0)
-                throw new CryptographicException("Message authentication failed.");
-
-            using (var aes = Aes.Create())
+            try
             {
-                aes.Key = EncryptionKey;
-                aes.IV = iv;
-                aes.Mode = CipherMode.CBC;
-                aes.Padding = PaddingMode.PKCS7;
-                using (var decryptor = aes.CreateDecryptor())
+                if (cipherText == null || iv == null || hmac == null || iv.Length != 16 || hmac.Length != 32)
+                    return "[Encrypted message unavailable]";
+
+                var expected = ComputeHmac(iv, cipherText);
+                var difference = 0;
+                for (var i = 0; i < expected.Length; i++)
+                    difference |= expected[i] ^ hmac[i];
+                if (difference != 0)
+                    return "[Message authentication failed]";
+
+                using (var aes = Aes.Create())
                 {
-                    var plainBytes = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
-                    return Encoding.UTF8.GetString(plainBytes);
+                    aes.Key = EncryptionKey;
+                    aes.IV = iv;
+                    aes.Mode = CipherMode.CBC;
+                    aes.Padding = PaddingMode.PKCS7;
+                    using (var decryptor = aes.CreateDecryptor())
+                    {
+                        var plainBytes = decryptor.TransformFinalBlock(cipherText, 0, cipherText.Length);
+                        return Encoding.UTF8.GetString(plainBytes);
+                    }
                 }
+            }
+            catch (Exception)
+            {
+                return "[Unable to decrypt message]";
             }
         }
 

@@ -22,395 +22,6 @@
     <link rel="icon" type="image/svg+xml" href="~/favicon.svg" asp-append-version="true" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     @RenderSection("Styles", required: false)
-    <script src="~/Scripts/modernizr-2.8.3.js"></script>
-
-    <style>
-        :root {
-            /* Light theme variables */
-            --success-bg: #198754;
-            --primary-color: #4361ee;
-            --primary-dark: #3a56d4;
-            --secondary-color: #3f37c9;
-            --accent-color: #4895ef;
-            --success-color: #4cc9f0;
-            --warning-color: #f72585;
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --text-color: #212529;
-            --text-muted: #6c757d;
-            --border-color: #dee2e6;
-            --navbar-bg: #ffffff;
-            --footer-bg: #2b2d42;
-            --footer-text: #ffffff;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-            --border-radius: 8px;
-        }
-
-        :root[data-theme="dark"],
-        html[data-theme="dark"],
-        body[data-theme="dark"],
-        [data-theme="dark"] {
-            /* Dark theme variables */
-            --primary-color: #9cb3ff;
-            --primary-dark: #c0d0ff;
-            --secondary-color: #8fa5ff;
-            --accent-color: #8ab4f8;
-            --success-color: #5ed3f0;
-            --warning-color: #ff4d8d;
-            --bg-color: #0f1416;
-            --card-bg: #182024;
-            --text-color: #edeae2;
-            --text-muted: #93a7ad;
-            --border-color: #3d525a;
-            --navbar-bg: #12181b;
-            --footer-bg: #0b0f11;
-            --footer-text: #edeae2;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
-            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
-        }
-
-        a, button, .btn, .card, .dashboard-card, .interaction-card, .nav-link, .theme-toggle {
-            transition: var(--transition);
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Navigation Styles */
-        .navbar {
-            height: 100px;
-            display: flex;
-            align-items: center;
-            background-color: var(--navbar-bg);
-            box-shadow: var(--shadow);
-            padding: 0.8rem 0;
-            transition: var(--transition);
-        }
-
-            .navbar .nav-link {
-                line-height: 50px; /* lock link alignment */
-                padding-top: 0;
-                padding-bottom: 0;
-            }
-
-        /* Make sure the underline doesn't push text */
-        .nav-link:before {
-            content: '';
-            position: absolute;
-            bottom: 4px; /* sits slightly above the bottom, no shifting */
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: var(--primary-color);
-            transition: var(--transition);
-            transform: translateX(-50%);
-            pointer-events: none; /* underline shouldn't affect layout */
-        }
-
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.8rem;
-            background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-            .navbar-brand:hover {
-                transform: scale(1.03);
-            }
-
-        .nav-link {
-            font-weight: 500;
-            padding: 0.5rem 1rem !important;
-            border-radius: var(--border-radius);
-            margin: 0 2px;
-            position: relative;
-        }
-
-            .nav-link:before {
-                content: '';
-                position: absolute;
-                bottom: 0;
-                left: 50%;
-                width: 0;
-                height: 2px;
-                background: var(--primary-color);
-                transition: var(--transition);
-                transform: translateX(-50%);
-            }
-
-            .nav-link:hover:before {
-                width: 80%;
-            }
-
-            .nav-link:hover {
-                color: var(--primary-color) !important;
-            }
-
-        .nav-item.active .nav-link {
-            color: var(--primary-color) !important;
-            font-weight: 600;
-        }
-
-            .nav-item.active .nav-link:before {
-                width: 80%;
-            }
-
-        /* Theme Toggle Button */
-        .theme-toggle {
-            background: transparent;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-            margin-left: 10px;
-        }
-
-            .theme-toggle:hover {
-                background-color: var(--primary-color);
-                color: white;
-                transform: rotate(15deg);
-            }
-
-        /* Notification Badge */
-        .notification-badge {
-            font-size: 0.7rem;
-            padding: 0.2rem 0.4rem;
-            min-width: 20px;
-            animation: subtlePulse 2s infinite;
-            transition: var(--transition);
-        }
-
-            .notification-badge.pulse {
-                animation: strongPulse 0.5s ease-in-out;
-            }
-
-        @@keyframes subtlePulse {
-            0%, 100% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.1);
-            }
-        }
-
-        @@keyframes strongPulse {
-            0% {
-                transform: scale(1);
-            }
-
-            50% {
-                transform: scale(1.3);
-            }
-
-            100% {
-                transform: scale(1);
-            }
-        }
-
-        /* Main Content Area */
-        .main-content {
-            flex: 1;
-            padding: 150px 0 2rem; /* top | left/right | bottom */
-        }
-
-
-        /* Footer Styles */
-        footer {
-            background-color: var(--footer-bg);
-            color: var(--footer-text);
-            padding: 2.5rem 0 1.5rem;
-            margin-top: auto;
-        }
-
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            margin-bottom: 1.5rem;
-        }
-
-        .footer-brand {
-            flex: 1;
-            min-width: 250px;
-            margin-bottom: 1.5rem;
-        }
-
-            .footer-brand h3 {
-                font-size: 1.5rem;
-                margin-bottom: 0.5rem;
-                background: linear-gradient(45deg, var(--accent-color), var(--success-color));
-                -webkit-background-clip: text;
-                background-clip: text;
-                color: transparent;
-            }
-
-            .footer-brand p {
-                color: var(--text-muted);
-                max-width: 300px;
-            }
-
-        .footer-links {
-            display: flex;
-            gap: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .footer-links-column {
-            min-width: 150px;
-        }
-
-            .footer-links-column h4 {
-                font-size: 1.1rem;
-                margin-bottom: 1rem;
-                position: relative;
-                padding-bottom: 0.5rem;
-            }
-
-                .footer-links-column h4:after {
-                    content: '';
-                    position: absolute;
-                    bottom: 0;
-                    left: 0;
-                    width: 30px;
-                    height: 2px;
-                    background: var(--accent-color);
-                }
-
-            .footer-links-column ul {
-                list-style: none;
-                padding: 0;
-                margin: 0;
-            }
-
-            .footer-links-column li {
-                margin-bottom: 0.5rem;
-            }
-
-            .footer-links-column a {
-                color: var(--footer-text);
-                text-decoration: none;
-                transition: var(--transition);
-                display: inline-block;
-            }
-
-                .footer-links-column a:hover {
-                    color: var(--accent-color);
-                    transform: translateX(5px);
-                }
-
-        .footer-bottom {
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            padding-top: 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .social-links {
-            display: flex;
-            gap: 1rem;
-        }
-
-            .social-links a {
-                color: var(--footer-text);
-                font-size: 1.2rem;
-                transition: var(--transition);
-            }
-
-                .social-links a:hover {
-                    color: var(--accent-color);
-                    transform: translateY(-3px);
-                }
-
-        /* Card Styles */
-        .card, .step-card, .benefit-card {
-            background-color: var(--card-bg);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-            overflow: hidden;
-        }
-
-            .card:hover, .step-card:hover, .benefit-card:hover {
-                transform: translateY(-5px);
-                box-shadow: var(--shadow-lg);
-            }
-
-        /* Utility Classes */
-        .btn-primary {
-            background-color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-
-            .btn-primary:hover {
-                background-color: var(--primary-dark);
-                border-color: var(--primary-dark);
-                transform: translateY(-2px);
-            }
-
-        hr {
-            border-color: var(--border-color);
-            opacity: 0.5;
-        }
-
-        /* Responsive adjustments */
-        @@media (max-width: 768px) {
-            .navbar-nav {
-                text-align: center;
-                margin-top: 1rem;
-            }
-
-            .footer-content {
-                flex-direction: column;
-            }
-
-            .footer-links {
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .footer-bottom {
-                flex-direction: column;
-                text-align: center;
-            }
-        }
-
-        @@media (max-width: 576px) {
-            .footer-links {
-                flex-direction: column;
-                gap: 1.5rem;
-            }
-
-            .footer-links-column {
-                min-width: 100%;
-            }
-        }
-    </style>
     <link rel="stylesheet" href="~/Content/skillbridge-refresh.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Content/skillbridge-overhaul.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Content/tailwind-app.css" asp-append-version="true" />
@@ -433,7 +44,7 @@
             <div class="sb-nav-content" id="navbarContent">
                 <ul class="navbar-nav sb-nav-primary tw:flex tw:items-center tw:gap-1 tw:m-0 tw:list-none tw:p-0">
                     <li class="nav-item tw:list-none">@Html.ActionLink("Explore", "Index", "Explore", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
-                    <li class="nav-item tw:list-none">@Html.ActionLink("Communities", "Index", "Communities", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
+                    <li class="nav-item tw:list-none">@Html.ActionLink("Community Feed", "Index", "Communities", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
                     @if (User.Identity.IsAuthenticated)
                     {
                         <li class="nav-item tw:list-none">@Html.ActionLink("Interactions", "Index", "Interactions", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
@@ -510,7 +121,7 @@
                             {
                                 <li><a href="@Url.Action("Index", "Interactions")">Interactions</a></li>
                             }
-                            <li><a href="@Url.Action("Index", "Communities")">Communities</a></li>
+                            <li><a href="@Url.Action("Index", "Communities")">Community Feed</a></li>
                         </ul>
                     </div>
                     <div class="footer-links-column">
@@ -757,35 +368,40 @@
         });
 
         $(function () {
-            function updateNotifBadge() {
-                if ('@User.Identity.IsAuthenticated' === 'True') {
+            if ('@User.Identity.IsAuthenticated' === 'True') {
+                function updateNotifBadge() {
+                    if (document.hidden) return;
                     $.get('@Url.Action("GetNotifications", "Notifications")', function (data) {
                         var badge = $("#notifBadge");
-                        if (data.unreadCount > 0) {
+                        if (data && data.unreadCount > 0) {
                             badge.text(data.unreadCount).show();
                             badge.addClass('pulse');
                             setTimeout(() => badge.removeClass('pulse'), 500);
                         } else {
                             badge.hide();
                         }
-                    }).fail(function() {
-                        console.log("Failed to fetch notifications");
                     });
                 }
-            }
 
-            updateNotifBadge();
-            setInterval(updateNotifBadge, 15000);
-            if ('@User.Identity.IsAuthenticated' === 'True') {
                 function updateMessageBadge() {
+                    if (document.hidden) return;
                     $.get('@Url.Action("UnreadCount", "Messages")', function (data) {
                         var badge = $('#messageBadge');
-                        if (data.count > 0) badge.text(data.count).show();
+                        if (data && data.count > 0) badge.text(data.count).show();
                         else badge.hide();
                     });
                 }
-                updateMessageBadge();
-                setInterval(updateMessageBadge, 15000);
+
+                function refreshBadges() {
+                    updateNotifBadge();
+                    updateMessageBadge();
+                }
+
+                refreshBadges();
+                setInterval(refreshBadges, 60000);
+                document.addEventListener('visibilitychange', function () {
+                    if (!document.hidden) refreshBadges();
+                });
             }
         });
 

@@ -52,33 +52,33 @@ try
     db.SaveChanges();
 
     using (var context = new ApplicationDbContext(options))
-        Check(Controller(context, ids[0]).ProposeMeeting(fixture.Id, DateTimeOffset.UtcNow.AddHours(2).ToString("o"),
+        Check(await Controller(context, ids[0]).ProposeMeeting(fixture.Id, DateTimeOffset.UtcNow.AddHours(2).ToString("o"),
             "Online", "Temporary audit meeting") is RedirectToActionResult, "Meeting proposal must succeed.");
     using (var context = new ApplicationDbContext(options))
-        Check(Controller(context, ids[1]).RespondToMeeting(fixture.Id, "Accept") is RedirectToActionResult &&
+        Check(await Controller(context, ids[1]).RespondToMeeting(fixture.Id, "Accept") is RedirectToActionResult &&
             context.Interactions.Find(fixture.Id).MeetingStatus == "Confirmed", "The partner must be able to accept the meeting.");
     using (var context = new ApplicationDbContext(options))
-        Check(Controller(context, ids[0]).CancelMeeting(fixture.Id) is RedirectToActionResult &&
+        Check(await Controller(context, ids[0]).CancelMeeting(fixture.Id) is RedirectToActionResult &&
             context.InteractionMeetingEvents.Count(e => e.InteractionId == fixture.Id) == 3,
             "Meeting changes must preserve their history.");
 
     var sessions = db.InteractionSessions.AsNoTracking().Where(s => s.InteractionId == fixture.Id).OrderBy(s => s.Id).ToList();
     using (var context = new ApplicationDbContext(options))
-        Check(Controller(context, ids[0]).SaveStageNote(sessions[0].Id, "Temporary audit note", "Next step") is RedirectToActionResult,
+        Check(await Controller(context, ids[0]).SaveStageNote(sessions[0].Id, "Temporary audit note", "Next step") is RedirectToActionResult,
             "A participant must be able to save a milestone note.");
     using (var context = new ApplicationDbContext(options))
-        Check(Controller(context, ids[0]).ProposePlan(fixture.Id, sessions[0].SkillId,
+        Check(await Controller(context, ids[0]).ProposePlan(fixture.Id, sessions[0].SkillId,
             new List<PlanStepInput> { new() { SessionId = sessions[0].Id, Title = "Temporary revised custom milestone" } }) is RedirectToActionResult,
             "An upcoming plan must be editable without deleting notes.");
     using (var context = new ApplicationDbContext(options))
-        Check(Controller(context, ids[1]).RespondToPlan(fixture.Id, sessions[0].SkillId, "Accept") is RedirectToActionResult &&
+        Check(await Controller(context, ids[1]).RespondToPlan(fixture.Id, sessions[0].SkillId, "Accept") is RedirectToActionResult &&
             context.InteractionSessions.Find(sessions[0].Id).Title == "Temporary revised custom milestone",
             "The partner must be able to accept the revised plan.");
     foreach (var session in sessions)
         foreach (var userId in ids)
         {
             using var context = new ApplicationDbContext(options);
-            Check(Controller(context, userId).MarkStageDone(session.StageNumber, fixture.Id, session.SkillId) is JsonResult,
+            Check(await Controller(context, userId).MarkStageDone(session.StageNumber, fixture.Id, session.SkillId) is JsonResult,
                 "Both participants must be able to confirm each milestone.");
         }
     Check(db.InteractionSessions.AsNoTracking().Where(s => s.InteractionId == fixture.Id)
@@ -86,11 +86,11 @@ try
     Console.WriteLine("Meeting, plan, note and milestone workflow checks passed.");
 
     using var start = new ManualResetEventSlim(false);
-    var completions = ids.Select(userId => Task.Run(() =>
+    var completions = ids.Select(userId => Task.Run(async () =>
     {
         using var context = new ApplicationDbContext(options);
         start.Wait();
-        return Controller(context, userId).EndInteraction(fixture.Id);
+        return await Controller(context, userId).EndInteraction(fixture.Id);
     })).ToArray();
     start.Set();
     var completed = await Task.WhenAll(completions);
@@ -109,11 +109,11 @@ try
     Console.WriteLine("Completion race and custom milestone checks passed.");
 
     using var ratingStart = new ManualResetEventSlim(false);
-    var ratings = Enumerable.Range(0, 2).Select(_ => Task.Run(() =>
+    var ratings = Enumerable.Range(0, 2).Select(_ => Task.Run(async () =>
     {
         using var context = new ApplicationDbContext(options);
         ratingStart.Wait();
-        var result = (JsonResult)Controller(context, ids[0]).SubmitRating(new InteractionRatingViewModel
+        var result = (JsonResult)await Controller(context, ids[0]).SubmitRating(new InteractionRatingViewModel
         {
             InteractionId = fixture.Id, RatingValue = 9, Comment = "Temporary audit concurrency check"
         });
