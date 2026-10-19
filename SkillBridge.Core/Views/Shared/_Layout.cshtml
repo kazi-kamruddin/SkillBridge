@@ -44,7 +44,7 @@
             <div class="sb-nav-content" id="navbarContent">
                 <ul class="navbar-nav sb-nav-primary tw:flex tw:items-center tw:gap-1 tw:m-0 tw:list-none tw:p-0">
                     <li class="nav-item tw:list-none">@Html.ActionLink("Explore", "Index", "Explore", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
-                    <li class="nav-item tw:list-none">@Html.ActionLink("Communities", "Index", "Communities", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
+                    <li class="nav-item tw:list-none">@Html.ActionLink("Community Feed", "Index", "Communities", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
                     @if (User.Identity.IsAuthenticated)
                     {
                         <li class="nav-item tw:list-none">@Html.ActionLink("Interactions", "Index", "Interactions", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
@@ -121,7 +121,7 @@
                             {
                                 <li><a href="@Url.Action("Index", "Interactions")">Interactions</a></li>
                             }
-                            <li><a href="@Url.Action("Index", "Communities")">Communities</a></li>
+                            <li><a href="@Url.Action("Index", "Communities")">Community Feed</a></li>
                         </ul>
                     </div>
                     <div class="footer-links-column">

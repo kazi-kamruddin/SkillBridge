@@ -39,7 +39,7 @@ test('guest navigation offers browsing and keeps private areas out of view', asy
   await page.goto('/');
   const navigation = page.locator('nav').first();
   await expect(navigation.getByRole('link', { name: 'Explore' })).toBeVisible();
-  await expect(navigation.getByRole('link', { name: 'Communities' })).toBeVisible();
+  await expect(navigation.getByRole('link', { name: /Community Feed|Communities/i })).toBeVisible();
   await expect(navigation.getByRole('link', { name: 'Interactions' })).toHaveCount(0);
   await expect(navigation.getByRole('link', { name: 'Messages' })).toHaveCount(0);
   await expect(navigation.getByRole('link', { name: 'Reports' })).toHaveCount(0);

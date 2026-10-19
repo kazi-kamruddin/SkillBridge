@@ -404,7 +404,7 @@ test.describe('SkillBridge Repository-Wide End-to-End Audit', () => {
 
     // Verify links are visible without opening hamburger
     await expect(nav.getByRole('link', { name: 'Explore' })).toBeVisible();
-    await expect(nav.getByRole('link', { name: 'Communities' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: /Community Feed|Communities/i })).toBeVisible();
     await expect(nav.getByRole('link', { name: 'Log in' })).toBeVisible();
     await expect(nav.getByRole('link', { name: 'Register' })).toBeVisible();
   });

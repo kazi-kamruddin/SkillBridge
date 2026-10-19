@@ -4,7 +4,12 @@
     ViewBag.Title = Model.CommunityName + " - Community";
 }
 
-<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8 sb-community-landing">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-4 tw:my-6 sb-community-landing">
+    <div class="tw:mb-4">
+        <a href="@Url.Action("Index", "Communities")" class="tw:inline-flex tw:items-center tw:gap-1.5 tw:text-sm tw:font-extrabold tw:text-sb-blue-strong tw:hover:underline">
+            &larr; Back to Community Feed
+        </a>
+    </div>
     <!-- Header -->
     <header class="sb-page-heading sb-community-landing-hero d-flex tw:flex justify-content-between tw:justify-between align-items-center tw:items-center mb-4 tw:mb-6">
         <div>

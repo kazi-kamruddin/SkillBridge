@@ -50,10 +50,59 @@ namespace SkillBridge.Models
     // VIEWMODELS
     // =====================================
 
+    public class CommunityFeedPostViewModel
+    {
+        public int PostId { get; set; }
+        public int CommunityId { get; set; }
+        public int SkillId { get; set; }
+        public string SkillName { get; set; }
+        public string CategoryName { get; set; }
+        public string AuthorUserId { get; set; }
+        public string AuthorName { get; set; }
+        public string AuthorAvatarUrl { get; set; }
+        public string AuthorRoleBadge { get; set; }
+        public bool AuthorIsPublic { get; set; }
+        public string Title { get; set; }
+        public string Content { get; set; }
+        public string ImageUrl { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string TimeAgo { get; set; }
+        public int CommentCount { get; set; }
+        public bool IsAuthor { get; set; }
+        public CommunityCommentViewModel TopComment { get; set; }
+    }
+
+    public class CommunityFilterSkillPill
+    {
+        public int SkillId { get; set; }
+        public string SkillName { get; set; }
+        public int PostCount { get; set; }
+        public bool IsUserSkill { get; set; }
+    }
+
+    public class UserSelectableSkill
+    {
+        public int CommunityId { get; set; }
+        public int SkillId { get; set; }
+        public string SkillName { get; set; }
+        public string Role { get; set; }
+    }
+
     public class CommunityIndexViewModel
     {
         public bool IsGuest { get; set; }
         public string SearchQuery { get; set; } = "";
+        public string ActiveTab { get; set; } = "all";
+        public int? SelectedSkillId { get; set; }
+        public string SelectedSkillName { get; set; }
+        public List<CommunityFeedPostViewModel> Posts { get; set; } = new List<CommunityFeedPostViewModel>();
+        public List<CommunityFilterSkillPill> AvailableSkillPills { get; set; } = new List<CommunityFilterSkillPill>();
+        public List<UserSelectableSkill> UserPostableSkills { get; set; } = new List<UserSelectableSkill>();
+        public int CurrentPage { get; set; } = 1;
+        public int TotalPages { get; set; } = 1;
+        public int TotalPostsCount { get; set; }
+        public bool HasMore { get; set; }
+        public bool UserHasSkills { get; set; }
         public List<CommunityViewModel> SkillsYouKnow { get; set; } = new List<CommunityViewModel>();
         public List<CommunityViewModel> SkillsYouWantToLearn { get; set; } = new List<CommunityViewModel>();
         public List<CommunityViewModel> OtherCommunities { get; set; } = new List<CommunityViewModel>();
@@ -92,10 +141,16 @@ namespace SkillBridge.Models
     {
         public int PostId { get; set; }
         public int CommunityId { get; set; }
+        public int SkillId { get; set; }
+        public string SkillName { get; set; }
+        public string CategoryName { get; set; }
         public string Title { get; set; }
         public string Content { get; set; }
         public string ImageUrl { get; set; }
+        public string CreatedByUserId { get; set; }
         public string CreatedByUserName { get; set; }
+        public string AuthorAvatarUrl { get; set; }
+        public string AuthorRoleBadge { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsMember { get; set; }
         public bool IsAuthor { get; set; }

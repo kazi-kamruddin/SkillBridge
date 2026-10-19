@@ -4,7 +4,12 @@
     ViewBag.Title = "Create Post";
 }
 
-<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8 sb-post-editor-page">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-4 tw:my-6 sb-post-editor-page">
+    <div class="tw:mb-4">
+        <a href="@Url.Action("Index", "Communities")" class="tw:inline-flex tw:items-center tw:gap-1.5 tw:text-sm tw:font-extrabold tw:text-sb-blue-strong tw:hover:underline">
+            &larr; Back to Community Feed
+        </a>
+    </div>
     <header class="sb-page-heading sb-post-editor-hero"><span class="sb-eyebrow">A PLACE TO THINK OUT LOUD</span><h1>Start a conversation.</h1><p>Ask a question, share a breakthrough, or show what you are making.</p></header>
     <div class="sb-post-editor-layout">
         <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink sb-post-editor-card">
