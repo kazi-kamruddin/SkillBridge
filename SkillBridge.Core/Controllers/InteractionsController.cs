@@ -448,6 +448,7 @@ namespace SkillBridge.Controllers
         public async Task<ActionResult> MarkStageDone(int stageNumber, int interactionId, int skillId)
         {
             var userId = User.Identity.GetUserId();
+            await using var transaction = await db.Database.BeginTransactionAsync();
             var session = await db.InteractionSessions
                 .Include(s => s.Interaction)
                 .Include(s => s.Skill)
@@ -471,31 +472,45 @@ namespace SkillBridge.Controllers
                 return Json(new { success = true, status = session.Status });
 
             if (session.Interaction.User1Id == userId)
-                session.User1Confirmed = true;
+            {
+                await db.InteractionSessions.Where(s => s.Id == session.Id)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.User1Confirmed, true));
+            }
             else if (session.Interaction.User2Id == userId)
-                session.User2Confirmed = true;
+            {
+                await db.InteractionSessions.Where(s => s.Id == session.Id)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.User2Confirmed, true));
+            }
+
+            await db.Entry(session).ReloadAsync();
 
             if (session.User1Confirmed && session.User2Confirmed && session.Status != "Confirmed")
             {
-                session.Status = "Confirmed";
+                var claimed = await db.InteractionSessions.Where(s => s.Id == session.Id && s.Status != "Confirmed")
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.Status, "Confirmed"));
 
-                db.Notifications.Add(new Notification
+                if (claimed == 1)
                 {
-                    UserId = session.Interaction.User1Id,
-                    Type = "Exchange",
-                    ReferenceId = interactionId,
-                    Message = $"Stage {session.StageNumber} of {session.Skill.Name} completed!"
-                });
-                db.Notifications.Add(new Notification
-                {
-                    UserId = session.Interaction.User2Id,
-                    Type = "Exchange",
-                    ReferenceId = interactionId,
-                    Message = $"Stage {session.StageNumber} of {session.Skill.Name} completed!"
-                });
+                    session.Status = "Confirmed";
+                    db.Notifications.Add(new Notification
+                    {
+                        UserId = session.Interaction.User1Id,
+                        Type = "Exchange",
+                        ReferenceId = interactionId,
+                        Message = $"Stage {session.StageNumber} of {session.Skill.Name} completed!"
+                    });
+                    db.Notifications.Add(new Notification
+                    {
+                        UserId = session.Interaction.User2Id,
+                        Type = "Exchange",
+                        ReferenceId = interactionId,
+                        Message = $"Stage {session.StageNumber} of {session.Skill.Name} completed!"
+                    });
+                    await db.SaveChangesAsync();
+                }
             }
 
-            await db.SaveChangesAsync();
+            await transaction.CommitAsync();
 
             return Json(new
             {
@@ -596,6 +611,12 @@ namespace SkillBridge.Controllers
 
             userSkill.KnownUpToStage = Math.Max(userSkill.KnownUpToStage ?? 0, completedLevel);
             userSkill.Status = "Teaching";
+
+            var learningSkill = await db.UserSkills.FirstOrDefaultAsync(us => us.UserId == userId && us.SkillId == skillId && us.Status == "Learning");
+            if (learningSkill != null)
+            {
+                learningSkill.KnownUpToStage = Math.Max(learningSkill.KnownUpToStage ?? 0, completedLevel);
+            }
         }
 
         ////////////////////////////////////////////////////////////////////////////
@@ -800,13 +821,17 @@ namespace SkillBridge.Controllers
             var sessions = interaction.Sessions.Where(s => s.SkillId == skillId).ToList();
             if (!sessions.Any()) return 0;
 
-            var completedCatalogStages = sessions
+            var confirmed = sessions
                 .Where(s => s.User1Confirmed && s.User2Confirmed)
-                .Select(s => s.CatalogStageNumber ?? 0)
+                .ToList();
+            if (!confirmed.Any()) return 0;
+
+            var completedCatalogStages = confirmed
+                .Select(s => s.CatalogStageNumber ?? s.StageNumber)
                 .Where(stage => stage > 0).ToHashSet();
             var level = 0;
             while (completedCatalogStages.Contains(level + 1)) level++;
-            return level;
+            return level > 0 ? level : Math.Min(12, confirmed.Count);
         }
 
         ////////////////////////////////////////////////////////////////////////////

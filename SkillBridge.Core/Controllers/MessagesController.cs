@@ -312,6 +312,9 @@ namespace SkillBridge.Controllers
             }
             if (BlockRules.EitherBlocked(db, currentUserId, targetUserId)) return StatusCode(403);
 
+            var canonicalUser1 = string.CompareOrdinal(currentUserId, targetUserId) <= 0 ? currentUserId : targetUserId;
+            var canonicalUser2 = string.CompareOrdinal(currentUserId, targetUserId) <= 0 ? targetUserId : currentUserId;
+
             var conversation = await db.Conversations
                 .FirstOrDefaultAsync(c =>
                     (c.User1Id == currentUserId && c.User2Id == targetUserId) ||
@@ -321,14 +324,24 @@ namespace SkillBridge.Controllers
             {
                 conversation = new Conversation
                 {
-                    User1Id = currentUserId,
-                    User2Id = targetUserId,
+                    User1Id = canonicalUser1,
+                    User2Id = canonicalUser2,
                     CreatedAt = DateTime.Now,
                     LastMessageAt = DateTime.Now
                 };
 
                 db.Conversations.Add(conversation);
-                await db.SaveChangesAsync();
+                try
+                {
+                    await db.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+                    conversation = await db.Conversations
+                        .FirstOrDefaultAsync(c =>
+                            (c.User1Id == currentUserId && c.User2Id == targetUserId) ||
+                            (c.User1Id == targetUserId && c.User2Id == currentUserId));
+                }
             }
 
             return RedirectToAction("Chat", new { id = conversation.Id });

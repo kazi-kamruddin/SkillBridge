@@ -366,13 +366,13 @@ namespace SkillBridge.Controllers
                     SkillName = skill.Skill.Name,
                     Stage = skill.KnownUpToStage ?? 0,
                     TotalStages = skill.Skill.SkillStages.Count,
-                    RequestStatus = skill.KnownUpToStage.GetValueOrDefault() < 1 ? "Hidden" : visitorWantsThisSkill
-                        ? (existingRequest != null
+                    RequestStatus = (skill.KnownUpToStage.GetValueOrDefault() < 1 || currentUserId == null || currentUserId == id)
+                        ? "Hidden"
+                        : (existingRequest != null
                             ? (existingRequest.Status == "Pending" ? "Pending" :
                                existingRequest.Status == "Accepted" ? "Accepted" :
                                existingRequest.Status == "Withdrawn" ? "Withdrawn" : "Declined")
                             : "None")
-                        : "Hidden"
                 });
             }
 
@@ -434,9 +434,8 @@ namespace SkillBridge.Controllers
             var currentUserId = User.Identity.GetUserId();
             if (currentUserId == null)
                 return Json(new { success = false, message = "You must be logged in." });
-            if (!await db.UserSkills.AsNoTracking().AnyAsync(us => us.UserId == currentUserId && us.Status == "Teaching" && us.KnownUpToStage > 0) ||
-                !await db.UserSkills.AsNoTracking().AnyAsync(us => us.UserId == currentUserId && us.Status == "Learning"))
-                return Json(new { success = false, message = "Add a skill to teach and a skill to learn before requesting an exchange." });
+            if (!await db.UserSkills.AsNoTracking().AnyAsync(us => us.UserId == currentUserId && us.Status == "Teaching" && us.KnownUpToStage > 0))
+                return Json(new { success = false, message = "Add a skill to teach before requesting an exchange." });
             goal = (goal ?? "").Trim();
             pace = (pace ?? "").Trim();
             firstMeetingIdea = (firstMeetingIdea ?? "").Trim();
@@ -459,9 +458,8 @@ namespace SkillBridge.Controllers
             if (userSkill.UserId == currentUserId)
                 return Json(new { success = false, message = "You cannot request your own skill." });
 
-            if (!await db.UserSkills.AsNoTracking().AnyAsync(us => us.UserId == currentUserId &&
-                us.SkillId == userSkill.SkillId && us.Status == "Learning"))
-                return Json(new { success = false, message = "Add this skill to your learning list first." });
+            var alreadyLearning = await db.UserSkills.AnyAsync(us => us.UserId == currentUserId &&
+                us.SkillId == userSkill.SkillId && us.Status == "Learning");
 
             var existingRequest = await db.SkillRequests
                 .FirstOrDefaultAsync(r => r.SkillId == userSkill.SkillId &&
@@ -486,6 +484,17 @@ namespace SkillBridge.Controllers
 
             await using (var transaction = await db.Database.BeginTransactionAsync())
             {
+                if (!alreadyLearning)
+                {
+                    db.UserSkills.Add(new UserSkill
+                    {
+                        UserId = currentUserId,
+                        SkillId = userSkill.SkillId,
+                        Status = "Learning",
+                        KnownUpToStage = 0
+                    });
+                }
+
                 db.SkillRequests.Add(request);
                 await db.SaveChangesAsync();
 

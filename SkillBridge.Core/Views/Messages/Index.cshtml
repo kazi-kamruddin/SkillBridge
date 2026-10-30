@@ -1,24 +1,41 @@
 @model IEnumerable<SkillBridge.Models.Conversation>
-
+@using SkillBridge.Helpers
+@using SkillBridge.Models
+@inject ApplicationDbContext ProfileDb
 
 @{
     ViewBag.Title = "Messages";
     var currentUserId = User.Identity.GetUserId();
+    var partnerIds = Model.Select(c => c.User1Id == currentUserId ? c.User2Id : c.User1Id).Distinct().ToList();
+    var partnerProfiles = ProfileDb.UserInformations
+        .Where(info => partnerIds.Contains(info.UserId))
+        .ToDictionary(info => info.UserId, info => info);
 }
 
-<h2>Your Conversations</h2>
+<div class="sb-page-shell tw:mx-auto tw:max-w-4xl tw:py-6">
+    <header class="sb-page-heading tw:mb-6">
+        <div class="sb-hero-kicker"><span class="sb-eyebrow">DIRECT MESSAGES</span></div>
+        <h1>Your Conversations</h1>
+        <p>Coordinate schedules, exchange notes, and share resources with your learning partners.</p>
+    </header>
 
-<ul class="list-group tw:flex tw:flex-col tw:gap-2">
-    @foreach (var convo in Model)
-    {
-        var otherUserId = convo.User1Id == currentUserId ? convo.User2Id : convo.User1Id;
-        <li class="list-group-item tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">
-            <a href="@Url.Action("Chat", "Messages", new { id = convo.Id })">
-                Conversation with @otherUserId
-            </a>
-            <span class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 pull-right">
-                @convo.LastMessageAt?.ToString("g")
-            </span>
-        </li>
-    }
-</ul>
+    <ul class="list-group tw:flex tw:flex-col tw:gap-3">
+        @foreach (var convo in Model)
+        {
+            var otherUserId = convo.User1Id == currentUserId ? convo.User2Id : convo.User1Id;
+            partnerProfiles.TryGetValue(otherUserId, out var partnerInfo);
+            var partnerName = !string.IsNullOrWhiteSpace(partnerInfo?.FullName) ? partnerInfo.FullName : "SkillBridge Member";
+            var partnerAvatar = ProfileImageHelper.GetProfileImage(partnerInfo?.ProfileImageUrl, partnerName);
+
+            <li class="list-group-item tw:flex tw:items-center tw:justify-between tw:gap-4 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">
+                <a class="tw:flex tw:items-center tw:gap-3 tw:font-extrabold tw:no-underline" href="@Url.Action("Chat", "Messages", new { id = convo.Id })">
+                    <img src="@partnerAvatar" alt="@partnerName" width="44" height="44" class="tw:rounded-full tw:border-2 tw:border-sb-ink" />
+                    <span>Conversation with @partnerName</span>
+                </a>
+                <span class="text-muted tw:text-sm tw:text-sb-muted tw:dark:text-sb-night-ink/70">
+                    @convo.LastMessageAt?.ToString("g")
+                </span>
+            </li>
+        }
+    </ul>
+</div>

@@ -17,7 +17,6 @@
     --sb-canvas-sage: rgba(126, 166, 144, .17);
     --sb-canvas-coral: rgba(220, 161, 137, .14);
     --sb-canvas-line: rgba(23, 36, 42, .038);
-    --sb-canvas-dot: rgba(23, 36, 42, .12);
 }
 
 :root[data-theme="dark"],
@@ -40,15 +39,13 @@ body[data-theme="dark"] {
     --sb-canvas-sage: rgba(65, 130, 100, .13);
     --sb-canvas-coral: rgba(160, 95, 75, .12);
     --sb-canvas-line: rgba(221, 232, 226, .035);
-    --sb-canvas-dot: rgba(221, 232, 226, .09);
     background-image:
         radial-gradient(ellipse 33rem 28rem at 4% 20%, var(--sb-canvas-sage), transparent 82%),
         radial-gradient(ellipse 36rem 30rem at 96% 48%, var(--sb-canvas-blue), transparent 84%),
         radial-gradient(ellipse 34rem 28rem at 18% 85%, var(--sb-canvas-coral), transparent 84%),
-        url("/images/skill-pattern-dark.svg"),
-        radial-gradient(var(--sb-canvas-dot) .85px, transparent 1px);
-    background-size: auto, auto, auto, 360px 360px, 22px 22px;
-    background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat;
+        url("/images/skill-pattern-dark.svg");
+    background-size: auto, auto, auto, 420px 420px;
+    background-repeat: no-repeat, no-repeat, no-repeat, repeat;
     background-attachment: fixed;
 }
 
@@ -71,10 +68,9 @@ body {
         radial-gradient(ellipse 33rem 28rem at 4% 20%, var(--sb-canvas-sage), transparent 82%),
         radial-gradient(ellipse 36rem 30rem at 96% 48%, var(--sb-canvas-blue), transparent 84%),
         radial-gradient(ellipse 34rem 28rem at 18% 85%, var(--sb-canvas-coral), transparent 84%),
-        url("/images/skill-pattern-light.svg"),
-        radial-gradient(var(--sb-canvas-dot) .85px, transparent 1px);
-    background-size: auto, auto, auto, 360px 360px, 22px 22px;
-    background-repeat: no-repeat, no-repeat, no-repeat, repeat, repeat;
+        url("/images/skill-pattern-light.svg");
+    background-size: auto, auto, auto, 420px 420px;
+    background-repeat: no-repeat, no-repeat, no-repeat, repeat;
     background-attachment: fixed;
     color: var(--text-color, var(--sb-ink));
 }

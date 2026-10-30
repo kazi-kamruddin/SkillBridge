@@ -74,13 +74,15 @@
 
 <style>
     .post-card {
-        border: 1px solid #e5e5e5;
-        background: #fff;
+        border: 2px solid var(--sb-line);
+        background: var(--sb-card);
+        color: var(--sb-ink);
+        box-shadow: var(--sb-card-shadow-small);
         transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
 
-        .post-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
+    .post-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--sb-card-shadow);
+    }
 </style>
