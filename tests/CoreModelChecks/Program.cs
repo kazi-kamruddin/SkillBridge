@@ -10,6 +10,12 @@ var options = new DbContextOptionsBuilder<ApplicationDbContext>()
     .Options;
 using var db = new ApplicationDbContext(options);
 _ = db.Model.GetEntityTypes().Count();
+var interactionEntity = db.Model.FindEntityType(typeof(Interaction))
+    ?? throw new Exception("Interaction entity missing from EF model.");
+var requesterSkillProp = interactionEntity.FindProperty(nameof(Interaction.SkillFromRequesterId))
+    ?? throw new Exception("SkillFromRequesterId property missing from EF model.");
+if (!requesterSkillProp.IsNullable)
+    throw new Exception("Interaction.SkillFromRequesterId must be nullable to support 1-way mentorships.");
 Console.WriteLine("Core EF model checks passed.");
 
 using var writer = new StringWriter();
@@ -54,3 +60,65 @@ var exploreVm = new ExploreViewModel
 if (!exploreVm.AdditionalMembers.Single().CanKnock || exploreVm.AllCatalogSkillNames.Count != 2)
     throw new Exception("ExploreViewModel discovery check failed.");
 Console.WriteLine("ExploreViewModel discovery checks passed.");
+
+// D4: Strict separation between catalog-linked progression and custom milestones.
+var customOnlySessions = new[]
+{
+    new InteractionSession { SkillId = 1, StageNumber = 1, CatalogStageNumber = null, User1Confirmed = true, User2Confirmed = true },
+    new InteractionSession { SkillId = 1, StageNumber = 2, CatalogStageNumber = null, User1Confirmed = true, User2Confirmed = true }
+};
+if (ExchangeProgressHelper.MaxStageCompleted(customOnlySessions, 1) != 0)
+    throw new Exception("Custom milestones without CatalogStageNumber must return stage 0.");
+
+var contiguousCatalogSessions = new[]
+{
+    new InteractionSession { SkillId = 1, StageNumber = 1, CatalogStageNumber = 1, User1Confirmed = true, User2Confirmed = true },
+    new InteractionSession { SkillId = 1, StageNumber = 2, CatalogStageNumber = 2, User1Confirmed = true, User2Confirmed = true },
+    new InteractionSession { SkillId = 1, StageNumber = 3, CatalogStageNumber = 4, User1Confirmed = true, User2Confirmed = true }
+};
+if (ExchangeProgressHelper.MaxStageCompleted(contiguousCatalogSessions, 1) != 2)
+    throw new Exception("Contiguous catalog completion check failed (expected 2 when stage 3 is skipped).");
+
+var unconfirmedCatalogSessions = new[]
+{
+    new InteractionSession { SkillId = 1, StageNumber = 1, CatalogStageNumber = 1, User1Confirmed = true, User2Confirmed = false }
+};
+if (ExchangeProgressHelper.MaxStageCompleted(unconfirmedCatalogSessions, 1) != 0)
+    throw new Exception("Single-sided confirmation must not advance verified catalog stage.");
+Console.WriteLine("Catalog vs custom stage progression checks passed.");
+
+// D3: Null-safe 1-way mentorship vs 2-way reciprocal skill formatting.
+var oneWayInteraction = new Interaction
+{
+    User1Id = "teacher-1",
+    User2Id = "learner-2",
+    SkillFromTeacherId = 1,
+    SkillFromTeacher = sampleSkills[0],
+    SkillFromRequesterId = null,
+    SkillFromRequester = null
+};
+var (teacherLearns, teacherTeaches) = ExchangeProgressHelper.FormatExchangeSkills(oneWayInteraction, "teacher-1");
+var (learnerLearns, learnerTeaches) = ExchangeProgressHelper.FormatExchangeSkills(oneWayInteraction, "learner-2");
+if (teacherLearns != null || teacherTeaches != "Python" || learnerLearns != "Python" || learnerTeaches != null)
+    throw new Exception("1-way mentorship skill formatting mismatch.");
+
+var twoWayInteraction = new Interaction
+{
+    User1Id = "teacher-1",
+    User2Id = "learner-2",
+    SkillFromTeacherId = 1,
+    SkillFromTeacher = sampleSkills[0],
+    SkillFromRequesterId = 2,
+    SkillFromRequester = sampleSkills[1]
+};
+var (t2Learns, t2Teaches) = ExchangeProgressHelper.FormatExchangeSkills(twoWayInteraction, "teacher-1");
+if (t2Learns != "Figma" || t2Teaches != "Python")
+    throw new Exception("2-way exchange skill formatting mismatch.");
+Console.WriteLine("One-way & two-way skill formatting checks passed.");
+
+// D5: Profile view model explicit opt-in metadata checks.
+var profileSkillVm = new UserSkillViewModel { SkillId = 1, SkillName = "Python", KnownUpToStage = 2, AlreadyTeaching = false };
+var updateVm = new UpdateProfileViewModel { VerifiedLearningStages = new Dictionary<int, int> { [1] = 2 } };
+if (profileSkillVm.SkillId != 1 || profileSkillVm.AlreadyTeaching || updateVm.VerifiedLearningStages[1] != 2)
+    throw new Exception("Profile verified learning & opt-in model checks failed.");
+Console.WriteLine("Profile verified learning model checks passed.");

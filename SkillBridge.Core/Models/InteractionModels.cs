@@ -25,8 +25,7 @@ namespace SkillBridge.Models
         [ForeignKey("SkillFromTeacherId")]
         public virtual Skill SkillFromTeacher { get; set; }
 
-        [Required]
-        public int SkillFromRequesterId { get; set; }
+        public int? SkillFromRequesterId { get; set; }
         [ForeignKey("SkillFromRequesterId")]
         public virtual Skill SkillFromRequester { get; set; }
 

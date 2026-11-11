@@ -15,6 +15,9 @@
 
     var knownSkillIds = new HashSet<int>(Model.SkillsIKnow.Select(s => s.SkillId));
     var toLearnSkillIds = new HashSet<int>(Model.SkillsToLearn);
+    var verifiedLearningStagesJson = JsonSerializer.Serialize(
+        (Model.VerifiedLearningStages ?? new Dictionary<int, int>()).ToDictionary(kv => kv.Key.ToString(), kv => kv.Value)
+    );
 }
 
 @section Styles {
@@ -135,12 +138,19 @@
                         @foreach (var skill in category.Skills)
                         {
                             var knownSkill = Model.SkillsIKnow.FirstOrDefault(s => s.SkillId == skill.Id);
+                            var verifiedStage = 0;
+                            var hasVerifiedStage = Model.VerifiedLearningStages != null && Model.VerifiedLearningStages.TryGetValue(skill.Id, out verifiedStage) && verifiedStage > 0;
+                            var initialStage = knownSkill?.KnownUpToStage ?? (hasVerifiedStage ? verifiedStage : 1);
                             var selected = knownSkill != null ? "active" : "";
                             <li class="list-group-item tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card skill-know @selected" tabindex="0" role="button" aria-pressed="@(selected == "active" ? "true" : "false")"
                                 data-skill-id="@skill.Id"
                                 data-skill-name="@skill.Name"
-                                data-known-stage="@(knownSkill?.KnownUpToStage ?? 1)">
+                                data-known-stage="@initialStage">
                                 @skill.Name
+                                @if (hasVerifiedStage && knownSkill == null)
+                                {
+                                    <span class="tw:mt-1 tw:block tw:text-xs tw:font-bold tw:text-sb-blue-strong tw:dark:text-[#aab9ff]">Verified Stage @verifiedStage</span>
+                                }
                             </li>
                         }
                     </ul>
@@ -166,6 +176,7 @@
         $(document).ready(function () {
             var $form = $("#updateProfileForm");
             var skillStagesData = @Html.Raw(skillStagesDataJson);
+            var verifiedLearningStages = @Html.Raw(verifiedLearningStagesJson);
 
             var selectedSkillsToLearn = new Set(@Html.Raw(JsonSerializer.Serialize(Model.SkillsToLearn.Select(id => id.ToString()).ToList())));
             var selectedSkillsIKnow = {};
@@ -226,8 +237,19 @@
             $(document).on("click", ".skill-know", function () {
                 var $this = $(this);
                 var skillId = String($this.data("skill-id")), skillName = $this.data("skill-name");
-                if ($this.hasClass("active")) { $this.removeClass("active"); delete selectedSkillsIKnow[skillId]; $("#stage-selection-" + skillId).remove(); refreshSkillsIKnowHiddenInputs(); }
-                else { $this.addClass("active"); selectedSkillsIKnow[skillId] = 1; renderStageSelectionFor(skillId, skillName); refreshSkillsIKnowHiddenInputs(); }
+                if ($this.hasClass("active")) {
+                    $this.removeClass("active");
+                    delete selectedSkillsIKnow[skillId];
+                    $("#stage-selection-" + skillId).remove();
+                    refreshSkillsIKnowHiddenInputs();
+                } else {
+                    $this.addClass("active");
+                    var maxAvailableStage = (skillStagesData[skillId] && skillStagesData[skillId].length) ? skillStagesData[skillId].length : 1;
+                    var prefilledStage = verifiedLearningStages[skillId] || 1;
+                    selectedSkillsIKnow[skillId] = Math.min(maxAvailableStage, Math.max(1, prefilledStage));
+                    renderStageSelectionFor(skillId, skillName);
+                    refreshSkillsIKnowHiddenInputs();
+                }
                 $this.attr("aria-pressed", $this.hasClass("active") ? "true" : "false");
             });
 

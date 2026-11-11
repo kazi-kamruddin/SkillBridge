@@ -1,4 +1,3 @@
-
 @model List<SkillBridge.Models.InteractionIndexViewModel>
 
 @section Styles {
@@ -139,10 +138,15 @@
     <div class="row tw:grid tw:grid-cols-12 tw:gap-4">
         @foreach (var interaction in Model)
         {
+            var isOneWay = string.IsNullOrWhiteSpace(interaction.SkillYouLearn) || string.IsNullOrWhiteSpace(interaction.SkillYouTeach);
             <div class="interaction-card tw:col-span-12 tw:md:col-span-6 tw:xl:col-span-4">
                 <h4>@interaction.OtherUserName</h4>
-                <p><strong>Teaching:</strong> @interaction.SkillYouTeach</p>
-                <p><strong>Learning:</strong> @interaction.SkillYouLearn</p>
+                @if (isOneWay)
+                {
+                    <p><span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:bg-sb-blue tw:px-2.5 tw:py-0.5 tw:text-xs tw:font-bold tw:text-sb-ink tw:dark:border-sb-night-ink tw:dark:text-sb-night-ink">One-way mentorship</span></p>
+                }
+                <p><strong>Teaching:</strong> @(string.IsNullOrWhiteSpace(interaction.SkillYouTeach) ? "None (1-way mentorship)" : interaction.SkillYouTeach)</p>
+                <p><strong>Learning:</strong> @(string.IsNullOrWhiteSpace(interaction.SkillYouLearn) ? "None (1-way mentorship)" : interaction.SkillYouLearn)</p>
                 <p><strong>Status:</strong> @interaction.Status</p>
                 @if (interaction.Status == "Ended")
                 {

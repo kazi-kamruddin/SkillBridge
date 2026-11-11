@@ -11,7 +11,7 @@
 <main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 mt-5 tw:mt-8 sb-public-profile sb-own-profile sb-profile-redesign" aria-labelledby="title">
 
     <p class="text-success tw:text-[#397d6c]">@ViewBag.StatusMessage</p>
-    @if (TempData["AccountNotice"] is string accountNotice) { <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink" role="status">@accountNotice</div> }
+    @if (TempData["AccountNotice"] is string accountNotice) { <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink tw:dark:border-sb-night-ink tw:dark:text-sb-night-ink" role="status">@accountNotice</div> }
 
     <header class="sb-profile-hero">
         <div class="sb-profile-hero-copy">
@@ -117,8 +117,28 @@
             foreach (var skill in Model.LearningSkills)
             {
                 <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink sb-learning-skill">
-                    <div class="card-body tw:p-5 p-2 tw:p-2 text-center tw:text-center">
-                        <span>@skill.SkillName </span>
+                    <div class="card-body tw:flex tw:flex-col tw:items-center tw:gap-2 tw:p-4 text-center tw:text-center">
+                        <span class="tw:font-bold">@skill.SkillName</span>
+                        @if (skill.KnownUpToStage > 0)
+                        {
+                            <span class="tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:bg-sb-blue tw:px-2.5 tw:py-0.5 tw:text-xs tw:font-bold tw:text-sb-ink tw:dark:border-sb-night-ink tw:dark:text-sb-night-ink">
+                                Verified Stage @skill.KnownUpToStage@(skill.TotalStages > 0 ? $"/{skill.TotalStages}" : "")
+                            </span>
+                            if (!skill.AlreadyTeaching)
+                            {
+                                <form method="post" action="@Url.Action("PromoteLearnedSkill", "Profile")" class="tw:mt-1">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="skillId" value="@skill.SkillId" />
+                                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-1.5 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-sage-deep tw:px-3 tw:py-1.5 tw:text-xs tw:font-extrabold tw:text-sb-ink tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink tw:dark:text-sb-night-ink">
+                                        Opt in to teach
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span class="tw:text-xs tw:font-bold tw:text-sb-muted tw:dark:text-sb-night-ink/70">Listed in Teaching Skills</span>
+                            }
+                        }
                     </div>
                 </div>
             }

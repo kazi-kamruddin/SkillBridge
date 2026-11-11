@@ -95,7 +95,30 @@
             <section aria-labelledby="latest-interaction-heading"><div class="tw:mb-5"><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.15em] tw:text-sb-blue-strong tw:dark:text-[#aab9ff]">Keep the exchange moving / 02</span><h2 id="latest-interaction-heading" class="tw:mt-1 tw:text-3xl tw:font-black tw:tracking-[-.04em]">Latest interaction</h2></div>
                 @if (Model.LatestInteractionId != null)
                 {
-                    <article class="tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-5 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card"><div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4"><div class="tw:flex tw:items-center tw:gap-3"><img src="@Model.LatestInteractionOtherUserProfileImage" alt="@Model.LatestInteractionOtherUserFullName" class="tw:size-14 tw:rounded-full tw:border-2 tw:border-sb-ink tw:object-cover tw:shadow-sb-small tw:dark:border-sb-night-ink" /><div><h3 class="tw:text-xl tw:font-black">@Model.LatestInteractionOtherUserFullName</h3><p class="tw:mt-1 tw:text-sm tw:text-sb-muted tw:dark:text-sb-night-ink/75">Status: <span class="tw:font-extrabold">@Model.LatestInteractionStatus</span></p></div></div><a class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-sage tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night" href="@Url.Action("Sessions", "Interactions", new { id = Model.LatestInteractionId })">View stages ↗</a></div><div class="tw:mt-5 tw:grid tw:grid-cols-1 tw:items-center tw:gap-3 tw:md:grid-cols-[1fr_auto_1fr]"><div class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-sage tw:p-4 tw:dark:border-sb-night-ink tw:dark:bg-sb-night"><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.12em]">You're teaching</span><p class="tw:mt-1 tw:text-lg tw:font-black">@Model.LatestInteractionSkillYouTeach</p></div><span class="tw:justify-self-center tw:text-3xl tw:font-black" aria-hidden="true">↔</span><div class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue tw:p-4 tw:dark:border-sb-night-ink tw:dark:bg-sb-night"><span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.12em]">You're learning</span><p class="tw:mt-1 tw:text-lg tw:font-black">@Model.LatestInteractionSkillYouLearn</p></div></div></article>
+                    var isOneWay = string.IsNullOrWhiteSpace(Model.LatestInteractionSkillYouLearn) || string.IsNullOrWhiteSpace(Model.LatestInteractionSkillYouTeach);
+                    <article class="tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-5 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">
+                        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
+                            <div class="tw:flex tw:items-center tw:gap-3">
+                                <img src="@Model.LatestInteractionOtherUserProfileImage" alt="@Model.LatestInteractionOtherUserFullName" class="tw:size-14 tw:rounded-full tw:border-2 tw:border-sb-ink tw:object-cover tw:shadow-sb-small tw:dark:border-sb-night-ink" />
+                                <div>
+                                    <h3 class="tw:text-xl tw:font-black">@Model.LatestInteractionOtherUserFullName</h3>
+                                    <p class="tw:mt-1 tw:text-sm tw:text-sb-muted tw:dark:text-sb-night-ink/75">Status: <span class="tw:font-extrabold">@Model.LatestInteractionStatus</span>@(isOneWay ? " · One-way mentorship" : "")</p>
+                                </div>
+                            </div>
+                            <a class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-sage tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night" href="@Url.Action("Sessions", "Interactions", new { id = Model.LatestInteractionId })">View stages ↗</a>
+                        </div>
+                        <div class="tw:mt-5 tw:grid tw:grid-cols-1 tw:items-center tw:gap-3 tw:md:grid-cols-[1fr_auto_1fr]">
+                            <div class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-sage tw:p-4 tw:dark:border-sb-night-ink tw:dark:bg-sb-night">
+                                <span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.12em]">You're teaching</span>
+                                <p class="tw:mt-1 tw:text-lg tw:font-black">@(string.IsNullOrWhiteSpace(Model.LatestInteractionSkillYouTeach) ? "None (1-way mentorship)" : Model.LatestInteractionSkillYouTeach)</p>
+                            </div>
+                            <span class="tw:justify-self-center tw:text-3xl tw:font-black" aria-hidden="true">@(isOneWay ? "→" : "↔")</span>
+                            <div class="tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue tw:p-4 tw:dark:border-sb-night-ink tw:dark:bg-sb-night">
+                                <span class="tw:text-xs tw:font-black tw:uppercase tw:tracking-[.12em]">You're learning</span>
+                                <p class="tw:mt-1 tw:text-lg tw:font-black">@(string.IsNullOrWhiteSpace(Model.LatestInteractionSkillYouLearn) ? "None (1-way mentorship)" : Model.LatestInteractionSkillYouLearn)</p>
+                            </div>
+                        </div>
+                    </article>
                 }
                 else
                 {

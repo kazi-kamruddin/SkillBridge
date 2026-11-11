@@ -40,15 +40,18 @@ namespace SkillBridge.Controllers
                 .ToListAsync();
 
             var names = await MemberNames.ForAsync(db, interactions.Select(i => i.User1Id == userId ? i.User2Id : i.User1Id));
-            var model = interactions.Select(i => new InteractionIndexViewModel
+            var model = interactions.Select(i =>
             {
-                InteractionId = i.Id,
-                Status = i.Status,
-                EndReason = i.EndReason,
-                OtherUserName = MemberNames.Get(names, i.User1Id == userId ? i.User2Id : i.User1Id),
-
-                SkillYouLearn = i.User1Id == userId ? i.SkillFromRequester.Name : i.SkillFromTeacher.Name,
-                SkillYouTeach = i.User1Id == userId ? i.SkillFromTeacher.Name : i.SkillFromRequester.Name
+                var (learnSkill, teachSkill) = ExchangeProgressHelper.FormatExchangeSkills(i, userId);
+                return new InteractionIndexViewModel
+                {
+                    InteractionId = i.Id,
+                    Status = i.Status,
+                    EndReason = i.EndReason,
+                    OtherUserName = MemberNames.Get(names, i.User1Id == userId ? i.User2Id : i.User1Id),
+                    SkillYouLearn = learnSkill,
+                    SkillYouTeach = teachSkill
+                };
             }).ToList();
 
             return View(model);
@@ -66,15 +69,19 @@ namespace SkillBridge.Controllers
                 .OrderByDescending(i => i.EndedAt ?? i.CreatedAt)
                 .ToListAsync();
             var names = await MemberNames.ForAsync(db, exchanges.Select(i => i.User1Id == userId ? i.User2Id : i.User1Id));
-            return View(exchanges.Select(i => new InteractionIndexViewModel
+            return View(exchanges.Select(i =>
             {
-                InteractionId = i.Id,
-                OtherUserName = MemberNames.Get(names, i.User1Id == userId ? i.User2Id : i.User1Id),
-                SkillYouLearn = i.User1Id == userId ? i.SkillFromRequester.Name : i.SkillFromTeacher.Name,
-                SkillYouTeach = i.User1Id == userId ? i.SkillFromTeacher.Name : i.SkillFromRequester.Name,
-                Status = i.Status,
-                CreatedAt = i.CreatedAt,
-                EndedAt = i.EndedAt
+                var (learnSkill, teachSkill) = ExchangeProgressHelper.FormatExchangeSkills(i, userId);
+                return new InteractionIndexViewModel
+                {
+                    InteractionId = i.Id,
+                    OtherUserName = MemberNames.Get(names, i.User1Id == userId ? i.User2Id : i.User1Id),
+                    SkillYouLearn = learnSkill,
+                    SkillYouTeach = teachSkill,
+                    Status = i.Status,
+                    CreatedAt = i.CreatedAt,
+                    EndedAt = i.EndedAt
+                };
             }).ToList());
         }
 
@@ -92,13 +99,14 @@ namespace SkillBridge.Controllers
             var ratings = await db.Ratings.AsNoTracking().Where(r => r.InteractionId == id).ToListAsync();
             var otherUserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id;
             var otherUserName = await MemberNames.GetAsync(db, otherUserId);
+            var (learnSkill, teachSkill) = ExchangeProgressHelper.FormatExchangeSkills(interaction, userId);
             return View(new InteractionHistoryViewModel
             {
                 InteractionId = id,
                 Status = interaction.Status,
                 OtherUserName = otherUserName,
-                SkillYouLearn = interaction.User1Id == userId ? interaction.SkillFromRequester.Name : interaction.SkillFromTeacher.Name,
-                SkillYouTeach = interaction.User1Id == userId ? interaction.SkillFromTeacher.Name : interaction.SkillFromRequester.Name,
+                SkillYouLearn = learnSkill,
+                SkillYouTeach = teachSkill,
                 EndReason = interaction.EndReason,
                 CreatedAt = interaction.CreatedAt,
                 EndedAt = interaction.EndedAt,
@@ -120,8 +128,8 @@ namespace SkillBridge.Controllers
             var userId = User.Identity.GetUserId();
             var interaction = await db.Interactions
                 .Include(i => i.Sessions).ThenInclude(s => s.Skill)
-                .Include(i => i.SkillFromRequester.SkillStages)
-                .Include(i => i.SkillFromTeacher.SkillStages)
+                .Include(i => i.SkillFromRequester).ThenInclude(s => s.SkillStages)
+                .Include(i => i.SkillFromTeacher).ThenInclude(s => s.SkillStages)
                 .FirstOrDefaultAsync(i => i.Id == id &&
                     (i.User1Id == userId || i.User2Id == userId));
 
@@ -264,7 +272,7 @@ namespace SkillBridge.Controllers
             var interaction = await db.Interactions.FirstOrDefaultAsync(i => i.Id == interactionId &&
                 i.Status == "Ongoing" && (i.User1Id == userId || i.User2Id == userId));
             if (interaction == null) return NotFound();
-            if (skillId != interaction.SkillFromRequesterId && skillId != interaction.SkillFromTeacherId)
+            if (skillId <= 0 || (skillId != interaction.SkillFromRequesterId && skillId != interaction.SkillFromTeacherId))
                 return BadRequest();
             if (await db.InteractionPlanProposals.AnyAsync(p => p.InteractionId == interactionId && p.SkillId == skillId))
                 return Conflict("Respond to the current plan proposal before suggesting another.");
@@ -576,7 +584,10 @@ namespace SkillBridge.Controllers
                     .SetProperty(i => i.EndedAt, completedAt));
             if (claimed != 1) return StatusCode(409);
 
-            await UpdateUserSkillAsync(interaction.User1Id, interaction.SkillFromRequesterId, interaction);
+            if (interaction.SkillFromRequesterId.HasValue)
+            {
+                await UpdateUserSkillAsync(interaction.User1Id, interaction.SkillFromRequesterId.Value, interaction);
+            }
             await UpdateUserSkillAsync(interaction.User2Id, interaction.SkillFromTeacherId, interaction);
 
             interaction.Status = "Completed";
@@ -592,28 +603,25 @@ namespace SkillBridge.Controllers
 
         private async Task UpdateUserSkillAsync(string userId, int skillId, Interaction interaction)
         {
-            if (skillId == 0) return;
-            var completedLevel = MaxStageCompleted(interaction, skillId);
-            if (completedLevel == 0) return;
+            if (skillId <= 0) return;
+            var completedLevel = ExchangeProgressHelper.MaxStageCompleted(interaction.Sessions, skillId);
+            if (completedLevel <= 0) return;
 
-            var userSkill = await db.UserSkills.FirstOrDefaultAsync(us => us.UserId == userId && us.SkillId == skillId && us.Status == "Teaching");
+            var learningSkill = await db.UserSkills
+                .FirstOrDefaultAsync(us => us.UserId == userId && us.SkillId == skillId && us.Status == "Learning");
 
-            if (userSkill == null)
+            if (learningSkill == null)
             {
-                userSkill = new UserSkill
+                learningSkill = new UserSkill
                 {
                     UserId = userId,
                     SkillId = skillId,
-                    Status = "Teaching"
+                    Status = "Learning",
+                    KnownUpToStage = completedLevel
                 };
-                db.UserSkills.Add(userSkill);
+                db.UserSkills.Add(learningSkill);
             }
-
-            userSkill.KnownUpToStage = Math.Max(userSkill.KnownUpToStage ?? 0, completedLevel);
-            userSkill.Status = "Teaching";
-
-            var learningSkill = await db.UserSkills.FirstOrDefaultAsync(us => us.UserId == userId && us.SkillId == skillId && us.Status == "Learning");
-            if (learningSkill != null)
+            else
             {
                 learningSkill.KnownUpToStage = Math.Max(learningSkill.KnownUpToStage ?? 0, completedLevel);
             }
@@ -637,11 +645,12 @@ namespace SkillBridge.Controllers
 
             var otherUserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id;
             var otherUserName = await MemberNames.GetAsync(db, otherUserId);
+            var (learnSkill, teachSkill) = ExchangeProgressHelper.FormatExchangeSkills(interaction, userId);
 
             var ratingModel = new InteractionRatingViewModel
             {
                 InteractionId = interaction.Id,
-                SkillName = interaction.User1Id == userId ? interaction.SkillFromRequester.Name : interaction.SkillFromTeacher.Name,
+                SkillName = learnSkill ?? teachSkill ?? interaction.SkillFromTeacher?.Name ?? "Skill",
                 FromUserName = otherUserName
             };
 
@@ -649,8 +658,8 @@ namespace SkillBridge.Controllers
             {
                 InteractionId = interaction.Id,
                 OtherUserName = ratingModel.FromUserName,
-                SkillYouLearn = interaction.User1Id == userId ? interaction.SkillFromRequester.Name : interaction.SkillFromTeacher.Name,
-                SkillYouTeach = interaction.User1Id == userId ? interaction.SkillFromTeacher.Name : interaction.SkillFromRequester.Name,
+                SkillYouLearn = learnSkill,
+                SkillYouTeach = teachSkill,
                 Status = interaction.Status
             };
 
@@ -816,49 +825,40 @@ namespace SkillBridge.Controllers
         }
 
         ////////////////////////////////////////////////////////////////////////////
-        private int MaxStageCompleted(Interaction interaction, int skillId)
-        {
-            var sessions = interaction.Sessions.Where(s => s.SkillId == skillId).ToList();
-            if (!sessions.Any()) return 0;
-
-            var confirmed = sessions
-                .Where(s => s.User1Confirmed && s.User2Confirmed)
-                .ToList();
-            if (!confirmed.Any()) return 0;
-
-            var completedCatalogStages = confirmed
-                .Select(s => s.CatalogStageNumber ?? s.StageNumber)
-                .Where(stage => stage > 0).ToHashSet();
-            var level = 0;
-            while (completedCatalogStages.Contains(level + 1)) level++;
-            return level > 0 ? level : Math.Min(12, confirmed.Count);
-        }
-
-        ////////////////////////////////////////////////////////////////////////////
 
         private async Task CreateFeedbackNotificationAsync(Interaction interaction)
         {
             var user2Name = await MemberNames.GetAsync(db, interaction.User2Id);
             var user1Name = await MemberNames.GetAsync(db, interaction.User1Id);
 
-            var notif1 = new Notification
+            string notif1Message;
+            string notif2Message;
+            if (!interaction.SkillFromRequesterId.HasValue || interaction.SkillFromRequester == null)
+            {
+                notif1Message = $"You completed your mentorship with {user2Name}. You taught {interaction.SkillFromTeacher.Name}. Click below to rate your partner.";
+                notif2Message = $"You completed your mentorship with {user1Name}. You learned {interaction.SkillFromTeacher.Name}. Click below to rate your mentor.";
+            }
+            else
+            {
+                notif1Message = $"You have successfully completed the interaction with {user2Name}. You taught {interaction.SkillFromTeacher.Name} and learned {interaction.SkillFromRequester.Name}. Click below to rate this interaction.";
+                notif2Message = $"You have successfully completed the interaction with {user1Name}. You taught {interaction.SkillFromRequester.Name} and learned {interaction.SkillFromTeacher.Name}. Click below to rate this interaction.";
+            }
+
+            db.Notifications.Add(new Notification
             {
                 UserId = interaction.User1Id,
                 Type = "Feedback",
                 ReferenceId = interaction.Id,
-                Message = $"You have successfully completed the interaction with {user2Name}. You taught {interaction.SkillFromTeacher.Name} and learned {interaction.SkillFromRequester.Name}. Click below to rate this interaction."
-            };
+                Message = notif1Message
+            });
 
-            var notif2 = new Notification
+            db.Notifications.Add(new Notification
             {
                 UserId = interaction.User2Id,
                 Type = "Feedback",
                 ReferenceId = interaction.Id,
-                Message = $"You have successfully completed the interaction with {user1Name}. You taught {interaction.SkillFromRequester.Name} and learned {interaction.SkillFromTeacher.Name}. Click below to rate this interaction."
-            };
-
-            db.Notifications.Add(notif1);
-            db.Notifications.Add(notif2);
+                Message = notif2Message
+            });
         }
 
         ////////////////////////////////////////////////////////////////////////////

@@ -13,6 +13,8 @@
 
         .notification-header {
             display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
@@ -59,6 +61,7 @@
 
         .notification-content {
             flex: 1;
+            min-width: 0;
         }
 
         .notification-message {
@@ -67,6 +70,7 @@
             font-weight: 700;
             line-height: 1.5;
             color: var(--sb-ink);
+            overflow-wrap: anywhere;
         }
 
         .notification-time {
@@ -84,7 +88,6 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            min-width: 180px;
         }
 
         .btn-sm-modern {
@@ -197,7 +200,7 @@
                     {
                         <h2 class="h5 px-4 tw:px-6 pt-3 tw:pt-4">Action needed</h2>
                     }
-                    <div class="notification-item d-flex tw:flex justify-content-between tw:justify-between align-items-start tw:items-start @(n.IsRead ?"" : "unread")" data-id="@n.Id">
+                    <div class="notification-item d-flex tw:flex tw:flex-col tw:sm:flex-row tw:gap-4 justify-content-between tw:justify-between align-items-start tw:items-start @(n.IsRead ? "" : "unread")" data-id="@n.Id">
                         <div class="notification-content">
                             <div class="notification-message">@n.Message</div>
                             <div class="notification-time">
@@ -207,10 +210,10 @@
                             @if (n.Type == "SkillRequest")
                             {
                                 <a href="@Url.Action("RequestDetails", "Profile", new { id = n.ReferenceId })" class="d-block tw:block mb-2 tw:mb-2">Read exchange proposal</a>
-                                <div class="skill-selection d-none tw:hidden" data-id="@n.Id">
-                                    <label class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Select skill to learn from requester:</label>
-                                    <select class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-control-modern skill-dropdown" data-id="@n.Id"></select>
-                                    <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary-modern btn-sm-modern mt-2 tw:mt-2 initialize-btn" data-id="@n.Id">
+                                <div class="skill-selection tw:hidden" data-id="@n.Id">
+                                    <label class="skill-selection-label form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold" for="skill-dropdown-@n.Id">Choose exchange mode:</label>
+                                    <select id="skill-dropdown-@n.Id" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-control-modern skill-dropdown" data-id="@n.Id"></select>
+                                    <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary-modern btn-sm-modern mt-2 tw:mt-2 initialize-btn" data-id="@n.Id">
                                         <i class="fas fa-play-circle me-1 tw:me-1"></i>Start Interaction
                                     </button>
                                 </div>
@@ -222,21 +225,21 @@
                             }
                         </div>
 
-                        <div class="notification-actions">
+                        <div class="notification-actions tw:w-full tw:sm:w-auto tw:sm:min-w-[180px]">
                             @if (n.Type == "SkillRequest")
                             {
-                                <div class="d-flex tw:flex gap-2 tw:gap-2">
-                                    <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success-modern btn-sm-modern accept-btn" data-id="@n.Id">
+                                <div class="notification-decision-buttons d-flex tw:flex tw:flex-wrap gap-2 tw:gap-2">
+                                    <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success-modern btn-sm-modern accept-btn" data-id="@n.Id">
                                         <i class="fas fa-check me-1 tw:me-1"></i>Accept
                                     </button>
-                                    <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-danger-modern btn-sm-modern decline-btn" data-id="@n.Id">
+                                    <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-danger-modern btn-sm-modern decline-btn" data-id="@n.Id">
                                         <i class="fas fa-times me-1 tw:me-1"></i>Decline
                                     </button>
                                 </div>
                             }
                             else if (n.Type != "Feedback" && !n.IsRead)
                             {
-                                <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
+                                <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
                                     <i class="fas fa-eye me-1 tw:me-1"></i>Mark as Read
                                 </button>
                             }
@@ -246,7 +249,7 @@
                                     <a href="@Url.Action("RateInteraction", "Interactions", new { interactionId = n.ReferenceId })" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary-modern btn-sm-modern">
                                         <i class="fas fa-star me-1 tw:me-1"></i>Rate the Interaction
                                     </a>
-                                    <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
+                                    <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
                                         <i class="fas fa-eye me-1 tw:me-1"></i>Mark as Read
                                     </button>
                                 </div>
@@ -279,13 +282,18 @@
             $(document).on("click", ".decline-btn", function () {
                 var btn = $(this);
                 var id = btn.data("id");
+                btn.prop("disabled", true);
                 $.post("/Notifications/DeclineSkillRequest", { notificationId: id, __RequestVerificationToken: verificationToken }, function (res) {
                     if (res.success) {
                         btn.closest(".notification-item").fadeOut(300, function () {
                             $(this).remove();
                             updateNotificationCount();
                         });
+                    } else {
+                        btn.prop("disabled", false);
                     }
+                }).fail(function () {
+                    btn.prop("disabled", false);
                 });
             });
 
@@ -295,18 +303,32 @@
                 var id = btn.data("id");
                 var container = $(".skill-selection[data-id='" + id + "']");
                 var dropdown = container.find(".skill-dropdown");
+                var label = container.find(".skill-selection-label");
+                btn.prop("disabled", true);
 
                 $.get("/Notifications/AcceptSkillRequest", { notificationId: id }, function (res) {
-                    dropdown.empty();
-                    if (res.skills.length === 0) {
-                        dropdown.append('<option value="">No skills available</option>');
-                    } else {
-                        $.each(res.skills, function (i, skill) {
-                            dropdown.append($('<option>').val(skill.skillId).text(skill.name));
-                        });
+                    if (!res || res.canAcceptOneWay === false) {
+                        btn.prop("disabled", false);
+                        alert("This request is no longer available.");
+                        return;
                     }
-                    container.removeClass("d-none");
-                    btn.closest('.d-flex').hide();
+
+                    dropdown.empty();
+                    if (res.skills && res.skills.length > 0) {
+                        label.text("Select a skill to learn back (or accept as 1-way mentorship):");
+                        $.each(res.skills, function (i, skill) {
+                            dropdown.append($('<option>').val(skill.skillId).text('Swap: learn ' + skill.name));
+                        });
+                    } else {
+                        label.text("No reciprocal match listed — start as 1-way mentorship:");
+                    }
+                    dropdown.append($('<option>').val('').text('Accept as 1-way mentorship (teach without learning back)'));
+
+                    container.removeClass("d-none tw:hidden");
+                    btn.closest('.notification-decision-buttons').hide();
+                }).fail(function () {
+                    btn.prop("disabled", false);
+                    alert("Could not load exchange options. Please try again.");
                 });
             });
 
@@ -315,21 +337,26 @@
                 var btn = $(this);
                 var id = btn.data("id");
                 var dropdown = $(".skill-selection[data-id='" + id + "']").find(".skill-dropdown");
-                var selectedSkillId = dropdown.val();
-                if (!selectedSkillId) {
-                    alert("Please select a skill to learn from requester.");
-                    return;
-                }
+                var selectedSkillId = dropdown.val() || "";
+                btn.prop("disabled", true);
 
-                $.post("/Notifications/InitializeInteraction", { notificationId: id, skillId: selectedSkillId, __RequestVerificationToken: verificationToken }, function (res) {
-                    if (res.success) {
+                $.post("/Notifications/InitializeInteraction", {
+                    notificationId: id,
+                    skillId: selectedSkillId,
+                    __RequestVerificationToken: verificationToken
+                }, function (res) {
+                    if (res && res.success) {
                         btn.closest(".notification-item").fadeOut(300, function () {
                             $(this).remove();
                             updateNotificationCount();
                         });
                     } else {
+                        btn.prop("disabled", false);
                         alert("Failed to initialize interaction.");
                     }
+                }).fail(function () {
+                    btn.prop("disabled", false);
+                    alert("Failed to initialize interaction. Please try again.");
                 });
             });
 

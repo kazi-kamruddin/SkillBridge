@@ -1,4 +1,3 @@
-
 using SkillBridge.Helpers;
 using System;
 using SkillBridge.Models;
@@ -104,15 +103,9 @@ namespace SkillBridge.Controllers
                     vm.LatestInteractionOtherUserFullName = vm.LatestInteractionOtherUser;
                     vm.LatestInteractionOtherUserProfileImage = ProfileImageHelper.GetProfileImage(otherUserInfo?.ProfileImageUrl, otherUserInfo?.FullName);
 
-                    vm.LatestInteractionSkillYouLearn =
-                        latestInteraction.User1Id == userId
-                            ? latestInteraction.SkillFromRequester.Name
-                            : latestInteraction.SkillFromTeacher.Name;
-
-                    vm.LatestInteractionSkillYouTeach =
-                        latestInteraction.User1Id == userId
-                            ? latestInteraction.SkillFromTeacher.Name
-                            : latestInteraction.SkillFromRequester.Name;
+                    var (learnSkill, teachSkill) = ExchangeProgressHelper.FormatExchangeSkills(latestInteraction, userId);
+                    vm.LatestInteractionSkillYouLearn = learnSkill;
+                    vm.LatestInteractionSkillYouTeach = teachSkill;
                 }
             }
             else

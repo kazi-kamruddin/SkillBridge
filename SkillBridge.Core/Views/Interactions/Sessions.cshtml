@@ -105,9 +105,17 @@
     </style>
 }
 
+@{
+    var tracks = Model.SkillBlocks.GroupBy(s => new { s.SkillId, s.SkillName }).ToList();
+}
+
 <div class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 mt-4 tw:mt-6 sb-session-page">
     @Html.AntiForgeryToken()
     <h1 class="h2 mb-2 tw:mb-2">Your exchange plan</h1>
+    @if (tracks.Count == 1)
+    {
+        <p class="tw:mb-2"><span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:bg-sb-blue tw:px-3 tw:py-1 tw:text-xs tw:font-bold tw:text-sb-ink tw:dark:border-sb-night-ink tw:dark:text-sb-night-ink">One-way mentorship</span></p>
+    }
     <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 mb-4 tw:mb-6">Both partners confirm each milestone. You can suggest changes to upcoming milestones; the other member must agree.</p>
     @if (TempData["PlanNotice"] != null) { <p class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-success tw:bg-sb-sage tw:text-sb-ink" role="status">@TempData["PlanNotice"]</p> }
 
@@ -167,7 +175,7 @@
     <partial name="_MeetingHistory" model="Model.MeetingHistory" />
 
     <div class="exchange-tracks">
-        @foreach (var track in Model.SkillBlocks.GroupBy(s => new { s.SkillId, s.SkillName }))
+        @foreach (var track in tracks)
         {
             var proposal = Model.PlanProposals.FirstOrDefault(p => p.SkillId == track.Key.SkillId);
             <section class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink p-3 tw:p-4 mb-4 tw:mb-6 exchange-track" aria-label="@track.Key.SkillName plan">

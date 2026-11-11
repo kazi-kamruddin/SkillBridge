@@ -33,6 +33,19 @@ if (statistics.Count != 2) throw new InvalidOperationException("Both test accoun
 var originalSkills = db.UserSkills.AsNoTracking().Where(s => ids.Contains(s.UserId)).ToList();
 var skillIds = db.Skills.OrderBy(s => s.Id).Take(2).Select(s => s.Id).ToArray();
 if (skillIds.Length != 2) throw new InvalidOperationException("The catalog needs two skills.");
+
+var learnerTouchedSkillIds = originalSkills.Where(s => s.UserId == ids[1]).Select(s => s.SkillId).ToHashSet();
+var mentorshipSkill = db.Skills
+    .Include(s => s.SkillStages)
+    .AsNoTracking()
+    .Where(s => s.SkillStages.Count >= 2)
+    .OrderBy(s => learnerTouchedSkillIds.Contains(s.Id) ? 1 : 0)
+    .ThenBy(s => s.Id)
+    .FirstOrDefault() ?? throw new InvalidOperationException("The catalog needs a skill with at least two stages.");
+var originalLearnerSkillRows = originalSkills
+    .Where(s => s.UserId == ids[1] && s.SkillId == mentorshipSkill.Id)
+    .ToList();
+
 var fixture = new Interaction
 {
     User1Id = ids[0], User2Id = ids[1], SkillFromTeacherId = skillIds[0],
@@ -40,6 +53,7 @@ var fixture = new Interaction
 };
 db.Interactions.Add(fixture);
 db.SaveChanges();
+Interaction oneWayFixture = null;
 try
 {
     foreach (var skillId in skillIds)
@@ -127,28 +141,101 @@ try
         recipient.AccumulatedRating == originalRecipient.AccumulatedRating + 9,
         "A duplicate rating must not change the recipient's totals twice.");
     Console.WriteLine("Duplicate rating checks passed.");
+
+    // Phase 2: One-way mentorship (SkillFromRequesterId = null) + verified catalog progression without silent Teaching promotion.
+    oneWayFixture = new Interaction
+    {
+        User1Id = ids[0],
+        User2Id = ids[1],
+        SkillFromTeacherId = mentorshipSkill.Id,
+        SkillFromRequesterId = null,
+        Status = "Ongoing"
+    };
+    db.Interactions.Add(oneWayFixture);
+    db.SaveChanges();
+
+    var catalogStages = mentorshipSkill.SkillStages.OrderBy(s => s.StageNumber).Take(2).ToList();
+    foreach (var stage in catalogStages)
+    {
+        db.InteractionSessions.Add(new InteractionSession
+        {
+            InteractionId = oneWayFixture.Id,
+            SkillId = mentorshipSkill.Id,
+            StageNumber = stage.StageNumber,
+            Title = stage.Description,
+            CatalogStageNumber = stage.StageNumber,
+            Status = "Pending",
+            User1Confirmed = false,
+            User2Confirmed = false
+        });
+    }
+    db.SaveChanges();
+
+    using (var context = new ApplicationDbContext(options))
+    {
+        Check(await Controller(context, ids[0]).Index() is ViewResult, "Teacher Interactions/Index must handle 1-way mentorships.");
+        Check(await Controller(context, ids[1]).Sessions(oneWayFixture.Id) is ViewResult, "Learner Sessions page must load for 1-way mentorships.");
+    }
+
+    var oneWaySessions = db.InteractionSessions.AsNoTracking().Where(s => s.InteractionId == oneWayFixture.Id).OrderBy(s => s.StageNumber).ToList();
+    foreach (var session in oneWaySessions)
+        foreach (var userId in ids)
+        {
+            using var context = new ApplicationDbContext(options);
+            Check(await Controller(context, userId).MarkStageDone(session.StageNumber, oneWayFixture.Id, session.SkillId) is JsonResult,
+                "1-way mentorship catalog milestones must confirm cleanly.");
+        }
+
+    var priorTeaching = originalLearnerSkillRows.FirstOrDefault(s => s.Status == "Teaching");
+    using (var context = new ApplicationDbContext(options))
+        Check(await Controller(context, ids[0]).EndInteraction(oneWayFixture.Id) is RedirectToActionResult,
+            "1-way mentorship must complete cleanly without a reciprocal skill.");
+
+    Check(db.Notifications.Count(n => n.Type == "Feedback" && n.ReferenceId == oneWayFixture.Id) == 2,
+        "1-way mentorship completion must create feedback notifications cleanly.");
+
+    var updatedLearning = db.UserSkills.AsNoTracking()
+        .FirstOrDefault(s => s.UserId == ids[1] && s.SkillId == mentorshipSkill.Id && s.Status == "Learning");
+    Check(updatedLearning != null && (updatedLearning.KnownUpToStage ?? 0) >= 2,
+        "Completing catalog stages in a 1-way mentorship must raise verified Learning stage progress.");
+
+    var postTeaching = db.UserSkills.AsNoTracking()
+        .FirstOrDefault(s => s.UserId == ids[1] && s.SkillId == mentorshipSkill.Id && s.Status == "Teaching");
+    if (priorTeaching == null)
+        Check(postTeaching == null, "Completing catalog stages must never silently add a Teaching row.");
+    else
+        Check(postTeaching != null && postTeaching.KnownUpToStage == priorTeaching.KnownUpToStage,
+            "Completing catalog stages must not silently mutate existing Teaching stage levels.");
+
+    Console.WriteLine("One-way mentorship, catalog progression, and no-auto-teach checks passed.");
 }
 finally
 {
     using var cleanup = new ApplicationDbContext(options);
     using var transaction = cleanup.Database.BeginTransaction();
-    cleanup.Notifications.Where(n => n.ReferenceId == fixture.Id && (n.Type == "Feedback" || n.Type == "Exchange")).ExecuteDelete();
-    cleanup.Ratings.Where(r => r.InteractionId == fixture.Id).ExecuteDelete();
-    cleanup.InteractionSessionNotes.Where(n => n.InteractionSession.InteractionId == fixture.Id).ExecuteDelete();
-    cleanup.InteractionPlanProposals.Where(p => p.InteractionId == fixture.Id).ExecuteDelete();
-    cleanup.InteractionMeetingEvents.Where(e => e.InteractionId == fixture.Id).ExecuteDelete();
-    cleanup.InteractionSessions.Where(s => s.InteractionId == fixture.Id).ExecuteDelete();
-    cleanup.Interactions.Where(i => i.Id == fixture.Id).ExecuteDelete();
+    var fixtureIds = oneWayFixture != null ? new[] { fixture.Id, oneWayFixture.Id } : new[] { fixture.Id };
+    cleanup.Notifications.Where(n => n.ReferenceId.HasValue && fixtureIds.Contains(n.ReferenceId.Value) &&
+        (n.Type == "Feedback" || n.Type == "Exchange")).ExecuteDelete();
+    cleanup.Ratings.Where(r => fixtureIds.Contains(r.InteractionId)).ExecuteDelete();
+    cleanup.InteractionSessionNotes.Where(n => fixtureIds.Contains(n.InteractionSession.InteractionId)).ExecuteDelete();
+    cleanup.InteractionPlanProposals.Where(p => fixtureIds.Contains(p.InteractionId)).ExecuteDelete();
+    cleanup.InteractionMeetingEvents.Where(e => fixtureIds.Contains(e.InteractionId)).ExecuteDelete();
+    cleanup.InteractionSessions.Where(s => fixtureIds.Contains(s.InteractionId)).ExecuteDelete();
+    cleanup.Interactions.Where(i => fixtureIds.Contains(i.Id)).ExecuteDelete();
     foreach (var before in statistics)
         cleanup.UserRatings.Where(r => r.UserId == before.UserId).ExecuteUpdate(setters => setters
             .SetProperty(r => r.InteractionsCompleted, before.InteractionsCompleted)
             .SetProperty(r => r.RatingsReceived, before.RatingsReceived)
             .SetProperty(r => r.AccumulatedRating, before.AccumulatedRating));
+
     var originalIds = originalSkills.Select(s => s.Id).ToArray();
-    cleanup.UserSkills.Where(s => ids.Contains(s.UserId) && !originalIds.Contains(s.Id) &&
-        skillIds.Contains(s.SkillId) && s.Status == "Teaching" && s.KnownUpToStage == 0).ExecuteDelete();
+    cleanup.UserSkills.Where(s => ids.Contains(s.UserId) && !originalIds.Contains(s.Id)).ExecuteDelete();
+    foreach (var beforeSkill in originalLearnerSkillRows)
+        cleanup.UserSkills.Where(s => s.Id == beforeSkill.Id)
+            .ExecuteUpdate(setters => setters.SetProperty(s => s.KnownUpToStage, beforeSkill.KnownUpToStage));
+
     transaction.Commit();
-    Console.WriteLine("Temporary workflow fixtures removed; disposable-account statistics restored.");
+    Console.WriteLine("Temporary workflow fixtures removed; disposable-account statistics and skills restored.");
 }
 
 static InteractionsController Controller(ApplicationDbContext db, string userId)

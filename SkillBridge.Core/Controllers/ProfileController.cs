@@ -50,6 +50,7 @@ namespace SkillBridge.Controllers
                 .Where(us => us.UserId == userId)
                 .Select(us => new UserSkillViewModel
                 {
+                    SkillId = us.SkillId,
                     SkillName = us.Skill.Name,
                     CategoryName = us.Skill.SkillCategory.Name,
                     KnownUpToStage = us.KnownUpToStage ?? 0,
@@ -58,7 +59,12 @@ namespace SkillBridge.Controllers
                 }).ToListAsync();
 
             var teachingSkills = userSkills.Where(s => s.Status == "Teaching").ToList();
+            var teachingSkillIds = teachingSkills.Select(s => s.SkillId).ToHashSet();
             var learningSkills = userSkills.Where(s => s.Status == "Learning").ToList();
+            foreach (var learningSkill in learningSkills)
+            {
+                learningSkill.AlreadyTeaching = teachingSkillIds.Contains(learningSkill.SkillId);
+            }
 
             var userRatings = await db.UserRatings.AsNoTracking().FirstOrDefaultAsync(ur => ur.UserId == userId);
 
@@ -135,7 +141,11 @@ namespace SkillBridge.Controllers
                     SkillId = s.SkillId,
                     KnownUpToStage = s.KnownUpToStage ?? 1
                 }).ToList(),
-                AllSkillCategories = skillCategories
+                AllSkillCategories = skillCategories,
+                VerifiedLearningStages = userSkills
+                    .Where(s => s.Status == "Learning" && (s.KnownUpToStage ?? 0) > 0)
+                    .GroupBy(s => s.SkillId)
+                    .ToDictionary(g => g.Key, g => g.Max(x => x.KnownUpToStage ?? 0))
             };
 
             return View(model);
@@ -184,6 +194,10 @@ namespace SkillBridge.Controllers
             {
                 model.AllSkillCategories = await db.SkillCategories.AsNoTracking().Include("Skills.SkillStages").ToListAsync();
                 model.ExistingProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo.ProfileImageUrl, userInfo.FullName);
+                model.VerifiedLearningStages = await db.UserSkills.AsNoTracking()
+                    .Where(s => s.UserId == userId && s.Status == "Learning" && (s.KnownUpToStage ?? 0) > 0)
+                    .GroupBy(s => s.SkillId)
+                    .ToDictionaryAsync(g => g.Key, g => g.Max(x => x.KnownUpToStage ?? 0));
                 return View(model);
             }
 
@@ -191,10 +205,17 @@ namespace SkillBridge.Controllers
             if (model.ProfileImage?.Length > 0)
             {
                 try { uploaded = await images.UploadAsync(model.ProfileImage, "skillbridge/avatars", false); }
-                catch { ModelState.AddModelError(nameof(model.ProfileImage), "The image could not be uploaded. Please try again.");
+                catch
+                {
+                    ModelState.AddModelError(nameof(model.ProfileImage), "The image could not be uploaded. Please try again.");
                     model.AllSkillCategories = await db.SkillCategories.AsNoTracking().Include("Skills.SkillStages").ToListAsync();
                     model.ExistingProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo.ProfileImageUrl, userInfo.FullName);
-                    return View(model); }
+                    model.VerifiedLearningStages = await db.UserSkills.AsNoTracking()
+                        .Where(s => s.UserId == userId && s.Status == "Learning" && (s.KnownUpToStage ?? 0) > 0)
+                        .GroupBy(s => s.SkillId)
+                        .ToDictionaryAsync(g => g.Key, g => g.Max(x => x.KnownUpToStage ?? 0));
+                    return View(model);
+                }
             }
             var previousImagePublicId = userInfo.ProfileImagePublicId;
             userInfo.FullName = model.FullName.Trim();
@@ -219,6 +240,11 @@ namespace SkillBridge.Controllers
             userInfo.MeetingFormat = model.MeetingFormat;
 
             var existingSkills = await db.UserSkills.Where(us => us.UserId == userId).ToListAsync();
+            var preservedLearningStages = existingSkills
+                .Where(s => s.Status == "Learning")
+                .GroupBy(s => s.SkillId)
+                .ToDictionary(g => g.Key, g => g.Max(x => x.KnownUpToStage ?? 0));
+
             await using (var transaction = await db.Database.BeginTransactionAsync())
             {
                 db.UserSkills.RemoveRange(existingSkills);
@@ -231,7 +257,7 @@ namespace SkillBridge.Controllers
                         UserId = userId,
                         SkillId = skillId,
                         Status = "Learning",
-                        KnownUpToStage = 0
+                        KnownUpToStage = preservedLearningStages.GetValueOrDefault(skillId, 0)
                     });
                 }
                 foreach (var sk in teachingSkills)
@@ -255,6 +281,60 @@ namespace SkillBridge.Controllers
                 catch { logger.LogWarning("Could not remove an old profile image from Cloudinary."); }
             }
             return RedirectToAction("Index");
+        }
+
+        ////////////////////////////////////////////////////////////////////////////
+        // POST: /Profile/PromoteLearnedSkill
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
+        public async Task<ActionResult> PromoteLearnedSkill(int skillId)
+        {
+            var userId = User.Identity.GetUserId();
+            var userInfo = await db.UserInformations.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
+            if (userInfo == null)
+                return RedirectToAction("Index", "CompleteProfile");
+
+            if (!await db.Skills.AsNoTracking().AnyAsync(s => s.Id == skillId))
+                return NotFound();
+
+            var learningSkill = await db.UserSkills
+                .Include(us => us.Skill)
+                .ThenInclude(s => s.SkillStages)
+                .FirstOrDefaultAsync(us => us.UserId == userId && us.SkillId == skillId && us.Status == "Learning");
+
+            var verifiedStage = learningSkill?.KnownUpToStage ?? 0;
+            if (verifiedStage < 1)
+                return BadRequest("Verify at least one catalog milestone in an exchange before opting in to teach this skill.");
+
+            var maxCatalogStage = learningSkill.Skill.SkillStages.Any()
+                ? learningSkill.Skill.SkillStages.Max(st => st.StageNumber)
+                : verifiedStage;
+            var promotedStage = Math.Min(maxCatalogStage, verifiedStage);
+            if (promotedStage < 1)
+                return BadRequest("This skill has no teachable catalog stages yet.");
+
+            var existingTeaching = await db.UserSkills
+                .FirstOrDefaultAsync(us => us.UserId == userId && us.SkillId == skillId && us.Status == "Teaching");
+
+            if (existingTeaching == null)
+            {
+                db.UserSkills.Add(new UserSkill
+                {
+                    UserId = userId,
+                    SkillId = skillId,
+                    Status = "Teaching",
+                    KnownUpToStage = promotedStage
+                });
+            }
+            else
+            {
+                existingTeaching.KnownUpToStage = Math.Max(existingTeaching.KnownUpToStage ?? 0, promotedStage);
+            }
+
+            await db.SaveChangesAsync();
+            TempData["AccountNotice"] = $"You opted in to teach {learningSkill.Skill.Name} (up to Stage {promotedStage}).";
+            return RedirectToAction(nameof(Index));
         }
 
         ////////////////////////////////////////////////////////////////////////////
@@ -336,19 +416,9 @@ namespace SkillBridge.Controllers
                 .Where(us => us.UserId == id)
                 .ToListAsync();
 
-            var visitorLearningSkillIds = currentUserId != null
-                ? await db.UserSkills
-                    .AsNoTracking()
-                    .Where(us => us.UserId == currentUserId && us.Status == "Learning")
-                    .Select(us => us.SkillId)
-                    .ToListAsync()
-                : new List<int>();
-
             var skillsToTeachVm = new List<SkillViewModel>();
             foreach (var skill in userSkills.Where(us => us.Status == "Teaching"))
             {
-                bool visitorWantsThisSkill = visitorLearningSkillIds.Contains(skill.SkillId);
-
                 var existingRequest = currentUserId != null
                     ? await db.SkillRequests
                         .AsNoTracking()
@@ -430,8 +500,6 @@ namespace SkillBridge.Controllers
             var currentUserId = User.Identity.GetUserId();
             if (currentUserId == null)
                 return Json(new { success = false, message = "You must be logged in." });
-            if (!await db.UserSkills.AsNoTracking().AnyAsync(us => us.UserId == currentUserId && us.Status == "Teaching" && us.KnownUpToStage > 0))
-                return Json(new { success = false, message = "Add a skill to teach before requesting an exchange." });
             goal = (goal ?? "").Trim();
             pace = (pace ?? "").Trim();
             firstMeetingIdea = (firstMeetingIdea ?? "").Trim();
@@ -572,13 +640,20 @@ namespace SkillBridge.Controllers
                     .AsNoTracking()
                     .Where(us => us.UserId == userId && us.Status == "Learning")
                     .Select(us => us.SkillId).ToListAsync();
-                ViewBag.ReciprocalSkills = await db.UserSkills
+                var requesterTeachable = await db.UserSkills
                     .AsNoTracking()
                     .Include(us => us.Skill)
                     .Where(us => us.UserId == request.RequesterId && us.Status == "Teaching" &&
-                        us.KnownUpToStage > 0 && us.SkillId != request.SkillId && wanted.Contains(us.SkillId))
-                    .Select(us => new SkillViewModel { SkillId = us.SkillId, SkillName = us.Skill.Name })
+                        us.KnownUpToStage > 0 && us.SkillId != request.SkillId)
+                    .Select(us => new SkillViewModel
+                    {
+                        SkillId = us.SkillId,
+                        SkillName = us.Skill.Name,
+                        Stage = us.KnownUpToStage ?? 0
+                    })
                     .ToListAsync();
+                ViewBag.ReciprocalSkills = requesterTeachable.Where(s => wanted.Contains(s.SkillId)).ToList();
+                ViewBag.RequesterOtherTeachSkills = requesterTeachable.Where(s => !wanted.Contains(s.SkillId)).ToList();
             }
             return View(request);
         }

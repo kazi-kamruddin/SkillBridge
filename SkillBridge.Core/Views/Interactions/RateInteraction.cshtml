@@ -8,8 +8,19 @@
         <h2 class="tw:mb-3 tw:text-2xl tw:font-black">You completed an interaction with @Model.RatingModel.FromUserName</h2>
 
         <div class="tw:mb-4 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-sage tw:p-4 tw:dark:border-sb-night-ink">
-            <p class="tw:mb-1">You learned: <strong>@Model.IndexModel.SkillYouLearn</strong></p>
-            <p class="tw:mb-0">You taught: <strong>@Model.IndexModel.SkillYouTeach</strong></p>
+            @if (string.IsNullOrWhiteSpace(Model.IndexModel.SkillYouLearn))
+            {
+                <p class="tw:mb-0">One-way mentorship — you taught <strong>@Model.IndexModel.SkillYouTeach</strong></p>
+            }
+            else if (string.IsNullOrWhiteSpace(Model.IndexModel.SkillYouTeach))
+            {
+                <p class="tw:mb-0">One-way mentorship — you learned <strong>@Model.IndexModel.SkillYouLearn</strong></p>
+            }
+            else
+            {
+                <p class="tw:mb-1">You learned: <strong>@Model.IndexModel.SkillYouLearn</strong></p>
+                <p class="tw:mb-0">You taught: <strong>@Model.IndexModel.SkillYouTeach</strong></p>
+            }
         </div>
 
         <form id="rating-form">
