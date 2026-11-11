@@ -29,7 +29,7 @@ WHERE "UserId" LIKE 'demo-usr-%'
        WHERE i."User1Id" LIKE 'demo-usr-%' OR i."User2Id" LIKE 'demo-usr-%'
    );
 
-DELETE FROM skillbridge."MeetingEvents"
+DELETE FROM skillbridge."InteractionMeetingEvents"
 WHERE "ActorUserId" LIKE 'demo-usr-%'
    OR "InteractionId" IN (
        SELECT "Id" FROM skillbridge."Interactions"

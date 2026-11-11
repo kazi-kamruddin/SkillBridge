@@ -1,8 +1,10 @@
 -- =============================================================================
 -- SkillBridge Demo Seed Data Script (011_demo_seed.sql)
 -- Populates 8 realistic member personas, 80 mixed/varied skill enrollments,
--- 10 completed peer exchanges with sessions and varied ratings (8.5 - 10.0),
--- and 15 community feed posts with 38 multi-member discussion comments.
+-- 11 completed exchanges (10 two-way swaps + 1 one-way mentorship) with
+-- sessions and varied ratings (8.5 - 10.0), plus 15 community feed posts
+-- with 38 multi-member discussion comments.
+-- Requires 012_one_way_mentorships.sql (for nullable SkillFromRequesterId).
 -- Safe and idempotent to run multiple times.
 -- Password for all demo accounts: DemoPass123!
 -- =============================================================================
@@ -31,7 +33,7 @@ WHERE "UserId" LIKE 'demo-usr-%'
        WHERE i."User1Id" LIKE 'demo-usr-%' OR i."User2Id" LIKE 'demo-usr-%'
    );
 
-DELETE FROM skillbridge."MeetingEvents"
+DELETE FROM skillbridge."InteractionMeetingEvents"
 WHERE "ActorUserId" LIKE 'demo-usr-%'
    OR "InteractionId" IN (
        SELECT "Id" FROM skillbridge."Interactions"
@@ -397,10 +399,10 @@ BEGIN
     RETURNING "Id" INTO v_int_id;
 
     INSERT INTO skillbridge."InteractionSessions" ("InteractionId", "SkillId", "StageNumber", "Title", "CatalogStageNumber", "User1Confirmed", "User2Confirmed", "Status") VALUES
-    (v_int_id, s_react, 1, 'Components, JSX and props', 1, true, true, 'Done'),
-    (v_int_id, s_react, 2, 'State and events', 2, true, true, 'Done'),
-    (v_int_id, s_python, 1, 'Python Basics & Syntax', 1, true, true, 'Done'),
-    (v_int_id, s_python, 2, 'Functions & Modularization', 4, true, true, 'Done');
+    (v_int_id, s_react, 1, 'Components, JSX and props', 1, true, true, 'Confirmed'),
+    (v_int_id, s_react, 2, 'State and events', 2, true, true, 'Confirmed'),
+    (v_int_id, s_python, 1, 'Python Basics & Syntax', 1, true, true, 'Confirmed'),
+    (v_int_id, s_python, 2, 'Functions & Modularization', 4, true, true, 'Confirmed');
 
     INSERT INTO skillbridge."Ratings" ("InteractionId", "FromUserId", "ToUserId", "RatingValue", "Comment", "CreatedAt") VALUES
     (v_int_id, 'demo-usr-02', 'demo-usr-01', 10, 'Outstanding mentor! Rakibul broke down React state reconciliation and custom hook patterns with crystal-clear diagrams and live debugging.', NOW() - INTERVAL '20 days'),
@@ -412,10 +414,10 @@ BEGIN
     RETURNING "Id" INTO v_int_id;
 
     INSERT INTO skillbridge."InteractionSessions" ("InteractionId", "SkillId", "StageNumber", "Title", "CatalogStageNumber", "User1Confirmed", "User2Confirmed", "Status") VALUES
-    (v_int_id, s_uiux, 1, 'Visual hierarchy and layout', 3, true, true, 'Done'),
-    (v_int_id, s_uiux, 2, 'Usability review and iteration', 6, true, true, 'Done'),
-    (v_int_id, s_js, 1, 'DOM and events', 4, true, true, 'Done'),
-    (v_int_id, s_js, 2, 'Asynchronous code and APIs', 5, true, true, 'Done');
+    (v_int_id, s_uiux, 1, 'Visual hierarchy and layout', 3, true, true, 'Confirmed'),
+    (v_int_id, s_uiux, 2, 'Usability review and iteration', 6, true, true, 'Confirmed'),
+    (v_int_id, s_js, 1, 'DOM and events', 4, true, true, 'Confirmed'),
+    (v_int_id, s_js, 2, 'Asynchronous code and APIs', 5, true, true, 'Confirmed');
 
     INSERT INTO skillbridge."Ratings" ("InteractionId", "FromUserId", "ToUserId", "RatingValue", "Comment", "CreatedAt") VALUES
     (v_int_id, 'demo-usr-01', 'demo-usr-03', 10, 'Sumit completely transformed how I think about visual hierarchy, contrast ratios, and Neo-Brutalist spacing systems.', NOW() - INTERVAL '16 days'),
@@ -427,10 +429,10 @@ BEGIN
     RETURNING "Id" INTO v_int_id;
 
     INSERT INTO skillbridge."InteractionSessions" ("InteractionId", "SkillId", "StageNumber", "Title", "CatalogStageNumber", "User1Confirmed", "User2Confirmed", "Status") VALUES
-    (v_int_id, s_solidworks, 1, '2D Sketching & Constraints', 2, true, true, 'Done'),
-    (v_int_id, s_solidworks, 2, 'Part Modeling (Extrude, Revolve, Loft)', 3, true, true, 'Done'),
-    (v_int_id, s_cpp, 1, 'Pointers & Memory Management', 5, true, true, 'Done'),
-    (v_int_id, s_cpp, 2, 'Object-Oriented Programming (Classes & Objects)', 6, true, true, 'Done');
+    (v_int_id, s_solidworks, 1, '2D Sketching & Constraints', 2, true, true, 'Confirmed'),
+    (v_int_id, s_solidworks, 2, 'Part Modeling (Extrude, Revolve, Loft)', 3, true, true, 'Confirmed'),
+    (v_int_id, s_cpp, 1, 'Pointers & Memory Management', 5, true, true, 'Confirmed'),
+    (v_int_id, s_cpp, 2, 'Object-Oriented Programming (Classes & Objects)', 6, true, true, 'Confirmed');
 
     INSERT INTO skillbridge."Ratings" ("InteractionId", "FromUserId", "ToUserId", "RatingValue", "Comment", "CreatedAt") VALUES
     (v_int_id, 'demo-usr-04', 'demo-usr-05', 10, 'Abdullah made 3D parametric CAD modeling intuitive. We modeled a complete custom enclosure and sensor mount from scratch.', NOW() - INTERVAL '14 days'),
@@ -442,10 +444,10 @@ BEGIN
     RETURNING "Id" INTO v_int_id;
 
     INSERT INTO skillbridge."InteractionSessions" ("InteractionId", "SkillId", "StageNumber", "Title", "CatalogStageNumber", "User1Confirmed", "User2Confirmed", "Status") VALUES
-    (v_int_id, s_stats, 1, 'Distributions (Normal, Binomial, etc.)', 4, true, true, 'Done'),
-    (v_int_id, s_stats, 2, 'Hypothesis Testing', 5, true, true, 'Done'),
-    (v_int_id, s_pm, 1, 'Breaking work into tasks', 2, true, true, 'Done'),
-    (v_int_id, s_pm, 2, 'Risks and blockers', 5, true, true, 'Done');
+    (v_int_id, s_stats, 1, 'Distributions (Normal, Binomial, etc.)', 4, true, true, 'Confirmed'),
+    (v_int_id, s_stats, 2, 'Hypothesis Testing', 5, true, true, 'Confirmed'),
+    (v_int_id, s_pm, 1, 'Breaking work into tasks', 2, true, true, 'Confirmed'),
+    (v_int_id, s_pm, 2, 'Risks and blockers', 5, true, true, 'Confirmed');
 
     INSERT INTO skillbridge."Ratings" ("InteractionId", "FromUserId", "ToUserId", "RatingValue", "Comment", "CreatedAt") VALUES
     (v_int_id, 'demo-usr-07', 'demo-usr-06', 9, 'Hasibur simplified p-values, confidence intervals, and sample sizing so I can apply them directly to product delivery metrics.', NOW() - INTERVAL '11 days'),
@@ -457,10 +459,10 @@ BEGIN
     RETURNING "Id" INTO v_int_id;
 
     INSERT INTO skillbridge."InteractionSessions" ("InteractionId", "SkillId", "StageNumber", "Title", "CatalogStageNumber", "User1Confirmed", "User2Confirmed", "Status") VALUES
-    (v_int_id, s_video, 1, 'Cutting and pacing', 2, true, true, 'Done'),
-    (v_int_id, s_video, 2, 'Audio cleanup and levels', 3, true, true, 'Done'),
-    (v_int_id, s_figma, 1, 'Auto layout and constraints', 2, true, true, 'Done'),
-    (v_int_id, s_figma, 2, 'Components and variants', 4, true, true, 'Done');
+    (v_int_id, s_video, 1, 'Cutting and pacing', 2, true, true, 'Confirmed'),
+    (v_int_id, s_video, 2, 'Audio cleanup and levels', 3, true, true, 'Confirmed'),
+    (v_int_id, s_figma, 1, 'Auto layout and constraints', 2, true, true, 'Confirmed'),
+    (v_int_id, s_figma, 2, 'Components and variants', 4, true, true, 'Confirmed');
 
     INSERT INTO skillbridge."Ratings" ("InteractionId", "FromUserId", "ToUserId", "RatingValue", "Comment", "CreatedAt") VALUES
     (v_int_id, 'demo-usr-03', 'demo-usr-08', 9, 'Great hands-on tips for timeline pacing, J/L cuts, and dialogue EQ cleanup. Very practical session!', NOW() - INTERVAL '9 days'),
@@ -472,8 +474,8 @@ BEGIN
     RETURNING "Id" INTO v_int_id;
 
     INSERT INTO skillbridge."InteractionSessions" ("InteractionId", "SkillId", "StageNumber", "Title", "CatalogStageNumber", "User1Confirmed", "User2Confirmed", "Status") VALUES
-    (v_int_id, s_html, 1, 'Flexbox and grid', 4, true, true, 'Done'),
-    (v_int_id, s_excel, 1, 'Pivot Tables & Data Summarization', 5, true, true, 'Done');
+    (v_int_id, s_html, 1, 'Flexbox and grid', 4, true, true, 'Confirmed'),
+    (v_int_id, s_excel, 1, 'Pivot Tables & Data Summarization', 5, true, true, 'Confirmed');
 
     INSERT INTO skillbridge."Ratings" ("InteractionId", "FromUserId", "ToUserId", "RatingValue", "Comment", "CreatedAt") VALUES
     (v_int_id, 'demo-usr-06', 'demo-usr-01', 10, 'Finally mastered CSS Grid and responsive Flexbox layouts thanks to Rakibul''s live CodePen exercises.', NOW() - INTERVAL '8 days'),
@@ -485,9 +487,9 @@ BEGIN
     RETURNING "Id" INTO v_int_id;
 
     INSERT INTO skillbridge."InteractionSessions" ("InteractionId", "SkillId", "StageNumber", "Title", "CatalogStageNumber", "User1Confirmed", "User2Confirmed", "Status") VALUES
-    (v_int_id, s_sql, 1, 'Joins & Subqueries', 3, true, true, 'Done'),
-    (v_int_id, s_sql, 2, 'Indexes, Views & Stored Procedures', 6, true, true, 'Done'),
-    (v_int_id, s_git, 1, 'Resolving merge conflicts', 6, true, true, 'Done');
+    (v_int_id, s_sql, 1, 'Joins & Subqueries', 3, true, true, 'Confirmed'),
+    (v_int_id, s_sql, 2, 'Indexes, Views & Stored Procedures', 6, true, true, 'Confirmed'),
+    (v_int_id, s_git, 1, 'Resolving merge conflicts', 6, true, true, 'Confirmed');
 
     INSERT INTO skillbridge."Ratings" ("InteractionId", "FromUserId", "ToUserId", "RatingValue", "Comment", "CreatedAt") VALUES
     (v_int_id, 'demo-usr-04', 'demo-usr-02', 9, 'Sadik walked me through PostgreSQL EXPLAIN ANALYZE and composite indexing with real query plans.', NOW() - INTERVAL '6 days'),
@@ -499,9 +501,9 @@ BEGIN
     RETURNING "Id" INTO v_int_id;
 
     INSERT INTO skillbridge."InteractionSessions" ("InteractionId", "SkillId", "StageNumber", "Title", "CatalogStageNumber", "User1Confirmed", "User2Confirmed", "Status") VALUES
-    (v_int_id, s_speaking, 1, 'Structuring a short talk', 1, true, true, 'Done'),
-    (v_int_id, s_speaking, 2, 'Handling questions', 6, true, true, 'Done'),
-    (v_int_id, s_matlab, 1, '2D & 3D Data Visualization', 5, true, true, 'Done');
+    (v_int_id, s_speaking, 1, 'Structuring a short talk', 1, true, true, 'Confirmed'),
+    (v_int_id, s_speaking, 2, 'Handling questions', 6, true, true, 'Confirmed'),
+    (v_int_id, s_matlab, 1, '2D & 3D Data Visualization', 5, true, true, 'Confirmed');
 
     INSERT INTO skillbridge."Ratings" ("InteractionId", "FromUserId", "ToUserId", "RatingValue", "Comment", "CreatedAt") VALUES
     (v_int_id, 'demo-usr-05', 'demo-usr-07', 10, 'Nafiz coached me right before my robotics thesis defense. His pacing and Q&A framing advice made all the difference!', NOW() - INTERVAL '5 days'),
@@ -513,8 +515,8 @@ BEGIN
     RETURNING "Id" INTO v_int_id;
 
     INSERT INTO skillbridge."InteractionSessions" ("InteractionId", "SkillId", "StageNumber", "Title", "CatalogStageNumber", "User1Confirmed", "User2Confirmed", "Status") VALUES
-    (v_int_id, s_python, 1, 'Python Basics & Syntax', 1, true, true, 'Done'),
-    (v_int_id, s_english, 1, 'Work and study scenarios', 6, true, true, 'Done');
+    (v_int_id, s_python, 1, 'Python Basics & Syntax', 1, true, true, 'Confirmed'),
+    (v_int_id, s_english, 1, 'Work and study scenarios', 6, true, true, 'Confirmed');
 
     INSERT INTO skillbridge."Ratings" ("InteractionId", "FromUserId", "ToUserId", "RatingValue", "Comment", "CreatedAt") VALUES
     (v_int_id, 'demo-usr-08', 'demo-usr-02', 9, 'Sadik helped me write my first Python script to batch-rename media files automatically.', NOW() - INTERVAL '4 days'),
@@ -526,12 +528,29 @@ BEGIN
     RETURNING "Id" INTO v_int_id;
 
     INSERT INTO skillbridge."InteractionSessions" ("InteractionId", "SkillId", "StageNumber", "Title", "CatalogStageNumber", "User1Confirmed", "User2Confirmed", "Status") VALUES
-    (v_int_id, s_graphic, 1, 'Color palettes and contrast', 2, true, true, 'Done'),
-    (v_int_id, s_sql, 1, 'Aggregations & GROUP BY', 4, true, true, 'Done');
+    (v_int_id, s_graphic, 1, 'Color palettes and contrast', 2, true, true, 'Confirmed'),
+    (v_int_id, s_sql, 1, 'Aggregations & GROUP BY', 4, true, true, 'Confirmed');
 
     INSERT INTO skillbridge."Ratings" ("InteractionId", "FromUserId", "ToUserId", "RatingValue", "Comment", "CreatedAt") VALUES
     (v_int_id, 'demo-usr-06', 'demo-usr-03', 10, 'Sumit''s color theory tips made my data science charts and slide decks look 10x more professional.', NOW() - INTERVAL '2 days'),
     (v_int_id, 'demo-usr-03', 'demo-usr-06', 10, 'Hasibur made SQL GROUP BY and window functions click in a single session!', NOW() - INTERVAL '2 days');
+
+    -- Interaction 11 (Showcase 1-Way Mentorship): Hasibur Srijon mentors Abdullah Ishtiaq in Python
+    INSERT INTO skillbridge."Interactions" ("User1Id", "User2Id", "SkillFromTeacherId", "SkillFromRequesterId", "Status", "CreatedAt", "EndedAt")
+    VALUES ('demo-usr-06', 'demo-usr-05', s_python, NULL, 'Completed', NOW() - INTERVAL '4 days', NOW() - INTERVAL '1 day')
+    RETURNING "Id" INTO v_int_id;
+
+    INSERT INTO skillbridge."InteractionSessions" ("InteractionId", "SkillId", "StageNumber", "Title", "CatalogStageNumber", "User1Confirmed", "User2Confirmed", "Status") VALUES
+    (v_int_id, s_python, 1, 'Python Basics & Syntax', 1, true, true, 'Confirmed'),
+    (v_int_id, s_python, 2, 'Control Flow & Loops', 2, true, true, 'Confirmed');
+
+    UPDATE skillbridge."UserSkills"
+    SET "KnownUpToStage" = GREATEST(COALESCE("KnownUpToStage", 0), 2)
+    WHERE "UserId" = 'demo-usr-05' AND "SkillId" = s_python AND "Status" = 'Learning';
+
+    INSERT INTO skillbridge."Ratings" ("InteractionId", "FromUserId", "ToUserId", "RatingValue", "Comment", "CreatedAt") VALUES
+    (v_int_id, 'demo-usr-05', 'demo-usr-06', 10, 'Hasibur generously mentored me one-way through Python fundamentals with practical robotics automation exercises.', NOW() - INTERVAL '1 day'),
+    (v_int_id, 'demo-usr-06', 'demo-usr-05', 9, 'Abdullah picked up Python basics and loops rapidly during our focused mentorship sessions.', NOW() - INTERVAL '1 day');
 END $$;
 
 -- Synchronize UserRatings counters accurately with the seeded completed exchanges and ratings
@@ -540,8 +559,8 @@ INSERT INTO skillbridge."UserRatings" ("UserId", "InteractionsCompleted", "Ratin
 ('demo-usr-02', 3, 3, 28), -- Avg: 9.3 / 10 (10, 9, 9)
 ('demo-usr-03', 3, 3, 29), -- Avg: 9.7 / 10 (10, 9, 10)
 ('demo-usr-04', 2, 2, 19), -- Avg: 9.5 / 10 (9, 10)
-('demo-usr-05', 2, 2, 19), -- Avg: 9.5 / 10 (10, 9)
-('demo-usr-06', 3, 3, 28), -- Avg: 9.3 / 10 (9, 9, 10)
+('demo-usr-05', 3, 3, 28), -- Avg: 9.3 / 10 (10, 9, 9)
+('demo-usr-06', 4, 4, 38), -- Avg: 9.5 / 10 (9, 9, 10, 10)
 ('demo-usr-07', 2, 2, 20), -- Avg: 10.0 / 10 (10, 10)
 ('demo-usr-08', 2, 2, 17)  -- Avg: 8.5 / 10 (9, 8)
 ON CONFLICT ("UserId") DO UPDATE SET

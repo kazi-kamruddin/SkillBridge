@@ -15,6 +15,8 @@ public static class NotificationLinkHelper
             url.Action("RateInteraction", "Interactions", new { interactionId = notification.ReferenceId.Value }),
         "Skill" when notification.ReferenceId.HasValue =>
             url.Action("Detail", "Explore", new { id = notification.ReferenceId.Value }),
+        "Community" when notification.ReferenceId.HasValue =>
+            url.Action("PostDetails", "Communities", new { id = notification.ReferenceId.Value }),
         "Catalog" => url.Action("Skills", "Explore"),
         "Info" when notification.ReferenceId.HasValue &&
             notification.Message == "This exchange request is no longer available." =>

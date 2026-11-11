@@ -218,7 +218,7 @@
                                     </button>
                                 </div>
                             }
-                            else if (n.Type == "Exchange" || n.Type == "RequestUpdate" || n.Type == "Skill" || n.Type == "Catalog" ||
+                            else if (n.Type == "Exchange" || n.Type == "RequestUpdate" || n.Type == "Skill" || n.Type == "Catalog" || n.Type == "Community" ||
                                 (n.Type == "Info" && n.ReferenceId.HasValue))
                             {
                                 <a href="@SkillBridge.Helpers.NotificationLinkHelper.Resolve(n, Url)" class="d-block tw:block mb-2 tw:mb-2">View update</a>

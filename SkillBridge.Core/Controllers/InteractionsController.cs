@@ -7,8 +7,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using SkillBridge.Services;
 using SkillBridge.Helpers;
+using SkillBridge.Hubs;
 using System.Text.Json;
 
 namespace SkillBridge.Controllers
@@ -17,10 +20,17 @@ namespace SkillBridge.Controllers
     public class InteractionsController : Controller
     {
         private readonly ApplicationDbContext db;
+        private readonly IHubContext<ChatHub> hubContext;
+        private readonly ILogger<InteractionsController> logger;
 
-        public InteractionsController(ApplicationDbContext db)
+        public InteractionsController(
+            ApplicationDbContext db,
+            IHubContext<ChatHub> hubContext = null,
+            ILogger<InteractionsController> logger = null)
         {
             this.db = db;
+            this.hubContext = hubContext;
+            this.logger = logger;
         }
 
         ////////////////////////////////////////////////////////////////////////////
@@ -186,6 +196,7 @@ namespace SkillBridge.Controllers
             RecordMeeting(interaction, userId, "Proposed");
             NotifyOther(interaction, userId, "The other member proposed a meeting time. Open your exchange to respond.");
             await db.SaveChangesAsync();
+            await HubNotifications.NotifyBadgesAsync(hubContext, logger, interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id);
             return RedirectToAction(nameof(Sessions), new { id });
         }
 
@@ -204,6 +215,7 @@ namespace SkillBridge.Controllers
             NotifyOther(interaction, userId, decision == "Accept" ?
                 "Your meeting time was accepted." : "Your meeting time was declined. You can propose another.");
             await db.SaveChangesAsync();
+            await HubNotifications.NotifyBadgesAsync(hubContext, logger, interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id);
             return RedirectToAction(nameof(Sessions), new { id });
         }
 
@@ -220,6 +232,7 @@ namespace SkillBridge.Controllers
             RecordMeeting(interaction, userId, "Cancelled");
             NotifyOther(interaction, userId, "The planned meeting was cancelled. Open your exchange to propose a new time.");
             await db.SaveChangesAsync();
+            await HubNotifications.NotifyBadgesAsync(hubContext, logger, interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id);
             return RedirectToAction(nameof(Sessions), new { id });
         }
 
@@ -237,6 +250,7 @@ namespace SkillBridge.Controllers
             RecordMeeting(interaction, userId, "Completed");
             NotifyOther(interaction, userId, "Your partner marked the planned meeting as completed.");
             await db.SaveChangesAsync();
+            await HubNotifications.NotifyBadgesAsync(hubContext, logger, interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id);
             return RedirectToAction(nameof(Sessions), new { id });
         }
 
@@ -315,14 +329,16 @@ namespace SkillBridge.Controllers
                 StepsJson = JsonSerializer.Serialize(steps),
                 OriginalStepsJson = JsonSerializer.Serialize(PlanSnapshot(current))
             });
+            var targetUserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id;
             db.Notifications.Add(new Notification
             {
-                UserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id,
+                UserId = targetUserId,
                 Type = "Exchange",
                 ReferenceId = interactionId,
                 Message = "Your partner suggested changes to your exchange plan. Open the exchange to review them."
             });
             await db.SaveChangesAsync();
+            await HubNotifications.NotifyBadgesAsync(hubContext, logger, targetUserId);
             TempData["PlanNotice"] = "Your partner can now review the proposed plan.";
             return RedirectToAction(nameof(Sessions), new { id = interactionId });
         }
@@ -378,12 +394,13 @@ namespace SkillBridge.Controllers
                 }
             }
 
+            var targetUserId = proposal.ProposedByUserId == userId
+                ? (interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id)
+                : proposal.ProposedByUserId;
             db.InteractionPlanProposals.Remove(proposal);
             db.Notifications.Add(new Notification
             {
-                UserId = proposal.ProposedByUserId == userId
-                    ? (interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id)
-                    : proposal.ProposedByUserId,
+                UserId = targetUserId,
                 Type = "Exchange",
                 ReferenceId = interactionId,
                 Message = decision == "Accept" ? "Your partner accepted the updated exchange plan."
@@ -392,6 +409,7 @@ namespace SkillBridge.Controllers
             });
             await db.SaveChangesAsync();
             await transaction.CommitAsync();
+            await HubNotifications.NotifyBadgesAsync(hubContext, logger, targetUserId);
             TempData["PlanNotice"] = decision == "Accept" ? "The shared plan has been updated."
                 : decision == "Decline" ? "The proposal was declined." : "The proposal was withdrawn.";
             return RedirectToAction(nameof(Sessions), new { id = interactionId });
@@ -492,6 +510,7 @@ namespace SkillBridge.Controllers
 
             await db.Entry(session).ReloadAsync();
 
+            bool stageCompleted = false;
             if (session.User1Confirmed && session.User2Confirmed && session.Status != "Confirmed")
             {
                 var claimed = await db.InteractionSessions.Where(s => s.Id == session.Id && s.Status != "Confirmed")
@@ -499,6 +518,7 @@ namespace SkillBridge.Controllers
 
                 if (claimed == 1)
                 {
+                    stageCompleted = true;
                     session.Status = "Confirmed";
                     db.Notifications.Add(new Notification
                     {
@@ -519,6 +539,10 @@ namespace SkillBridge.Controllers
             }
 
             await transaction.CommitAsync();
+            if (stageCompleted)
+            {
+                await HubNotifications.NotifyBadgesAsync(hubContext, logger, session.Interaction.User1Id, session.Interaction.User2Id);
+            }
 
             return Json(new
             {
@@ -545,15 +569,17 @@ namespace SkillBridge.Controllers
             interaction.EndReason = reason;
             interaction.EndedByUserId = userId;
             interaction.EndedAt = DateTime.Now;
+            var otherUserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id;
             db.Notifications.Add(new Notification
             {
-                UserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id,
+                UserId = otherUserId,
                 Type = "Exchange",
                 ReferenceId = id,
                 Message = "The other member ended your exchange. Open Interactions to see the reason.",
                 CreatedAt = DateTime.Now
             });
             await db.SaveChangesAsync();
+            await HubNotifications.NotifyBadgesAsync(hubContext, logger, otherUserId);
             return RedirectToAction(nameof(Index));
         }
 
@@ -598,6 +624,7 @@ namespace SkillBridge.Controllers
             await CreateFeedbackNotificationAsync(interaction);
             await db.SaveChangesAsync();
             await transaction.CommitAsync();
+            await HubNotifications.NotifyBadgesAsync(hubContext, logger, interaction.User1Id, interaction.User2Id);
             return RedirectToAction("Index");
         }
 
@@ -740,6 +767,7 @@ namespace SkillBridge.Controllers
 
             await db.SaveChangesAsync();
             await transaction.CommitAsync();
+            await HubNotifications.NotifyBadgesAsync(hubContext, logger, recipientId, currentUserId);
 
             return Json(new { success = true });
         }

@@ -75,7 +75,11 @@ namespace SkillBridge.Controllers
                     .FirstOrDefault();
 
                 vm.OtherLatestPost = db.CommunityPosts
-                    .Where(p => p.CreatedByUserId != userId && !p.IsHidden)
+                    .Where(p => p.CreatedByUserId != userId && !p.IsHidden &&
+                        !db.UserInformations.Any(ui => ui.UserId == p.CreatedByUserId && ui.IsHidden) &&
+                        !db.MemberBlocks.Any(b =>
+                            (b.BlockerId == userId && b.BlockedId == p.CreatedByUserId) ||
+                            (b.BlockedId == userId && b.BlockerId == p.CreatedByUserId)))
                     .OrderByDescending(p => p.CreatedAt)
                     .FirstOrDefault();
 

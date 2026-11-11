@@ -4,8 +4,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using SkillBridge.Models;
 using SkillBridge.Helpers;
+using SkillBridge.Hubs;
 using SkillBridge.Services;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,10 +18,17 @@ namespace SkillBridge.Controllers
     public class NotificationsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHubContext<ChatHub> _hubContext;
+        private readonly ILogger<NotificationsController> _logger;
 
-        public NotificationsController(ApplicationDbContext context)
+        public NotificationsController(
+            ApplicationDbContext context,
+            IHubContext<ChatHub> hubContext = null,
+            ILogger<NotificationsController> logger = null)
         {
             _context = context;
+            _hubContext = hubContext;
+            _logger = logger;
         }
 
         ////////////////////////////////////////////////////////////////////////////
@@ -83,6 +93,7 @@ namespace SkillBridge.Controllers
 
             notification.IsRead = true;
             await _context.SaveChangesAsync();
+            await HubNotifications.NotifyBadgesAsync(_hubContext, _logger, userId);
             return Json(new { success = true });
         }
 
@@ -127,6 +138,7 @@ namespace SkillBridge.Controllers
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
+                await HubNotifications.NotifyBadgesAsync(_hubContext, _logger, userId, skillRequest.RequesterId);
                 return Json(new { success = true });
             }
 
@@ -325,6 +337,7 @@ namespace SkillBridge.Controllers
                 await transaction.CommitAsync();
             }
 
+            await HubNotifications.NotifyBadgesAsync(_hubContext, _logger, userId, skillRequest.RequesterId);
             return Json(new { success = true, interactionId, isOneWay = !normalizedSkillId.HasValue });
         }
 
@@ -338,6 +351,7 @@ namespace SkillBridge.Controllers
                 .Where(n => n.UserId == userId && !n.IsRead)
                 .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
 
+            await HubNotifications.NotifyBadgesAsync(_hubContext, _logger, userId);
             return Json(new { success = true });
         }
 

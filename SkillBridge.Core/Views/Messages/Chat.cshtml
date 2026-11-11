@@ -28,8 +28,8 @@
                 {
                     var partnerId = convo.User1Id == currentUserId ? convo.User2Id : convo.User1Id;
 
-                    <li class="list-group-item tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card @(convo.Id == Model.Id ?"active" : "")" data-conversation-id="@convo.Id">
-                        <a class="d-block tw:block text-decoration-none text-dark tw:text-sb-ink tw:dark:text-sb-night-ink @(convo.Id == Model.Id ?"text-white" : "")"
+                    <li class="list-group-item tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card @(convo.Id == Model.Id ? "sb-chat-item-active" : "")" data-conversation-id="@convo.Id">
+                        <a class="d-block tw:block text-decoration-none sb-chat-item-link tw:text-sb-ink tw:dark:text-sb-night-ink"
                            href="@Url.Action("Chat", "Messages", new { id = convo.Id })">
                             @(partnerNames.TryGetValue(partnerId, out var partnerName) ? partnerName : "Member")
                             @if (unreadByConversation.TryGetValue(convo.Id, out var unread) && unread > 0)
@@ -46,7 +46,12 @@
         <!-- Middle column: chat history -->
         <div class="col-md-6 tw:col-span-12 tw:md:col-span-6 d-flex tw:flex flex-column tw:flex-col sb-chat-main" style="height:80vh;">
             <div id="messagePane" class="flex-grow-1 tw:flex-1 border tw:border-2 tw:border-sb-ink p-2 tw:p-2 mb-2 tw:mb-2" style="overflow-y:auto;">
-                <h5>@otherUserProfile?.FullName</h5>
+                <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
+                    <h5 class="tw:m-0 tw:min-w-0">@otherUserProfile?.FullName</h5>
+                    <a href="@Url.Action("Inbox", "Messages")" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-1.5 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-xs tw:font-extrabold tw:shadow-sb-small tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink">
+                        All conversations
+                    </a>
+                </div>
                 <hr />
                 <div id="messageList">
                     @if (messages != null && messages.Any())
@@ -120,6 +125,34 @@
                     }
                 </div>
                 @if (!string.IsNullOrWhiteSpace(otherUserProfile.Bio)) { <p>@otherUserProfile.Bio</p> }
+                @if (!string.IsNullOrWhiteSpace(otherUserProfile.UserId))
+                {
+                    <div class="tw:mt-4 tw:flex tw:flex-col tw:gap-2 sb-chat-safety-actions">
+                        <a href="@Url.Action("PublicProfile", "Profile", new { id = otherUserProfile.UserId })"
+                           class="btn tw:inline-flex tw:w-full tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-2 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong tw:dark:bg-sb-night-card tw:dark:text-[#a8beff]">
+                            View profile
+                        </a>
+                        <form method="post" action="@Url.Action("Block", "Profile")" onsubmit="return confirm('Block this member? Any ongoing exchange with them will end and messaging will stop.');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@otherUserProfile.UserId" />
+                            <button type="submit" class="btn tw:inline-flex tw:w-full tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-2 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43] tw:dark:bg-sb-night-card tw:dark:text-[#f29b8e]">
+                                Block member
+                            </button>
+                        </form>
+                        <details class="tw:rounded-xl tw:border tw:border-sb-line tw:p-2.5">
+                            <summary class="tw:cursor-pointer tw:text-xs tw:font-bold tw:text-sb-muted tw:dark:text-sb-night-ink/80">Report member</summary>
+                            <form method="post" action="@Url.Action("ReportProfile", "Profile")" class="tw:mt-2 tw:flex tw:flex-col tw:gap-2">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@otherUserProfile.UserId" />
+                                <label for="chat-report-reason" class="tw:text-xs tw:font-bold">Reason</label>
+                                <textarea id="chat-report-reason" name="reason" maxlength="500" required rows="2" placeholder="Describe the issue..." class="form-control tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-paper tw:px-2.5 tw:py-1.5 tw:text-sm tw:text-sb-ink tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink"></textarea>
+                                <button type="submit" class="btn tw:inline-flex tw:w-full tw:items-center tw:justify-center tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-xs tw:font-extrabold tw:shadow-sb-small tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43] tw:dark:bg-sb-night-card tw:dark:text-[#f29b8e]">
+                                    Send report
+                                </button>
+                            </form>
+                        </details>
+                    </div>
+                }
             }
             else
             {
@@ -189,14 +222,17 @@
                     { conversationId: conversationId, __RequestVerificationToken: token })
                     .done(function () {
                         $('[data-conversation-id="' + conversationId + '"] .conversation-unread').remove();
+                        if (window.sbRefreshBadges) window.sbRefreshBadges();
                     });
             }
             markRead();
 
-            const connection = new signalR.HubConnectionBuilder()
-                .withUrl('/chatHub')
-                .withAutomaticReconnect()
-                .build();
+            const connection = window.sbHubConnection || (window.signalR
+                ? new signalR.HubConnectionBuilder()
+                    .withUrl('/chatHub')
+                    .withAutomaticReconnect()
+                    .build()
+                : null);
 
             function renderMessage(msg) {
                 if (String(msg.conversationId) !== String(conversationId)) return;
@@ -227,25 +263,36 @@
                 if (followLatest) scrollToLatest();
             }
 
-            connection.on('receiveMessage', renderMessage);
             document.addEventListener('visibilitychange', function () { if (!document.hidden) markRead(); });
 
-            connection.start().then(function () {
-                return connection.invoke('JoinConversation', conversationId);
-            }).catch(function (error) {
-                console.error('Could not connect to chat:', error);
-            });
+            if (connection) {
+                connection.on('receiveMessage', renderMessage);
 
-            connection.onreconnected(function () {
-                connection.invoke('JoinConversation', conversationId).then(markRead).catch(console.error);
-            });
-
-            connection.on('messagesRead', function (event) {
-                if (Number(event.conversationId) !== conversationId || event.readerId === myId) return;
-                event.messageIds.forEach(function (id) {
-                    $('#messageList [data-message-id="' + id + '"] .read-state').text('Read');
+                var startPromise = window.sbEnsureHubStarted
+                    ? window.sbEnsureHubStarted()
+                    : connection.start();
+                startPromise.then(function () {
+                    return connection.invoke('JoinConversation', conversationId);
+                }).catch(function (error) {
+                    console.error('Could not connect to chat:', error);
                 });
-            });
+
+                connection.onreconnected(function () {
+                    connection.invoke('JoinConversation', conversationId)
+                        .then(function () {
+                            markRead();
+                            if (window.sbRefreshBadges) window.sbRefreshBadges();
+                        })
+                        .catch(console.error);
+                });
+
+                connection.on('messagesRead', function (event) {
+                    if (Number(event.conversationId) !== conversationId || event.readerId === myId) return;
+                    event.messageIds.forEach(function (id) {
+                        $('#messageList [data-message-id="' + id + '"] .read-state').text('Read');
+                    });
+                });
+            }
 
             $("#sendMessageForm").submit(function (e) {
                 e.preventDefault();

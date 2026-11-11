@@ -159,6 +159,36 @@
     <script src="~/Scripts/jquery-3.7.0.min.js"></script>
     <script src="~/Scripts/signalr.min.js"></script>
 
+    @if (User.Identity.IsAuthenticated)
+    {
+        <script>
+            (function () {
+                if (!window.signalR) return;
+                var connection = new signalR.HubConnectionBuilder()
+                    .withUrl('/chatHub')
+                    .withAutomaticReconnect()
+                    .build();
+                var startPromise = null;
+                connection.on('badgesChanged', function () {
+                    if (window.sbRefreshBadges) window.sbRefreshBadges();
+                });
+                connection.onreconnected(function () {
+                    if (window.sbRefreshBadges) window.sbRefreshBadges();
+                });
+                window.sbHubConnection = connection;
+                window.sbEnsureHubStarted = function () {
+                    if (!startPromise) {
+                        startPromise = connection.start().catch(function (err) {
+                            startPromise = null;
+                            throw err;
+                        });
+                    }
+                    return startPromise;
+                };
+            })();
+        </script>
+    }
+
     @RenderSection("scripts", required: false)
 
     <script>
@@ -403,6 +433,11 @@
                 function refreshBadges() {
                     updateNotifBadge();
                     updateMessageBadge();
+                }
+
+                window.sbRefreshBadges = refreshBadges;
+                if (window.sbEnsureHubStarted) {
+                    window.sbEnsureHubStarted().catch(function () {});
                 }
 
                 refreshBadges();

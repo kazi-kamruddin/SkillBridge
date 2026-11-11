@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
+using SkillBridge.Hubs;
 
 namespace SkillBridge.Controllers
 {
@@ -21,16 +23,18 @@ namespace SkillBridge.Controllers
         private readonly ApplicationDbContext db;
         private readonly CloudinaryImageService images;
         private readonly ILogger<ProfileController> logger;
+        private readonly IHubContext<ChatHub> hubContext;
 
         public ProfileController(UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager, ApplicationDbContext db, CloudinaryImageService images,
-            ILogger<ProfileController> logger)
+            ILogger<ProfileController> logger, IHubContext<ChatHub> hubContext = null)
         {
             UserManager = userManager;
             SignInManager = signInManager;
             this.db = db;
             this.images = images;
             this.logger = logger;
+            this.hubContext = hubContext;
         }
 
         ////////////////////////////////////////////////////////////////////////////
@@ -578,6 +582,7 @@ namespace SkillBridge.Controllers
                 await transaction.CommitAsync();
             }
 
+            await HubNotifications.NotifyBadgesAsync(hubContext, logger, userSkill.UserId);
             return Json(new { success = true, requestId = request.Id });
         }
 
@@ -616,6 +621,7 @@ namespace SkillBridge.Controllers
             }
             await db.SaveChangesAsync();
             await transaction.CommitAsync();
+            await HubNotifications.NotifyBadgesAsync(hubContext, logger, request.ReceiverId);
             return RedirectToAction(nameof(RequestDetails), new { id });
         }
 
@@ -707,6 +713,7 @@ namespace SkillBridge.Controllers
                     notification.IsRead = true;
                 }
                 await db.SaveChangesAsync();
+                await HubNotifications.NotifyBadgesAsync(hubContext, logger, userId, id);
             }
             return RedirectToAction(nameof(BlockedMembers));
         }

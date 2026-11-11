@@ -1,5 +1,9 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Encodings.Web;
+using SkillBridge.Controllers;
 using SkillBridge.Helpers;
 using SkillBridge.Models;
 
@@ -122,3 +126,53 @@ var updateVm = new UpdateProfileViewModel { VerifiedLearningStages = new Diction
 if (profileSkillVm.SkillId != 1 || profileSkillVm.AlreadyTeaching || updateVm.VerifiedLearningStages[1] != 2)
     throw new Exception("Profile verified learning & opt-in model checks failed.");
 Console.WriteLine("Profile verified learning model checks passed.");
+
+// D7/D8/D9/D10: Phase 3 community attribution, inbox models, notifications, SignalR badge helper, & ctor compatibility.
+var stubUrl = new StubUrlHelper();
+var communityNotif = new Notification { Type = "Community", ReferenceId = 42 };
+var resolvedCommunityUrl = NotificationLinkHelper.Resolve(communityNotif, stubUrl);
+if (resolvedCommunityUrl != "/Communities/PostDetails?id=42")
+    throw new Exception($"NotificationLinkHelper must resolve Community notifications cleanly (got '{resolvedCommunityUrl}').");
+
+var commentVm = new CommunityCommentViewModel
+{
+    CommentId = 9,
+    CreatedByUserId = "author-1",
+    CreatedByFullName = "Demo Author",
+    AuthorIsPublic = true
+};
+var partnerVm = new ChatPartnerViewModel { UserId = "partner-2", FullName = "Demo Partner" };
+var inboxVm = new InboxConversationViewModel
+{
+    ConversationId = 5,
+    PartnerUserId = "partner-2",
+    PartnerName = "Demo Partner",
+    UnreadCount = 2
+};
+if (commentVm.CreatedByUserId != "author-1" || !commentVm.AuthorIsPublic ||
+    partnerVm.UserId != "partner-2" || inboxVm.ConversationId != 5 || inboxVm.UnreadCount != 2)
+    throw new Exception("Phase 3 ViewModel property checks failed.");
+
+await HubNotifications.NotifyBadgesAsync(null, null, "user-1", "", null);
+
+using var interactionsCtrl = new InteractionsController(db);
+using var catalogCtrl = new CatalogController(db);
+using var notificationsCtrl = new NotificationsController(db);
+Console.WriteLine("Phase 3 notification link, inbox model, SignalR null-safety, and controller ctor checks passed.");
+
+sealed class StubUrlHelper : IUrlHelper
+{
+    public ActionContext ActionContext { get; } = new();
+
+    public string Action(UrlActionContext actionContext)
+    {
+        var values = new RouteValueDictionary(actionContext.Values);
+        var id = values.TryGetValue("id", out var v) ? $"?id={v}" : "";
+        return $"/{actionContext.Controller}/{actionContext.Action}{id}";
+    }
+
+    public string Content(string contentPath) => contentPath;
+    public bool IsLocalUrl(string url) => true;
+    public string Link(string routeName, object values) => routeName;
+    public string RouteUrl(UrlRouteContext routeContext) => "/";
+}

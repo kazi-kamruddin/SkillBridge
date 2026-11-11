@@ -119,7 +119,17 @@
                     <div class="comment-body flex-grow-1 tw:flex-1">
                         <p class="mb-1 tw:mb-1">@c.Content</p>
                         @if (!string.IsNullOrWhiteSpace(c.ImageUrl)) { <img src="@c.ImageUrl" alt="Image attached to this comment" class="img-fluid rounded tw:rounded-xl mb-2 tw:mb-2 sb-community-image" loading="lazy" /> }
-                        <small class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">@c.CreatedByFullName, @c.CreatedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                        <small class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">
+                            @if (!string.IsNullOrEmpty(c.CreatedByUserId) && (User.Identity.IsAuthenticated || c.AuthorIsPublic))
+                            {
+                                <a href="@Url.Action("PublicProfile", "Profile", new { id = c.CreatedByUserId })" class="tw:font-bold tw:text-sb-ink tw:hover:underline tw:dark:text-sb-night-ink">@c.CreatedByFullName</a>
+                            }
+                            else
+                            {
+                                @c.CreatedByFullName
+                            }
+                            · @c.CreatedAt.ToString("MMM dd, yyyy HH:mm")
+                        </small>
                         @if (User.Identity.IsAuthenticated)
                         {
                             <details class="mt-2 tw:mt-2">
@@ -140,12 +150,12 @@
         }
         else
         {
-            <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-light border">No comments yet. Be the first!</div>
+            <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink alert-light border">No comments yet. Be the first!</div>
         }
     </section>
 
     <!-- Add Comment Form -->
-    @if (Model.IsMember)
+    @if (User.Identity.IsAuthenticated)
     {
         <section class="comment-form mt-4 tw:mt-6">
             <h5 class="mb-3 tw:mb-4">Add a Comment</h5>
@@ -169,7 +179,7 @@
             </form>
         </section>
     }
-    else if (!User.Identity.IsAuthenticated)
+    else
     {
         <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink p-4 tw:p-5 mt-4 tw:mt-6">
             <div class="tw:flex tw:items-center tw:justify-between tw:flex-wrap tw:gap-3">
@@ -184,45 +194,19 @@
             </div>
         </div>
     }
-    else
-    {
-        <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink p-4 tw:p-5 mt-4 tw:mt-6">
-            <div class="tw:flex tw:items-start tw:gap-3">
-                <span class="sb-icon-tile sb-icon-tile-blue tw:shrink-0" style="width:36px;height:36px;" aria-hidden="true"><svg class="sb-icon"><use href="#sb-i-chat" /></svg></span>
-                <div class="tw:flex-1">
-                    <h4 class="tw:font-black tw:text-base tw:mb-1">Join the @Model.SkillName conversation!</h4>
-                    <p class="tw:text-sm tw:text-sb-muted tw:dark:text-sb-night-ink/70 tw:mb-3">
-                        To participate, post questions, or reply in this community, add <strong>@Model.SkillName</strong> to your learning list.
-                    </p>
-                    <div class="tw:flex tw:items-center tw:flex-wrap tw:gap-3">
-                        <form method="post" action="@Url.Action("JoinSkill", "Communities")" class="tw:inline-block">
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="skillId" value="@Model.SkillId" />
-                            <input type="hidden" name="returnUrl" value="@Context.Request.Path" />
-                            <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white">
-                                <i class="fas fa-plus" aria-hidden="true"></i> Add @Model.SkillName &amp; Join Discussion
-                            </button>
-                        </form>
-                        <a href="@Url.Action("UpdateProfile", "Profile")" class="tw:text-xs tw:font-bold tw:text-sb-muted tw:hover:underline">
-                            or customize full profile skills &rarr;
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
 </main>
 
 @section Styles {
     <style>
         .comment-card {
-            background: #f8f9fa;
-            border: 1px solid #e5e5e5;
-            transition: background 0.2s ease;
+            background: var(--sb-card);
+            color: var(--sb-ink);
+            border: 2px solid var(--sb-line);
+            transition: transform 0.15s ease;
         }
 
             .comment-card:hover {
-                background: #f1f3f5;
+                background: var(--sb-card);
             }
 
         .comment-avatar {
