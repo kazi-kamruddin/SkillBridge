@@ -296,21 +296,10 @@ namespace SkillBridge.Controllers
 
             if (targetUserId == currentUserId)
                 return RedirectToAction("Index");
-            if (!await db.UserInformations.AnyAsync(info => info.UserId == targetUserId && !info.IsHidden))
+            if (!await db.UserInformations.AsNoTracking().AnyAsync(info => info.UserId == targetUserId && !info.IsHidden))
                 return StatusCode(403);
-            if (!await db.UserSkills.AnyAsync(s => s.UserId == currentUserId && s.Status == "Teaching" && s.KnownUpToStage > 0) ||
-                !await db.UserSkills.AnyAsync(s => s.UserId == currentUserId && s.Status == "Learning"))
-            {
-                TempData["AccountNotice"] = "Add a skill you can teach and one you want to learn before starting a conversation.";
-                return RedirectToAction("UpdateProfile", "Profile");
-            }
-            if (!await db.UserSkills.AnyAsync(s => s.UserId == targetUserId && s.Status == "Teaching" && s.KnownUpToStage > 0) ||
-                !await db.UserSkills.AnyAsync(s => s.UserId == targetUserId && s.Status == "Learning"))
-            {
-                TempData["ProfileNotice"] = "This member is still setting up their skills.";
-                return RedirectToAction("PublicProfile", "Profile", new { id = targetUserId });
-            }
-            if (BlockRules.EitherBlocked(db, currentUserId, targetUserId)) return StatusCode(403);
+            if (await BlockRules.EitherBlockedAsync(db, currentUserId, targetUserId))
+                return StatusCode(403);
 
             var canonicalUser1 = string.CompareOrdinal(currentUserId, targetUserId) <= 0 ? currentUserId : targetUserId;
             var canonicalUser2 = string.CompareOrdinal(currentUserId, targetUserId) <= 0 ? targetUserId : currentUserId;

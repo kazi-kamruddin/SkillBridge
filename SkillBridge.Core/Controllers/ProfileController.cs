@@ -386,11 +386,7 @@ namespace SkillBridge.Controllers
             int interactionsCompleted = userRatings?.InteractionsCompleted ?? 0;
 
             var isSaved = currentUserId != null && await db.SavedProfiles.AsNoTracking().AnyAsync(s => s.UserId == currentUserId && s.TargetUserId == id);
-            var canKnock = currentUserId != null &&
-                await db.UserSkills.AsNoTracking().AnyAsync(s => s.UserId == currentUserId && s.Status == "Teaching" && s.KnownUpToStage > 0) &&
-                visitorLearningSkillIds.Any() &&
-                userSkills.Any(s => s.Status == "Teaching" && s.KnownUpToStage > 0) &&
-                userSkills.Any(s => s.Status == "Learning");
+            var canKnock = currentUserId != null && id != currentUserId;
 
             var model = new PublicProfileViewModel
             {

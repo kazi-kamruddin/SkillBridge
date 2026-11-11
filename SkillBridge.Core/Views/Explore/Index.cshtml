@@ -1,12 +1,15 @@
 @model SkillBridge.Models.ExploreViewModel
 @using SkillBridge.Models
-
+@using System.Text.Json
 
 @{
     ViewBag.Title = "Explore";
 
-    var currentUserId = User.Identity.GetUserId();
-    var userLearningSkills = Model.LearningSkillNames;
+    var userLearningSkills = Model.LearningSkillNames ?? new List<string>();
+    var seekingSet = new HashSet<string>(userLearningSkills, StringComparer.OrdinalIgnoreCase);
+    var otherCatalogSkills = (Model.AllCatalogSkillNames ?? new List<string>())
+        .Where(s => !seekingSet.Contains(s))
+        .ToList();
 
     Func<double, string> getRatingClass = rating =>
     {
@@ -54,8 +57,8 @@
         }
 
         .filter-group {
-            flex: 1;
-            min-width: 200px;
+            flex: 1 1 180px;
+            min-width: min(200px, 100%);
         }
 
         .section-title {
@@ -92,6 +95,7 @@
         .person-card {
             transition: transform 0.2s ease;
             margin-bottom: 1.5rem;
+            min-width: 0;
         }
 
         .card-body-modern {
@@ -104,12 +108,13 @@
         .user-info {
             display: flex;
             align-items: center;
+            gap: 0.75rem;
             margin-bottom: 1rem;
         }
 
         .avatar-container {
             position: relative;
-            margin-right: 1rem;
+            flex-shrink: 0;
         }
 
         .avatar {
@@ -129,6 +134,7 @@
             font-weight: 800;
             margin-bottom: 0.25rem;
             color: var(--sb-ink);
+            overflow-wrap: anywhere;
         }
 
         .user-location {
@@ -136,17 +142,20 @@
             font-size: 0.9rem;
             display: flex;
             align-items: center;
+            overflow-wrap: anywhere;
         }
 
         .user-location i {
             margin-right: 5px;
             font-size: 0.8rem;
+            flex-shrink: 0;
         }
 
         .rating-container {
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .rating-badge {
@@ -235,50 +244,88 @@
         }
     </style>
 }
-    <div class="explore-container">
-        <header class="sb-page-heading">
-            <div class="sb-hero-kicker"><span class="sb-icon-tile sb-icon-tile-sage" aria-hidden="true"><svg class="sb-icon"><use href="#sb-i-compass" /></svg></span><span class="sb-eyebrow">FIND YOUR PEOPLE</span></div>
-            <h1>Discover your next exchange.</h1>
-            <p>See what members can teach you and what you can share with them.</p>
-        </header>
 
-        <!-- Filters Section -->
-        <p class="sb-directory-link"><a href="@Url.Action("Skills", "Explore")">Search the full skills directory <span aria-hidden="true">↗</span></a></p>
-        <div class="filter-section">
-            <h3 class="filter-title"><i class="fas fa-filter"></i>Filter Results</h3>
+<div class="explore-container">
+    <header class="sb-page-heading">
+        <div class="sb-hero-kicker"><span class="sb-icon-tile sb-icon-tile-sage" aria-hidden="true"><svg class="sb-icon"><use href="#sb-i-compass" /></svg></span><span class="sb-eyebrow">FIND YOUR PEOPLE</span></div>
+        <h1>Discover your next exchange.</h1>
+        <p>Search members by skill, name, profession, or city—or reach out directly with a Knock.</p>
+    </header>
+
+    <p class="sb-directory-link"><a href="@Url.Action("Skills", "Explore")">Search the full skills directory <span aria-hidden="true">↗</span></a></p>
+
+    @if (!Model.HasOwnSkills)
+    {
+        <div class="alert tw:mb-6 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue tw:p-4 tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" role="status">
+            Showing all visible members. You can knock on anyone right away, or <a class="tw:font-extrabold tw:underline" href="@Url.Action("UpdateProfile", "Profile")">add your own skills</a> to unlock personalized match rankings.
+        </div>
+    }
+
+    <!-- Search & Filters Section -->
+    <section class="filter-section" aria-label="Search and filter members">
+        <h3 class="filter-title"><i class="fas fa-filter" aria-hidden="true"></i>Search &amp; Filter Members</h3>
+        <form method="get" action="@Url.Action("Index", "Explore")" id="exploreFilterForm" class="tw:space-y-4">
+            <div class="tw:flex tw:flex-wrap tw:items-end tw:gap-3">
+                <div class="tw:min-w-0 tw:flex-1 tw:basis-64">
+                    <label for="memberSearchInput" class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Search Members</label>
+                    <input type="search" id="memberSearchInput" name="q" value="@Model.SearchQuery" maxlength="100"
+                           placeholder="Search by name, skill, profession, or city..."
+                           class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" />
+                </div>
+                <div class="tw:flex tw:flex-wrap tw:gap-2">
+                    <button type="submit" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-blue-strong tw:px-4 tw:py-2 tw:font-extrabold tw:text-white tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink">Search</button>
+                    <button type="button" id="resetExploreFilters" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:px-4 tw:py-2 tw:font-extrabold tw:text-sb-ink tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink">Reset</button>
+                </div>
+            </div>
+
             <div class="filter-row">
                 <div class="filter-group">
-                    <label class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Skill I'm Learning</label>
+                    <label for="skillFilter" class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Skill Offered</label>
                     <select id="skillFilter" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-select-modern">
                         <option value="">All Skills</option>
-                        @foreach (var skill in userLearningSkills)
+                        @if (userLearningSkills.Any())
                         {
-                            <option>@skill</option>
+                            <optgroup label="Skills You're Seeking">
+                                @foreach (var skill in userLearningSkills)
+                                {
+                                    <option value="@skill">@skill</option>
+                                }
+                            </optgroup>
+                        }
+                        @if (otherCatalogSkills.Any())
+                        {
+                            <optgroup label="@(userLearningSkills.Any() ? "All Other Catalog Skills" : "All Catalog Skills")">
+                                @foreach (var skill in otherCatalogSkills)
+                                {
+                                    <option value="@skill">@skill</option>
+                                }
+                            </optgroup>
                         }
                     </select>
                 </div>
 
                 <div class="filter-group">
-                    <label class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Minimum Skill Phase</label>
+                    <label for="phaseFilter" class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Minimum Skill Phase</label>
                     <select id="phaseFilter" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-select-modern">
                         <option value="">Any Phase</option>
                         @for (int i = 1; i <= Model.MaxCatalogStage; i++)
                         {
-                            <option>@i</option>
+                            <option value="@i">@i</option>
                         }
                     </select>
                 </div>
 
                 <div class="filter-group">
-                    <label class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Location</label>
+                    <label for="locationFilter" class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Location</label>
                     <select id="locationFilter" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-select-modern">
                         <option value="">All Locations</option>
                         @foreach (var loc in Model.Locations)
                         {
-                            <option>@loc</option>
+                            <option value="@loc">@loc</option>
                         }
                     </select>
                 </div>
+
                 <div class="filter-group">
                     <label for="formatFilter" class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Meeting format</label>
                     <select id="formatFilter" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-select-modern">
@@ -287,6 +334,7 @@
                         <option value="In person">In person</option>
                     </select>
                 </div>
+
                 <div class="filter-group">
                     <label for="dayFilter" class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Available day</label>
                     <select id="dayFilter" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-select-modern">
@@ -297,6 +345,7 @@
                         }
                     </select>
                 </div>
+
                 <div class="filter-group">
                     <label for="timeZoneFilter" class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Time zone</label>
                     <select id="timeZoneFilter" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-select-modern">
@@ -308,46 +357,63 @@
                     </select>
                 </div>
             </div>
-        </div>
+        </form>
+    </section>
 
-        <!-- Best Matches Section -->
-        @if (Model.BestMatches.Any())
-        {
-            <div class="matches-container">
-                <h3 class="section-title"><i class="fas fa-fire"></i>Best Matches</h3>
-                <div class="row tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:lg:grid-cols-3 tw:gap-6" id="bestMatches">
-                    @foreach (var person in Model.BestMatches)
-                    {
-                        <div class="col person-card"
-                             data-offers="@string.Join(",", person.SkillsToTeach.Select(s => s.SkillName))"
-                             data-location="@person.Location"
-                             data-maxstage="@person.SkillsToTeach.Max(s => s.Stage)"
-                             data-skill-stages="@System.Text.Json.JsonSerializer.Serialize(person.SkillsToTeach.Select(s => new { name = s.SkillName, stage = s.Stage }))"
-                             data-format="@person.MeetingFormat" data-days="@person.AvailableDaysMask" data-timezone="@person.TimeZoneId">
-                            <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink card-modern h-100 tw:h-full position-relative">
-                                <div class="card-body-modern">
-                                    <div class="user-info">
-                                        <div class="avatar-container">
-                                            <img src="@Url.Content(person.ProfileImageUrl)" class="avatar" alt="@person.FullName" />
-                                        </div>
-                                        <div class="user-details">
-                                            <h5 class="user-name">@person.FullName</h5>
+    <!-- Best Matches Section -->
+    @if (Model.BestMatches.Any())
+    {
+        <div class="matches-container" id="bestMatchesContainer">
+            <h3 class="section-title"><i class="fas fa-fire" aria-hidden="true"></i>Best Matches</h3>
+            <div class="row tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:lg:grid-cols-3 tw:gap-6" id="bestMatches">
+                @foreach (var person in Model.BestMatches)
+                {
+                    var searchBlob = string.Join(" ", new[] { person.FullName, person.Profession, person.Location, person.Bio }
+                        .Concat(person.SkillsToTeach.Select(s => s.SkillName))
+                        .Concat(person.SkillsToLearn.Select(s => s.SkillName))
+                        .Where(x => !string.IsNullOrWhiteSpace(x))).ToLowerInvariant();
+                    <div class="col person-card"
+                         data-offers="@string.Join(",", person.SkillsToTeach.Select(s => s.SkillName))"
+                         data-location="@person.Location"
+                         data-maxstage="@(person.SkillsToTeach.Any() ? person.SkillsToTeach.Max(s => s.Stage) : 0)"
+                         data-skill-stages="@JsonSerializer.Serialize(person.SkillsToTeach.Select(s => new { name = s.SkillName, stage = s.Stage }))"
+                         data-format="@person.MeetingFormat"
+                         data-days="@person.AvailableDaysMask"
+                         data-timezone="@person.TimeZoneId"
+                         data-search-text="@searchBlob">
+                        <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink card-modern h-100 tw:h-full position-relative">
+                            <div class="card-body-modern">
+                                <div class="user-info">
+                                    <div class="avatar-container">
+                                        <img src="@Url.Content(person.ProfileImageUrl)" class="avatar" alt="@person.FullName" />
+                                    </div>
+                                    <div class="user-details">
+                                        <h5 class="user-name">@person.FullName</h5>
+                                        @if (!string.IsNullOrWhiteSpace(person.Profession))
+                                        {
+                                            <div class="tw:text-sm tw:font-semibold tw:text-sb-muted tw:dark:text-sb-night-ink/75 tw:break-words">@person.Profession</div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(person.Location))
+                                        {
                                             <div class="user-location">
-                                                <i class="fas fa-map-marker-alt"></i>@person.Location
+                                                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>@person.Location
                                             </div>
-                                        </div>
-                                        <div class="rating-container">
-                                            <div class="rating-badge @getRatingClass(person.AverageRating)">
-                                                @person.AverageRating.ToString("0.0")
-                                            </div>
+                                        }
+                                    </div>
+                                    <div class="rating-container">
+                                        <div class="rating-badge @getRatingClass(person.AverageRating)">
+                                            @person.AverageRating.ToString("0.0")
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div class="skills-section">
-                                        <div class="small tw:text-sm mb-3 tw:mb-4"><strong>Why this match:</strong> They can teach you @person.YouCanLearn. You can teach them @person.TheyCanLearn.</div>
+                                <div class="skills-section">
+                                    <div class="small tw:text-sm mb-3 tw:mb-4"><strong>Why this match:</strong> They can teach you @person.YouCanLearn. You can teach them @person.TheyCanLearn.</div>
+                                    @if (person.SkillsToTeach.Any())
+                                    {
                                         <div class="mb-3 tw:mb-4">
                                             <div class="skills-title">
-                                                <i class="fas fa-gift"></i>Offers to Teach
+                                                <i class="fas fa-gift" aria-hidden="true"></i>Offers to Teach
                                             </div>
                                             <div class="skills-container">
                                                 @foreach (var skill in person.SkillsToTeach)
@@ -356,10 +422,13 @@
                                                 }
                                             </div>
                                         </div>
+                                    }
 
+                                    @if (person.SkillsToLearn.Any())
+                                    {
                                         <div>
                                             <div class="skills-title">
-                                                <i class="fas fa-search"></i>Wants to Learn
+                                                <i class="fas fa-search" aria-hidden="true"></i>Wants to Learn
                                             </div>
                                             <div class="skills-container">
                                                 @foreach (var skill in person.SkillsToLearn)
@@ -368,81 +437,88 @@
                                                 }
                                             </div>
                                         </div>
-                                    </div>
+                                    }
+                                </div>
 
-                                    <!-- Actions -->
-                                    <div class="mt-3 tw:mt-4 tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-2">
-                                        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })">View Profile</a>
-                                        @if (User.Identity.IsAuthenticated)
+                                <!-- Actions -->
+                                <div class="mt-3 tw:mt-4 tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-2">
+                                    <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })">View Profile</a>
+                                    @if (User.Identity.IsAuthenticated && person.SkillsToTeach.Any())
+                                    {
+                                        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-primary tw:bg-sb-blue-strong tw:text-white" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })#skillsToTeachList">Propose Exchange</a>
+                                    }
+                                    @if (person.CanKnock)
+                                    {
+                                        using (Html.BeginForm("Knock", "Messages", FormMethod.Post, new { @class = "tw:inline-block tw:m-0" }))
                                         {
-                                            <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-primary tw:bg-sb-blue-strong tw:text-white" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })#skillsToTeachList">Propose Exchange</a>
+                                            @Html.AntiForgeryToken()
+                                            @Html.Hidden("targetUserId", person.UserId)
+                                            <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-success tw:bg-sb-sage-deep tw:text-sb-ink tw:dark:text-sb-night-ink">Knock</button>
                                         }
-                                        @if (person.CanKnock)
-                                        {
-                                            using (Html.BeginForm("Knock", "Messages", FormMethod.Post, new { @class = "tw:inline-block tw:m-0" }))
-                                            {
-                                                @Html.AntiForgeryToken()
-                                                @Html.Hidden("targetUserId", person.UserId)
-                                                <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-success tw:bg-sb-sage-deep tw:text-sb-ink">Knock</button>
-                                            }
-                                        }
-                                    </div>
+                                    }
                                 </div>
                             </div>
                         </div>
-                    }
-                </div>
+                    </div>
+                }
             </div>
-        }
-        else if (Model.LearningSkillNames.Any())
-        {
-            <div class="matches-container">
-                <div class="no-results">
-                    <i class="fas fa-users"></i>
-                    <h4>No Match Results Found</h4>
-                    <p>Try adjusting your filters or <a href="@Url.Action("UpdateProfile", "Profile")">update your learning skills</a> to find partners.</p>
-                </div>
-            </div>
-        }
+        </div>
+    }
 
-        <!-- Partial Matches Section -->
-        @if (Model.PartialMatches.Any())
-        {
-            <div class="matches-container">
-                <h3 class="section-title"><i class="fas fa-user-friends"></i>@(Model.LearningSkillNames.Any() ? "Partial Matches" : "Explore members")</h3>
-                <div class="row tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:lg:grid-cols-4 tw:gap-6" id="partialMatches">
-                    @foreach (var person in Model.PartialMatches)
-                    {
-                        <div class="col person-card"
-                             data-offers="@string.Join(",", person.SkillsToTeach.Select(s => s.SkillName))"
-                             data-location="@person.Location"
-                             data-maxstage="@person.SkillsToTeach.Max(s => s.Stage)"
-                             data-skill-stages="@System.Text.Json.JsonSerializer.Serialize(person.SkillsToTeach.Select(s => new { name = s.SkillName, stage = s.Stage }))"
-                             data-format="@person.MeetingFormat" data-days="@person.AvailableDaysMask" data-timezone="@person.TimeZoneId">
-                            <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink card-modern h-100 tw:h-full">
-                                <div class="card-body-modern">
-                                    <div class="user-info">
-                                        <div class="avatar-container">
-                                            <img src="@Url.Content(person.ProfileImageUrl)" class="avatar" alt="@person.FullName" />
-                                        </div>
-                                        <div class="user-details">
-                                            <h5 class="user-name">@person.FullName</h5>
+    <!-- Partial Matches Section -->
+    @if (Model.PartialMatches.Any())
+    {
+        <div class="matches-container" id="partialMatchesContainer">
+            <h3 class="section-title"><i class="fas fa-user-friends" aria-hidden="true"></i>@(Model.LearningSkillNames.Any() ? "Partial Matches" : "Explore members")</h3>
+            <div class="row tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:lg:grid-cols-4 tw:gap-6" id="partialMatches">
+                @foreach (var person in Model.PartialMatches)
+                {
+                    var searchBlob = string.Join(" ", new[] { person.FullName, person.Profession, person.Location, person.Bio }
+                        .Concat(person.SkillsToTeach.Select(s => s.SkillName))
+                        .Concat(person.SkillsToLearn.Select(s => s.SkillName))
+                        .Where(x => !string.IsNullOrWhiteSpace(x))).ToLowerInvariant();
+                    <div class="col person-card"
+                         data-offers="@string.Join(",", person.SkillsToTeach.Select(s => s.SkillName))"
+                         data-location="@person.Location"
+                         data-maxstage="@(person.SkillsToTeach.Any() ? person.SkillsToTeach.Max(s => s.Stage) : 0)"
+                         data-skill-stages="@JsonSerializer.Serialize(person.SkillsToTeach.Select(s => new { name = s.SkillName, stage = s.Stage }))"
+                         data-format="@person.MeetingFormat"
+                         data-days="@person.AvailableDaysMask"
+                         data-timezone="@person.TimeZoneId"
+                         data-search-text="@searchBlob">
+                        <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink card-modern h-100 tw:h-full">
+                            <div class="card-body-modern">
+                                <div class="user-info">
+                                    <div class="avatar-container">
+                                        <img src="@Url.Content(person.ProfileImageUrl)" class="avatar" alt="@person.FullName" />
+                                    </div>
+                                    <div class="user-details">
+                                        <h5 class="user-name">@person.FullName</h5>
+                                        @if (!string.IsNullOrWhiteSpace(person.Profession))
+                                        {
+                                            <div class="tw:text-sm tw:font-semibold tw:text-sb-muted tw:dark:text-sb-night-ink/75 tw:break-words">@person.Profession</div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(person.Location))
+                                        {
                                             <div class="user-location">
-                                                <i class="fas fa-map-marker-alt"></i>@person.Location
+                                                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>@person.Location
                                             </div>
-                                        </div>
-                                        <div class="rating-container">
-                                            <div class="rating-badge @getRatingClass(person.AverageRating)">
-                                                @person.AverageRating.ToString("0.0")
-                                            </div>
+                                        }
+                                    </div>
+                                    <div class="rating-container">
+                                        <div class="rating-badge @getRatingClass(person.AverageRating)">
+                                            @person.AverageRating.ToString("0.0")
                                         </div>
                                     </div>
+                                </div>
 
-                                    <div class="skills-section">
-                                        <div class="small tw:text-sm mb-3 tw:mb-4"><strong>Why this match:</strong> They can teach you @person.YouCanLearn. Your skills do not yet match what they want to learn.</div>
+                                <div class="skills-section">
+                                    <div class="small tw:text-sm mb-3 tw:mb-4"><strong>Why this match:</strong> They can teach you @person.YouCanLearn. Your skills do not yet match what they want to learn.</div>
+                                    @if (person.SkillsToTeach.Any())
+                                    {
                                         <div>
                                             <div class="skills-title">
-                                                <i class="fas fa-gift"></i>Offers to Teach
+                                                <i class="fas fa-gift" aria-hidden="true"></i>Offers to Teach
                                             </div>
                                             <div class="skills-container">
                                                 @foreach (var skill in person.SkillsToTeach)
@@ -451,161 +527,252 @@
                                                 }
                                             </div>
                                         </div>
-                                    </div>
+                                    }
+                                </div>
 
-                                    <!-- Actions -->
-                                    <div class="mt-3 tw:mt-4 tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-2">
-                                        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })">View Profile</a>
-                                        @if (User.Identity.IsAuthenticated)
+                                <!-- Actions -->
+                                <div class="mt-3 tw:mt-4 tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-2">
+                                    <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })">View Profile</a>
+                                    @if (User.Identity.IsAuthenticated && person.SkillsToTeach.Any())
+                                    {
+                                        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-primary tw:bg-sb-blue-strong tw:text-white" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })#skillsToTeachList">Propose Exchange</a>
+                                    }
+                                    @if (person.CanKnock)
+                                    {
+                                        using (Html.BeginForm("Knock", "Messages", FormMethod.Post, new { @class = "tw:inline-block tw:m-0" }))
                                         {
-                                            <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-primary tw:bg-sb-blue-strong tw:text-white" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })#skillsToTeachList">Propose Exchange</a>
+                                            @Html.AntiForgeryToken()
+                                            @Html.Hidden("targetUserId", person.UserId)
+                                            <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-success tw:bg-sb-sage-deep tw:text-sb-ink tw:dark:text-sb-night-ink">Knock</button>
                                         }
-                                        @if (person.CanKnock)
-                                        {
-                                            using (Html.BeginForm("Knock", "Messages", FormMethod.Post, new { @class = "tw:inline-block tw:m-0" }))
-                                            {
-                                                @Html.AntiForgeryToken()
-                                                @Html.Hidden("targetUserId", person.UserId)
-                                                <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-success tw:bg-sb-sage-deep tw:text-sb-ink">Knock</button>
-                                            }
-                                        }
-                                    </div>
+                                    }
                                 </div>
                             </div>
                         </div>
-                    }
-                </div>
+                    </div>
+                }
             </div>
-        }
-        else
-        {
-            <div class="matches-container">
-                <div class="no-results">
-                    <i class="fas fa-user-friends"></i>
-                    <h4>No Match Results Found</h4>
-                    <p>Try adjusting your filters or <a href="@Url.Action("UpdateProfile", "Profile")">update your learning skills</a> to find partners.</p>
-                </div>
+        </div>
+    }
+
+    <!-- Browse All Members Section -->
+    @if (Model.AdditionalMembers.Any())
+    {
+        <div class="matches-container" id="additionalMembersContainer">
+            <h3 class="section-title"><i class="fas fa-users" aria-hidden="true"></i>@(Model.BestMatches.Any() || Model.PartialMatches.Any() ? "Browse More Members" : "Browse All Members")</h3>
+            <div class="row tw:grid tw:grid-cols-1 tw:md:grid-cols-2 tw:lg:grid-cols-4 tw:gap-6" id="additionalMembers">
+                @foreach (var person in Model.AdditionalMembers)
+                {
+                    var searchBlob = string.Join(" ", new[] { person.FullName, person.Profession, person.Location, person.Bio }
+                        .Concat(person.SkillsToTeach.Select(s => s.SkillName))
+                        .Concat(person.SkillsToLearn.Select(s => s.SkillName))
+                        .Where(x => !string.IsNullOrWhiteSpace(x))).ToLowerInvariant();
+                    <div class="col person-card"
+                         data-offers="@string.Join(",", person.SkillsToTeach.Select(s => s.SkillName))"
+                         data-location="@person.Location"
+                         data-maxstage="@(person.SkillsToTeach.Any() ? person.SkillsToTeach.Max(s => s.Stage) : 0)"
+                         data-skill-stages="@JsonSerializer.Serialize(person.SkillsToTeach.Select(s => new { name = s.SkillName, stage = s.Stage }))"
+                         data-format="@person.MeetingFormat"
+                         data-days="@person.AvailableDaysMask"
+                         data-timezone="@person.TimeZoneId"
+                         data-search-text="@searchBlob">
+                        <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink card-modern h-100 tw:h-full">
+                            <div class="card-body-modern">
+                                <div class="user-info">
+                                    <div class="avatar-container">
+                                        <img src="@Url.Content(person.ProfileImageUrl)" class="avatar" alt="@person.FullName" />
+                                    </div>
+                                    <div class="user-details">
+                                        <h5 class="user-name">@person.FullName</h5>
+                                        @if (!string.IsNullOrWhiteSpace(person.Profession))
+                                        {
+                                            <div class="tw:text-sm tw:font-semibold tw:text-sb-muted tw:dark:text-sb-night-ink/75 tw:break-words">@person.Profession</div>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(person.Location))
+                                        {
+                                            <div class="user-location">
+                                                <i class="fas fa-map-marker-alt" aria-hidden="true"></i>@person.Location
+                                            </div>
+                                        }
+                                    </div>
+                                    <div class="rating-container">
+                                        <div class="rating-badge @getRatingClass(person.AverageRating)">
+                                            @person.AverageRating.ToString("0.0")
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="skills-section">
+                                    @if (person.SkillsToTeach.Any())
+                                    {
+                                        <div class="mb-3 tw:mb-4">
+                                            <div class="skills-title">
+                                                <i class="fas fa-gift" aria-hidden="true"></i>Offers to Teach
+                                            </div>
+                                            <div class="skills-container">
+                                                @foreach (var skill in person.SkillsToTeach)
+                                                {
+                                                    <span class="skill-badge">@skill.SkillName</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="tw:text-sm tw:text-sb-muted tw:dark:text-sb-night-ink/75">No teaching skills listed yet.</p>
+                                    }
+
+                                    @if (person.SkillsToLearn.Any())
+                                    {
+                                        <div>
+                                            <div class="skills-title">
+                                                <i class="fas fa-search" aria-hidden="true"></i>Wants to Learn
+                                            </div>
+                                            <div class="skills-container">
+                                                @foreach (var skill in person.SkillsToLearn)
+                                                {
+                                                    <span class="skill-badge">@skill.SkillName</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="mt-3 tw:mt-4 tw:flex tw:flex-wrap tw:items-center tw:justify-center tw:gap-2">
+                                    <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })">View Profile</a>
+                                    @if (User.Identity.IsAuthenticated && person.SkillsToTeach.Any())
+                                    {
+                                        <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-primary tw:bg-sb-blue-strong tw:text-white" href="@Url.Action("PublicProfile", "Profile", new { id = person.UserId })#skillsToTeachList">Propose Exchange</a>
+                                    }
+                                    @if (person.CanKnock)
+                                    {
+                                        using (Html.BeginForm("Knock", "Messages", FormMethod.Post, new { @class = "tw:inline-block tw:m-0" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                            @Html.Hidden("targetUserId", person.UserId)
+                                            <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-sm btn-success tw:bg-sb-sage-deep tw:text-sb-ink tw:dark:text-sb-night-ink">Knock</button>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
             </div>
-        }
+        </div>
+    }
 
-
-    </div>
+    @if (!Model.BestMatches.Any() && !Model.PartialMatches.Any() && !Model.AdditionalMembers.Any())
+    {
+        <div class="matches-container" id="emptyDiscoveryNotice">
+            <div class="no-results">
+                <i class="fas fa-users" aria-hidden="true"></i>
+                <h4>No members matched your search</h4>
+                <p>Try clearing your search terms or <a href="@Url.Action("Index", "Explore")">view all visible members</a>.</p>
+            </div>
+        </div>
+    }
+</div>
 
 @section Scripts {
-        <script>
+    <script>
+        (function () {
+            var hasServerQuery = @((!string.IsNullOrWhiteSpace(Model.SearchQuery)).ToString().ToLowerInvariant());
+            var resetUrl = '@Url.Action("Index", "Explore")';
+
             function applyFilters() {
+                var searchQuery = (document.getElementById("memberSearchInput")?.value || "").trim().toLowerCase();
                 var selectedSkill = document.getElementById("skillFilter").value;
-                var selectedPhase = parseInt(document.getElementById("phaseFilter").value) || 0;
+                var selectedPhase = parseInt(document.getElementById("phaseFilter").value, 10) || 0;
                 var selectedLocation = document.getElementById("locationFilter").value;
                 var selectedFormat = document.getElementById("formatFilter").value;
                 var selectedDay = document.getElementById("dayFilter").value;
                 var selectedTimeZone = document.getElementById("timeZoneFilter").value;
 
                 function matches(card) {
-                    var offers = card.getAttribute("data-offers").split(",");
-                    var location = card.getAttribute("data-location");
+                    var offersRaw = card.getAttribute("data-offers") || "";
+                    var offers = offersRaw ? offersRaw.split(",") : [];
+                    var location = card.getAttribute("data-location") || "";
                     var skillStages = JSON.parse(card.getAttribute("data-skill-stages") || '[]');
-                    var relevantStages = selectedSkill ? skillStages.filter(function (skill) { return skill.name === selectedSkill; }) : skillStages;
+                    var relevantStages = selectedSkill
+                        ? skillStages.filter(function (skill) { return skill.name === selectedSkill; })
+                        : skillStages;
                     var maxStage = relevantStages.reduce(function (max, skill) { return Math.max(max, skill.stage); }, 0);
-                    var format = card.getAttribute("data-format");
-                    var days = parseInt(card.getAttribute("data-days")) || 0;
-                    var timeZone = card.getAttribute("data-timezone");
+                    var format = card.getAttribute("data-format") || "";
+                    var days = parseInt(card.getAttribute("data-days"), 10) || 0;
+                    var timeZone = card.getAttribute("data-timezone") || "";
+                    var searchText = card.getAttribute("data-search-text") || "";
+
                     return (selectedSkill === "" || offers.includes(selectedSkill))
                         && (selectedPhase === 0 || maxStage >= selectedPhase)
                         && (selectedLocation === "" || location.toLowerCase() === selectedLocation.toLowerCase())
                         && (selectedFormat === "" || format === selectedFormat || format === "Either")
-                        && (selectedDay === "" || (days & (1 << parseInt(selectedDay))) !== 0)
-                        && (selectedTimeZone === "" || timeZone === selectedTimeZone);
+                        && (selectedDay === "" || (days & (1 << parseInt(selectedDay, 10))) !== 0)
+                        && (selectedTimeZone === "" || timeZone === selectedTimeZone)
+                        && (searchQuery === "" || searchText.includes(searchQuery));
                 }
 
-                var hasVisibleBestMatches = false;
-                var hasVisiblePartialMatches = false;
-
-                document.querySelectorAll("#bestMatches .person-card").forEach(function (card) {
-                    if (matches(card)) {
-                        card.style.display = "";
-                        hasVisibleBestMatches = true;
-                    } else {
-                        card.style.display = "none";
-                    }
-                });
-
-                document.querySelectorAll("#partialMatches .person-card").forEach(function (card) {
-                    if (matches(card)) {
-                        card.style.display = "";
-                        hasVisiblePartialMatches = true;
-                    } else {
-                        card.style.display = "none";
-                    }
-                });
-
-                toggleNoResultsMessage('bestMatches', hasVisibleBestMatches);
-                toggleNoResultsMessage('partialMatches', hasVisiblePartialMatches);
-
-                showCombinedNoResultsMessage(!hasVisibleBestMatches && !hasVisiblePartialMatches);
-            }
-
-            function toggleNoResultsMessage(sectionId, hasVisibleItems) {
-                var section = document.getElementById(sectionId);
-                if (section) {
-                    var container = section.closest('.matches-container');
-                    var header = container.querySelector('.section-title');
-                    var noResults = container.querySelector('.no-results');
-
-                    if (hasVisibleItems) {
-                        if (header) header.style.display = '';
-                        if (noResults) noResults.style.display = 'none';
-                        section.style.display = '';
-                    } else {
-                        if (header) header.style.display = 'none';
-                        if (noResults) noResults.style.display = 'block';
-                        section.style.display = 'none';
-                    }
-                }
-            }
-
-            function showCombinedNoResultsMessage(show) {
-                var existingMessage = document.getElementById('combinedNoResults');
-                if (existingMessage) {
-                    existingMessage.remove();
-                }
-
-                if (show) {
-                    var combinedMessage = document.createElement('div');
-                    combinedMessage.id = 'combinedNoResults';
-                    combinedMessage.className = 'matches-container';
-                    combinedMessage.innerHTML = `
-                    <div class="no-results">
-                        <i class="fas fa-search"></i>
-                        <h4>No matches found with current filters</h4>
-                        <p>Try adjusting your filters or search criteria to see more results</p>
-                    </div>
-                `;
-
-                    var filterSection = document.querySelector('.filter-section');
-                    filterSection.parentNode.insertBefore(combinedMessage, filterSection.nextSibling);
-
-                    document.querySelectorAll('.matches-container').forEach(function (container) {
-                        if (container.id !== 'combinedNoResults') {
-                            container.style.display = 'none';
+                function filterSection(sectionId) {
+                    var section = document.getElementById(sectionId);
+                    if (!section) return false;
+                    var anyVisible = false;
+                    section.querySelectorAll(".person-card").forEach(function (card) {
+                        if (matches(card)) {
+                            card.style.display = "";
+                            anyVisible = true;
+                        } else {
+                            card.style.display = "none";
                         }
                     });
-                } else {
-                    document.querySelectorAll('.matches-container').forEach(function (container) {
-                        container.style.display = '';
-                    });
+                    var container = section.closest(".matches-container");
+                    if (container) container.style.display = anyVisible ? "" : "none";
+                    return anyVisible;
+                }
+
+                var hasBest = filterSection("bestMatches");
+                var hasPartial = filterSection("partialMatches");
+                var hasAdditional = filterSection("additionalMembers");
+
+                var serverEmpty = document.getElementById("emptyDiscoveryNotice");
+                var existingCombined = document.getElementById("combinedNoResults");
+                if (existingCombined) existingCombined.remove();
+
+                if (!serverEmpty && !hasBest && !hasPartial && !hasAdditional) {
+                    var combinedMessage = document.createElement("div");
+                    combinedMessage.id = "combinedNoResults";
+                    combinedMessage.className = "matches-container";
+                    combinedMessage.innerHTML =
+                        '<div class="no-results">' +
+                        '<i class="fas fa-search" aria-hidden="true"></i>' +
+                        '<h4>No members match the selected filters</h4>' +
+                        '<p>Try adjusting your search keywords or clearing a filter to see more members.</p>' +
+                        '</div>';
+                    var filterSection = document.querySelector(".filter-section");
+                    filterSection.parentNode.insertBefore(combinedMessage, filterSection.nextSibling);
                 }
             }
 
-            document.getElementById("skillFilter").addEventListener("change", applyFilters);
-            document.getElementById("phaseFilter").addEventListener("change", applyFilters);
-            document.getElementById("locationFilter").addEventListener("change", applyFilters);
-            document.getElementById("formatFilter").addEventListener("change", applyFilters);
-            document.getElementById("dayFilter").addEventListener("change", applyFilters);
-            document.getElementById("timeZoneFilter").addEventListener("change", applyFilters);
+            document.getElementById("memberSearchInput")?.addEventListener("input", applyFilters);
+            ["skillFilter", "phaseFilter", "locationFilter", "formatFilter", "dayFilter", "timeZoneFilter"].forEach(function (id) {
+                document.getElementById(id)?.addEventListener("change", applyFilters);
+            });
 
-            document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById("resetExploreFilters")?.addEventListener("click", function () {
+                if (hasServerQuery) {
+                    window.location.href = resetUrl;
+                    return;
+                }
+                var searchInput = document.getElementById("memberSearchInput");
+                if (searchInput) searchInput.value = "";
+                ["skillFilter", "phaseFilter", "locationFilter", "formatFilter", "dayFilter", "timeZoneFilter"].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) el.value = "";
+                });
                 applyFilters();
             });
-        </script>
+
+            document.addEventListener("DOMContentLoaded", applyFilters);
+        })();
+    </script>
 }

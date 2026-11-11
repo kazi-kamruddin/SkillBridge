@@ -37,13 +37,13 @@ namespace SkillBridge.Controllers
                     .Where(us => us.UserId == userId)
                     .ToList();
 
-                if (db.SkillRequests.Any(r => r.ReceiverId == userId && r.Status == "Pending"))
+                if (db.SkillRequests.AsNoTracking().Any(r => r.ReceiverId == userId && r.Status == "Pending"))
                 {
                     vm.NextActionTitle = "A member is waiting for your answer";
                     vm.NextActionDescription = "Review the exchange proposal and decide whether to connect.";
                     vm.NextActionUrl = Url.Action("Requests", "Profile");
                 }
-                else if (db.Messages.Any(m => m.ToUserId == userId && !m.IsRead &&
+                else if (db.Messages.AsNoTracking().Any(m => m.ToUserId == userId && !m.IsRead &&
                     !db.MemberBlocks.Any(b => (b.BlockerId == userId && b.BlockedId == m.FromUserId) ||
                         (b.BlockedId == userId && b.BlockerId == m.FromUserId))))
                 {
@@ -51,22 +51,22 @@ namespace SkillBridge.Controllers
                     vm.NextActionDescription = "Pick up the conversation with your learning partner.";
                     vm.NextActionUrl = Url.Action("Index", "Messages");
                 }
-                else if (!vm.MySkills.Any(s => s.Status == "Teaching" && s.KnownUpToStage > 0) || !vm.MySkills.Any(s => s.Status == "Learning"))
-                {
-                    vm.NextActionTitle = "Add skills to start exchanging";
-                    vm.NextActionDescription = "Choose something you can teach and something you want to learn.";
-                    vm.NextActionUrl = Url.Action("UpdateProfile", "Profile");
-                }
-                else if (db.Interactions.Any(i => i.Status == "Ongoing" && (i.User1Id == userId || i.User2Id == userId)))
+                else if (db.Interactions.AsNoTracking().Any(i => i.Status == "Ongoing" && (i.User1Id == userId || i.User2Id == userId)))
                 {
                     vm.NextActionTitle = "Continue your exchange";
                     vm.NextActionDescription = "Check your plan, meeting time, and next milestone.";
                     vm.NextActionUrl = Url.Action("Index", "Interactions");
                 }
+                else if (!vm.MySkills.Any())
+                {
+                    vm.NextActionTitle = "Add your skills (optional)";
+                    vm.NextActionDescription = "Share what you can teach or pick skills you want to learn, or browse Explore right away.";
+                    vm.NextActionUrl = Url.Action("UpdateProfile", "Profile");
+                }
                 else
                 {
                     vm.NextActionTitle = "Find your next learning partner";
-                    vm.NextActionDescription = "Explore people whose teaching skills match what you want to learn.";
+                    vm.NextActionDescription = "Browse people teaching skills you want to explore, send a Knock, or join discussions.";
                     vm.NextActionUrl = Url.Action("Index", "Explore");
                 }
 

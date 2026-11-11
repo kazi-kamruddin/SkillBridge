@@ -63,10 +63,18 @@
                             <li><a class="dropdown-item tw:block tw:rounded-lg tw:px-3 tw:py-2 tw:font-bold" href="@Url.Action("HowItWorks", "Home")">How It Works</a></li>
                             <li><a class="dropdown-item tw:block tw:rounded-lg tw:px-3 tw:py-2 tw:font-bold" href="@Url.Action("About", "Home")">About</a></li>
                             <li><a class="dropdown-item tw:block tw:rounded-lg tw:px-3 tw:py-2 tw:font-bold" href="@Url.Action("Contact", "Home")">Contact</a></li>
-                            @if (User.Identity.IsAuthenticated && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SKILLBRIDGE_MODERATOR_EMAIL")) &&
-                                 string.Equals(User.Identity.Name, Environment.GetEnvironmentVariable("SKILLBRIDGE_MODERATOR_EMAIL"), StringComparison.OrdinalIgnoreCase))
+                            @{
+                                var moderatorEmail = Environment.GetEnvironmentVariable("SKILLBRIDGE_MODERATOR_EMAIL")?.Trim();
+                                var currentEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? User.Identity?.Name;
+                                var isModerator = User.Identity?.IsAuthenticated == true &&
+                                    !string.IsNullOrWhiteSpace(moderatorEmail) &&
+                                    string.Equals(currentEmail, moderatorEmail, StringComparison.OrdinalIgnoreCase);
+                            }
+                            @if (isModerator)
+
                             {
                                 <li><a class="dropdown-item tw:block tw:rounded-lg tw:px-3 tw:py-2 tw:font-bold" href="@Url.Action("Index", "Moderation")">Reports</a></li>
+                                <li><a class="dropdown-item tw:block tw:rounded-lg tw:px-3 tw:py-2 tw:font-bold" href="@Url.Action("Suggestions", "Catalog")">Skill suggestions</a></li>
                             }
                         </ul>
                     </li>

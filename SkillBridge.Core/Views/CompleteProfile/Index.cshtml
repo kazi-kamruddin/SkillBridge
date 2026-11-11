@@ -22,9 +22,9 @@
 
 
 
-<main aria-labelledby="title">
+<main aria-labelledby="title" class="tw:my-8">
     <h2 id="title">@ViewBag.Title</h2>
-    <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">Add your name to get started. The photo and skill details can wait until you are ready to connect with others.</p>
+    <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">Add your name and optional details, or skip for now to browse members, join communities, and start conversations right away.</p>
 
     @using (Html.BeginForm("Index", "CompleteProfile", FormMethod.Post, new { @id = "completeProfileForm", enctype = "multipart/form-data" }))
     {
@@ -41,9 +41,9 @@
             <input type="file" id="ProfileImage" name="ProfileImage" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" accept="image/jpeg,image/png,image/webp" />
             @Html.ValidationMessageFor(m => m.ProfileImage, "", new { @class = "text-danger tw:text-[#a34f42]" })
         </div>
-        <details class="mb-4 tw:mb-6 p-3 tw:p-4 rounded tw:rounded-xl border tw:border-2 tw:border-sb-ink">
+        <details class="mb-4 tw:mb-6 p-3 tw:p-4 rounded tw:rounded-xl border tw:border-2 tw:border-sb-ink tw:dark:border-sb-night-ink">
             <summary class="fw-semibold tw:font-semibold">Add more details and skills now (optional)</summary>
-            <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 mt-3 tw:mt-4">Add a skill to teach and one to learn when you want to connect with members.</p>
+            <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 mt-3 tw:mt-4">Add skills you want to learn, skills you can teach, or both—whenever you are ready.</p>
         <div class="form-group tw:mb-4 mb-3">
             @Html.LabelFor(m => m.Age)
             @Html.TextBoxFor(m => m.Age, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", type = "number", min = "1", placeholder = "Age" })
@@ -120,10 +120,14 @@
         <div id="skillStagesSelectionContainer" class="mt-3 tw:mt-4"></div>
         </details>
 
-        <div class="mt-4 tw:mt-6">
+        <div class="mt-4 tw:mt-6 tw:flex tw:flex-wrap tw:items-center tw:gap-3">
             <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success tw:bg-sb-sage-deep tw:text-sb-ink" id="proceedButton">Create my space</button>
+            <button type="submit" form="skipProfileForm" id="skipOnboardingButton" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:px-4 tw:py-2 tw:font-extrabold tw:text-sb-ink tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink">Skip for now</button>
         </div>
     }
+    <form id="skipProfileForm" method="post" action="@Url.Action("Skip", "CompleteProfile")" class="tw:hidden">
+        @Html.AntiForgeryToken()
+    </form>
 </main>
 
 @section Scripts {
