@@ -8,7 +8,7 @@ public static class SkillSearch
 {
     private static readonly Dictionary<string, string[]> Concepts = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["Python"] = ["automation", "scripting", "programming", "code", "software"],
+        ["Python"] = ["automation", "scripting", "programming", "code", "software", "backend"],
         ["C++"] = ["programming", "code", "software", "systems", "performance", "pointers"],
         ["Java"] = ["programming", "code", "software", "object oriented", "backend"],
         ["AutoCAD"] = ["cad", "2d design", "technical drawing", "drafting", "blueprint"],
@@ -16,7 +16,19 @@ public static class SkillSearch
         ["SolidWorks"] = ["cad", "3d design", "mechanical design", "parts", "assemblies", "modeling"],
         ["Statistics"] = ["probability", "data analysis", "hypothesis", "research", "regression"],
         ["Excel"] = ["spreadsheet", "spreadsheets", "tables", "formulas", "pivot tables", "charts", "data analysis"],
-        ["SQL"] = ["database", "databases", "queries", "query", "data storage", "relational data", "postgres"]
+        ["SQL"] = ["database", "databases", "queries", "query", "data storage", "relational data", "postgres"],
+        ["JavaScript"] = ["js", "frontend", "web", "dom", "browser", "scripting", "async", "apis"],
+        ["HTML & CSS"] = ["html", "css", "web design", "styling", "flexbox", "grid", "responsive", "layout"],
+        ["React"] = ["reactjs", "frontend", "components", "jsx", "hooks", "ui", "spa", "web app"],
+        ["Git & GitHub"] = ["git", "github", "version control", "commits", "branches", "pull request", "merge"],
+        ["UI/UX Design"] = ["ui", "ux", "user experience", "user interface", "wireframes", "usability", "prototype", "product design"],
+        ["Graphic Design"] = ["illustration", "poster", "typography", "branding", "color palette", "layout", "visual design"],
+        ["Video Editing"] = ["editing", "video", "cuts", "pacing", "color grading", "audio", "montage", "timeline"],
+        ["Figma"] = ["design tool", "prototype", "auto layout", "components", "wireframe", "ui design", "handoff"],
+        ["Public Speaking"] = ["presentation", "presentations", "speech", "speaking", "confidence", "pitch", "stage", "talk"],
+        ["English Conversation"] = ["english", "speaking", "fluency", "pronunciation", "vocabulary", "ielts", "communication"],
+        ["Technical Writing"] = ["documentation", "docs", "readme", "guides", "api docs", "writing", "editing"],
+        ["Project Management"] = ["agile", "scrum", "planning", "timeline", "tasks", "kanban", "coordination", "sprint"]
     };
 
     public static IEnumerable<Skill> Rank(IEnumerable<Skill> skills, string query)

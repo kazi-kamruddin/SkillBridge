@@ -21,14 +21,17 @@ namespace SkillBridge.Controllers
 
         ////////////////////////////////////////////////////////////////////////////
         [AllowAnonymous]
-        public async Task<ActionResult> Index(string skillFilter = "", int stageFilter = 0, string locationFilter = "")
+        public async Task<ActionResult> Index(string q = "", string skillFilter = "", int stageFilter = 0, string locationFilter = "")
         {
             if (!User.Identity.IsAuthenticated)
-                return await Skills("");
+                return await Skills(q);
 
             var currentUserId = User.Identity.GetUserId();
             if (!await db.UserInformations.AsNoTracking().AnyAsync(info => info.UserId == currentUserId))
                 return RedirectToAction("Index", "CompleteProfile");
+
+            q = (q ?? "").Trim();
+            if (q.Length > 100) q = q[..100];
 
             var currentUserSkills = await db.UserSkills
                 .AsNoTracking()
@@ -53,6 +56,7 @@ namespace SkillBridge.Controllers
                 .Where(info => !db.MemberBlocks.Any(block =>
                     (block.BlockerId == currentUserId && block.BlockedId == info.UserId) ||
                     (block.BlockedId == currentUserId && block.BlockerId == info.UserId)))
+                .OrderBy(info => info.FullName)
                 .Take(200)
                 .Select(info => new { Id = info.UserId, Info = info })
                 .ToListAsync();
@@ -72,6 +76,7 @@ namespace SkillBridge.Controllers
 
             var bestMatches = new List<PublicProfileViewModel>();
             var partialMatches = new List<PublicProfileViewModel>();
+            var additionalMembers = new List<PublicProfileViewModel>();
 
             foreach (var user in otherUsers)
             {
@@ -110,8 +115,7 @@ namespace SkillBridge.Controllers
                     TimeZoneId = userInfo?.TimeZoneId,
                     MeetingFormat = userInfo?.MeetingFormat ?? "Either",
                     AverageRating = averageRating,
-                    CanKnock = currentUserSkills.Any(s => s.Status == "Teaching" && s.KnownUpToStage > 0) &&
-                        learningSkills.Any() && userTeachingSkills.Any() && userLearningSkills.Any(),
+                    CanKnock = user.Id != currentUserId,
                     ProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo?.ProfileImageUrl, userInfo?.FullName),
                     YouCanLearn = string.Join(", ", userTeachingSkills
                         .Where(us => learningSkills.Any(ls => ls.SkillId == us.SkillId))
@@ -145,34 +149,65 @@ namespace SkillBridge.Controllers
                     !string.Equals(profileVm.Location, locationFilter, StringComparison.OrdinalIgnoreCase))
                     continue;
 
+                if (!string.IsNullOrWhiteSpace(q))
+                {
+                    bool matchesQuery =
+                        profileVm.FullName.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                        profileVm.Profession.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                        profileVm.Location.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                        profileVm.Bio.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                        profileVm.SkillsToTeach.Any(s => s.SkillName.Contains(q, StringComparison.OrdinalIgnoreCase)) ||
+                        profileVm.SkillsToLearn.Any(s => s.SkillName.Contains(q, StringComparison.OrdinalIgnoreCase));
+                    if (!matchesQuery) continue;
+                }
+
                 if (isBestMatch) bestMatches.Add(profileVm);
-                else if (isPartialMatch || (currentUserSkills.Count == 0 && userTeachingSkills.Count > 0)) partialMatches.Add(profileVm);
+                else if (isPartialMatch) partialMatches.Add(profileVm);
+                else additionalMembers.Add(profileVm);
             }
 
             bestMatches = bestMatches
                 .OrderByDescending(b => b.AverageRating)
                 .ThenByDescending(b => b.SkillsToTeach.Count)
+                .ThenBy(b => b.FullName)
                 .ToList();
 
             partialMatches = partialMatches
                 .OrderByDescending(p => p.AverageRating)
                 .ThenByDescending(p => p.SkillsToTeach.Count)
+                .ThenBy(p => p.FullName)
                 .ToList();
 
+            additionalMembers = additionalMembers
+                .OrderByDescending(a => a.AverageRating)
+                .ThenByDescending(a => a.SkillsToTeach.Count)
+                .ThenBy(a => a.FullName)
+                .ToList();
+
+            var allPeople = bestMatches.Concat(partialMatches).Concat(additionalMembers).ToList();
+            var allCatalogSkillNames = await db.Skills
+                .AsNoTracking()
+                .OrderBy(s => s.Name)
+                .Select(s => s.Name)
+                .ToListAsync();
             var maxStage = await db.SkillStages.AsNoTracking().MaxAsync(s => (int?)s.StageNumber);
 
             var model = new ExploreViewModel
             {
+                SearchQuery = q,
                 MaxCatalogStage = maxStage ?? 7,
-                TimeZones = bestMatches.Concat(partialMatches)
+                AllCatalogSkillNames = allCatalogSkillNames,
+                TimeZones = allPeople
                     .Select(m => m.TimeZoneId).Where(zone => !string.IsNullOrWhiteSpace(zone))
                     .Distinct().OrderBy(zone => zone).ToList(),
-                Locations = bestMatches.Concat(partialMatches)
+                Locations = allPeople
                     .Select(m => m.Location).Where(location => !string.IsNullOrWhiteSpace(location))
                     .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(location => location).ToList(),
                 BestMatches = bestMatches,
                 PartialMatches = partialMatches,
-                LearningSkillNames = learningSkills.Select(s => s.Name).Distinct().ToList()
+                AdditionalMembers = additionalMembers,
+                LearningSkillNames = learningSkills.Select(s => s.Name).Distinct().ToList(),
+                HasOwnSkills = currentUserSkills.Count > 0
             };
 
             return View(model);

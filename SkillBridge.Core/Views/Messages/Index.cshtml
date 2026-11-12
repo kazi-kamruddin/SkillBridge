@@ -1,24 +1,113 @@
-@model IEnumerable<SkillBridge.Models.Conversation>
-
-
+@model List<SkillBridge.Models.InboxConversationViewModel>
 @{
-    ViewBag.Title = "Messages";
-    var currentUserId = User.Identity.GetUserId();
+    ViewBag.Title = "Messages Inbox";
 }
 
-<h2>Your Conversations</h2>
-
-<ul class="list-group tw:flex tw:flex-col tw:gap-2">
-    @foreach (var convo in Model)
-    {
-        var otherUserId = convo.User1Id == currentUserId ? convo.User2Id : convo.User1Id;
-        <li class="list-group-item tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">
-            <a href="@Url.Action("Chat", "Messages", new { id = convo.Id })">
-                Conversation with @otherUserId
+<div class="sb-page-shell container tw:mx-auto tw:w-full tw:max-w-4xl tw:px-4 tw:py-6">
+    <header class="sb-page-heading tw:mb-6">
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-3">
+            <div>
+                <div class="sb-hero-kicker"><span class="sb-eyebrow">DIRECT MESSAGES</span></div>
+                <h1>Your Conversations</h1>
+                <p class="tw:mb-0">Coordinate schedules, exchange notes, and follow up with your learning partners.</p>
+            </div>
+            <a href="@Url.Action("Index", "Explore")" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong tw:dark:bg-sb-night-card tw:dark:text-sb-blue-link">
+                Explore People
             </a>
-            <span class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 pull-right">
-                @convo.LastMessageAt?.ToString("g")
-            </span>
-        </li>
+        </div>
+    </header>
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="sb-empty-panel tw:rounded-2xl tw:border-2 tw:border-dashed tw:border-sb-border-card tw:bg-sb-card tw:p-8 tw:text-center tw:dark:bg-sb-night-card">
+            <h2 class="tw:text-xl tw:font-black tw:mb-2">No conversations yet</h2>
+            <p class="tw:text-sb-muted tw:dark:text-sb-night-ink/75 tw:mb-4">Browse members on Explore and send a Knock to start a conversation anytime.</p>
+            <a href="@Url.Action("Index", "Explore")" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-5 tw:py-2.5 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary tw:bg-sb-blue-strong tw:text-white">
+                Explore Members
+            </a>
+        </div>
     }
-</ul>
+    else
+    {
+        <div class="tw:mb-4">
+            <label for="inboxSearch" class="tw:sr-only">Filter conversations</label>
+            <input id="inboxSearch" type="search" maxlength="100" placeholder="Search by member name, profession, or last message..."
+                   class="form-control tw:min-h-11 tw:w-full tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-4 tw:py-2.5 tw:font-semibold tw:text-sb-ink tw:shadow-sb-small tw:focus:border-sb-border-focus tw:focus:outline-none" />
+        </div>
+
+        <p id="inboxEmptyFilter" hidden class="tw:rounded-xl tw:border-2 tw:border-sb-border-card tw:bg-sb-card tw:p-4 tw:text-center tw:font-bold tw:dark:bg-sb-night-card">
+            No conversations match your filter.
+        </p>
+
+        <ul id="inboxList" class="tw:flex tw:list-none tw:flex-col tw:gap-3 tw:p-0">
+            @foreach (var item in Model)
+            {
+                var searchKey = $"{item.PartnerName} {item.PartnerProfession} {item.LastMessagePreview}".ToLowerInvariant();
+                <li class="sb-inbox-item tw:flex tw:flex-col tw:sm:flex-row tw:items-start tw:sm:items-center tw:justify-between tw:gap-4 tw:rounded-2xl tw:border-2 tw:border-sb-border-card tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:bg-sb-night-card" data-search="@searchKey">
+                    <div class="tw:flex tw:min-w-0 tw:flex-1 tw:items-center tw:gap-3.5">
+                        <a href="@Url.Action("Chat", "Messages", new { id = item.ConversationId })" class="tw:shrink-0">
+                            <img src="@item.PartnerAvatarUrl" alt="@item.PartnerName" width="52" height="52" class="tw:h-13 tw:w-13 tw:rounded-full tw:border-2 tw:border-sb-border-card tw:object-cover" loading="lazy" />
+                        </a>
+                        <div class="tw:min-w-0 tw:flex-1">
+                            <div class="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+                                <a href="@Url.Action("Chat", "Messages", new { id = item.ConversationId })" class="tw:text-base tw:font-black tw:text-sb-ink tw:no-underline tw:hover:underline tw:dark:text-sb-night-ink">
+                                    @item.PartnerName
+                                </a>
+                                @if (item.UnreadCount > 0)
+                                {
+                                    <span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-border-control tw:px-2.5 tw:py-0.5 tw:text-xs tw:font-black bg-danger tw:bg-sb-coral tw:text-sb-ink">
+                                        @item.UnreadCount unread
+                                    </span>
+                                }
+                                @if (item.LastMessageAt.HasValue)
+                                {
+                                    <span class="tw:text-xs tw:text-sb-muted tw:dark:text-sb-night-ink/70">@item.LastMessageAt.Value.ToString("g")</span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(item.PartnerProfession))
+                            {
+                                <div class="tw:text-xs tw:font-semibold tw:text-sb-muted tw:dark:text-sb-night-ink/70">@item.PartnerProfession</div>
+                            }
+                            <p class="tw:mb-0 tw:mt-1 tw:truncate tw:text-sm tw:text-sb-ink/85 tw:dark:text-sb-night-ink/85">
+                                @item.LastMessagePreview
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="tw:flex tw:w-full tw:sm:w-auto tw:shrink-0 tw:flex-wrap tw:items-center tw:gap-2">
+                        <a href="@Url.Action("Chat", "Messages", new { id = item.ConversationId })" class="btn tw:inline-flex tw:min-h-11 tw:flex-1 tw:sm:flex-initial tw:items-center tw:justify-center tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary tw:bg-sb-blue-strong tw:text-white">
+                            Open chat
+                        </a>
+                        <a href="@Url.Action("PublicProfile", "Profile", new { id = item.PartnerUserId })" class="btn tw:inline-flex tw:min-h-11 tw:flex-1 tw:sm:flex-initial tw:items-center tw:justify-center tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-3 tw:py-2 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-secondary tw:bg-sb-card tw:text-sb-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink">
+                            Profile
+                        </a>
+                    </div>
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+@section scripts {
+    <script>
+        (function () {
+            var search = document.getElementById('inboxSearch');
+            var list = document.getElementById('inboxList');
+            var emptyNotice = document.getElementById('inboxEmptyFilter');
+            if (!search || !list) return;
+
+            search.addEventListener('input', function () {
+                var q = (search.value || '').trim().toLowerCase();
+                var visible = 0;
+                list.querySelectorAll('.sb-inbox-item').forEach(function (item) {
+                    var hay = item.getAttribute('data-search') || '';
+                    var match = !q || hay.indexOf(q) !== -1;
+                    item.hidden = !match;
+                    item.style.display = match ? '' : 'none';
+                    if (match) visible++;
+                });
+                if (emptyNotice) emptyNotice.hidden = visible > 0;
+            });
+        })();
+    </script>
+}

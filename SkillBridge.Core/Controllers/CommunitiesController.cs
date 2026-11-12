@@ -1,13 +1,14 @@
-
-using SkillBridge.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SkillBridge.Helpers;
+using SkillBridge.Hubs;
+using SkillBridge.Models;
 using SkillBridge.Services;
 using System;
-using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.RateLimiting;
 
 namespace SkillBridge.Controllers
 {
@@ -16,9 +17,20 @@ namespace SkillBridge.Controllers
     {
         private readonly ApplicationDbContext db;
         private readonly CloudinaryImageService images;
+        private readonly IHubContext<ChatHub> hubContext;
+        private readonly ILogger<CommunitiesController> logger;
 
-        public CommunitiesController(ApplicationDbContext db, CloudinaryImageService images)
-        { this.db = db; this.images = images; }
+        public CommunitiesController(
+            ApplicationDbContext db,
+            CloudinaryImageService images,
+            IHubContext<ChatHub> hubContext = null,
+            ILogger<CommunitiesController> logger = null)
+        {
+            this.db = db;
+            this.images = images;
+            this.hubContext = hubContext;
+            this.logger = logger;
+        }
 
         [AllowAnonymous]
         public async Task<ActionResult> Index(string q = "", string tab = "all", int? skillId = null, int page = 1)
@@ -28,8 +40,9 @@ namespace SkillBridge.Controllers
             if (tab != "my-skills") tab = "all";
             if (page < 1) page = 1;
             var currentUserId = User.Identity.GetUserId();
+            bool hasCurrentUser = !string.IsNullOrEmpty(currentUserId);
 
-            var userSkills = !string.IsNullOrEmpty(currentUserId)
+            var userSkills = hasCurrentUser
                 ? await db.UserSkills
                     .AsNoTracking()
                     .Where(us => us.UserId == currentUserId)
@@ -49,10 +62,18 @@ namespace SkillBridge.Controllers
                 .Select(us => us.Skill)
                 .ToList();
 
-            // Query community feed posts
+            // Query visible community feed posts (excluding moderated/hidden profiles and mutually blocked members)
             var postQuery = db.CommunityPosts
                 .AsNoTracking()
-                .Where(p => !p.IsHidden);
+                .Where(p => !p.IsHidden &&
+                    !db.UserInformations.Any(ui => ui.UserId == p.CreatedByUserId && ui.IsHidden));
+
+            if (hasCurrentUser)
+            {
+                postQuery = postQuery.Where(p => !db.MemberBlocks.Any(b =>
+                    (b.BlockerId == currentUserId && b.BlockedId == p.CreatedByUserId) ||
+                    (b.BlockedId == currentUserId && b.BlockerId == p.CreatedByUserId)));
+            }
 
             if (tab == "my-skills")
             {
@@ -101,9 +122,17 @@ namespace SkillBridge.Controllers
                     p.Content,
                     p.ImageUrl,
                     p.CreatedAt,
-                    CommentCount = p.Comments.Count(c => !c.IsHidden),
+                    CommentCount = p.Comments.Count(c => !c.IsHidden &&
+                        !db.UserInformations.Any(ui => ui.UserId == c.CreatedByUserId && ui.IsHidden) &&
+                        (!hasCurrentUser || !db.MemberBlocks.Any(b =>
+                            (b.BlockerId == currentUserId && b.BlockedId == c.CreatedByUserId) ||
+                            (b.BlockedId == currentUserId && b.BlockerId == c.CreatedByUserId)))),
                     TopComment = p.Comments
-                        .Where(c => !c.IsHidden)
+                        .Where(c => !c.IsHidden &&
+                            !db.UserInformations.Any(ui => ui.UserId == c.CreatedByUserId && ui.IsHidden) &&
+                            (!hasCurrentUser || !db.MemberBlocks.Any(b =>
+                                (b.BlockerId == currentUserId && b.BlockedId == c.CreatedByUserId) ||
+                                (b.BlockedId == currentUserId && b.BlockerId == c.CreatedByUserId))))
                         .OrderByDescending(c => c.CreatedAt)
                         .Select(c => new
                         {
@@ -159,7 +188,9 @@ namespace SkillBridge.Controllers
                         Content = p.TopComment.Content,
                         ImageUrl = p.TopComment.ImageUrl,
                         ProfileImageUrl = commentAvatar,
+                        CreatedByUserId = p.TopComment.CreatedByUserId,
                         CreatedByFullName = DisplayName(commentAuthor),
+                        AuthorIsPublic = commentAuthor?.IsPublic == true && !commentAuthor.IsHidden,
                         CreatedAt = p.TopComment.CreatedAt,
                         IsAuthor = p.TopComment.CreatedByUserId == currentUserId
                     };
@@ -194,7 +225,11 @@ namespace SkillBridge.Controllers
                 {
                     SkillId = c.SkillId,
                     SkillName = c.Skill.Name,
-                    PostCount = c.Posts.Count(post => !post.IsHidden),
+                    PostCount = c.Posts.Count(post => !post.IsHidden &&
+                        !db.UserInformations.Any(ui => ui.UserId == post.CreatedByUserId && ui.IsHidden) &&
+                        (!hasCurrentUser || !db.MemberBlocks.Any(b =>
+                            (b.BlockerId == currentUserId && b.BlockedId == post.CreatedByUserId) ||
+                            (b.BlockedId == currentUserId && b.BlockerId == post.CreatedByUserId)))),
                     IsUserSkill = userSkillIds.Contains(c.SkillId)
                 })
                 .OrderByDescending(s => s.PostCount)
@@ -202,18 +237,30 @@ namespace SkillBridge.Controllers
                 .Take(16)
                 .ToListAsync();
 
-            var userPostableSkills = !string.IsNullOrEmpty(currentUserId)
-                ? await (from us in db.UserSkills.AsNoTracking()
-                         join c in db.Communities.AsNoTracking() on us.SkillId equals c.SkillId
-                         where us.UserId == currentUserId
-                         orderby c.Skill.Name
-                         select new UserSelectableSkill
-                         {
-                             CommunityId = c.Id,
-                             SkillId = c.SkillId,
-                             SkillName = c.Skill.Name,
-                             Role = us.Status
-                         }).ToListAsync()
+            var userSkillRoleMap = userSkills
+                .GroupBy(us => us.SkillId)
+                .ToDictionary(g => g.Key, g => g.Any(s => s.Status == "Teaching") ? "Teaching" : "Learning");
+
+            var userPostableSkills = hasCurrentUser
+                ? (await db.Communities.AsNoTracking()
+                    .OrderBy(c => c.Skill.Name)
+                    .Select(c => new
+                    {
+                        CommunityId = c.Id,
+                        c.SkillId,
+                        SkillName = c.Skill.Name
+                    })
+                    .ToListAsync())
+                    .Select(c => new UserSelectableSkill
+                    {
+                        CommunityId = c.CommunityId,
+                        SkillId = c.SkillId,
+                        SkillName = c.SkillName,
+                        Role = userSkillRoleMap.TryGetValue(c.SkillId, out var role) ? role : "Open Community"
+                    })
+                    .OrderBy(s => s.Role == "Open Community" ? 1 : 0)
+                    .ThenBy(s => s.SkillName)
+                    .ToList()
                 : new List<UserSelectableSkill>();
 
             string selectedSkillName = null;
@@ -280,38 +327,70 @@ namespace SkillBridge.Controllers
             return View(model);
         }
 
-
         [AllowAnonymous]
-        public ActionResult Landing(int id, string q = "", string sort = "newest")
+        public async Task<ActionResult> Landing(int id, string q = "", string sort = "newest")
         {
             q = (q ?? "").Trim();
             if (q.Length > 100) q = q[..100];
             if (sort != "active") sort = "newest";
-            var community = db.Communities.Include(c => c.Skill).FirstOrDefault(c => c.Id == id);
+            var community = await db.Communities.AsNoTracking().Include(c => c.Skill).FirstOrDefaultAsync(c => c.Id == id);
             if (community == null) return NotFound();
 
             var currentUserId = User.Identity.GetUserId();
-            bool isMember = db.UserSkills.Any(us => us.UserId == currentUserId && us.SkillId == community.SkillId);
+            bool hasCurrentUser = !string.IsNullOrEmpty(currentUserId);
+            bool isMember = hasCurrentUser &&
+                await db.UserSkills.AsNoTracking().AnyAsync(us => us.UserId == currentUserId && us.SkillId == community.SkillId);
 
-            var postRows = db.CommunityPosts
-                .Where(p => p.CommunityId == id && !p.IsHidden)
-                .Where(p => q == "" || EF.Functions.ILike(p.Title, "%" + q + "%") ||
-                    EF.Functions.ILike(p.Content, "%" + q + "%"))
+            var postQuery = db.CommunityPosts
+                .AsNoTracking()
+                .Where(p => p.CommunityId == id && !p.IsHidden &&
+                    !db.UserInformations.Any(ui => ui.UserId == p.CreatedByUserId && ui.IsHidden));
+
+            if (hasCurrentUser)
+            {
+                postQuery = postQuery.Where(p => !db.MemberBlocks.Any(b =>
+                    (b.BlockerId == currentUserId && b.BlockedId == p.CreatedByUserId) ||
+                    (b.BlockedId == currentUserId && b.BlockerId == p.CreatedByUserId)));
+            }
+
+            if (!string.IsNullOrEmpty(q))
+            {
+                postQuery = postQuery.Where(p =>
+                    EF.Functions.ILike(p.Title, "%" + q + "%") ||
+                    EF.Functions.ILike(p.Content, "%" + q + "%"));
+            }
+
+            var postRows = await postQuery
                 .Select(p => new
                 {
                     p.Id,
-                    CommentCount = p.Comments.Count(c => !c.IsHidden),
+                    CommentCount = p.Comments.Count(c => !c.IsHidden &&
+                        !db.UserInformations.Any(ui => ui.UserId == c.CreatedByUserId && ui.IsHidden) &&
+                        (!hasCurrentUser || !db.MemberBlocks.Any(b =>
+                            (b.BlockerId == currentUserId && b.BlockedId == c.CreatedByUserId) ||
+                            (b.BlockedId == currentUserId && b.BlockerId == c.CreatedByUserId)))),
                     p.Title,
                     p.ImageUrl,
                     p.CreatedByUserId,
                     p.CreatedAt,
-                    LastActivity = p.Comments.Where(c => !c.IsHidden).Select(c => (DateTime?)c.CreatedAt).Max() ?? p.CreatedAt
+                    LastActivity = p.Comments
+                        .Where(c => !c.IsHidden &&
+                            !db.UserInformations.Any(ui => ui.UserId == c.CreatedByUserId && ui.IsHidden) &&
+                            (!hasCurrentUser || !db.MemberBlocks.Any(b =>
+                                (b.BlockerId == currentUserId && b.BlockedId == c.CreatedByUserId) ||
+                                (b.BlockedId == currentUserId && b.BlockerId == c.CreatedByUserId))))
+                        .Select(c => (DateTime?)c.CreatedAt).Max() ?? p.CreatedAt
                 })
                 .OrderByDescending(p => sort == "active" ? p.LastActivity : p.CreatedAt)
                 .ThenByDescending(p => p.Id)
-                .ToList();
+                .ToListAsync();
+
             var authorIds = postRows.Select(p => p.CreatedByUserId).Distinct().ToList();
-            var authors = db.UserInformations.Where(info => authorIds.Contains(info.UserId)).ToDictionary(info => info.UserId);
+            var authors = await db.UserInformations
+                .AsNoTracking()
+                .Where(info => authorIds.Contains(info.UserId))
+                .ToDictionaryAsync(info => info.UserId);
+
             var posts = postRows.Select(p => new CommunityPostListItemViewModel
             {
                 PostId = p.Id,
@@ -321,8 +400,6 @@ namespace SkillBridge.Controllers
                 CreatedByFullName = DisplayName(authors.GetValueOrDefault(p.CreatedByUserId)),
                 CreatedAt = p.CreatedAt
             }).ToList();
-
-
 
             var model = new CommunityLandingViewModel
             {
@@ -338,15 +415,10 @@ namespace SkillBridge.Controllers
             return View(model);
         }
 
-
-        public ActionResult CreatePost(int communityId)
+        public async Task<ActionResult> CreatePost(int communityId)
         {
-            var currentUserId = User.Identity.GetUserId();
-            var community = db.Communities.Find(communityId);
+            var community = await db.Communities.AsNoTracking().FirstOrDefaultAsync(c => c.Id == communityId);
             if (community == null) return NotFound();
-
-            bool isMember = db.UserSkills.Any(us => us.UserId == currentUserId && us.SkillId == community.SkillId);
-            if (!isMember) return StatusCode(403);
 
             var model = new CommunityPostCreateModel
             {
@@ -354,7 +426,6 @@ namespace SkillBridge.Controllers
             };
             return View(model);
         }
-
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -366,8 +437,6 @@ namespace SkillBridge.Controllers
             var community = await db.Communities.FindAsync(model.CommunityId);
             if (community == null) return NotFound();
 
-            bool isMember = await db.UserSkills.AnyAsync(us => us.UserId == currentUserId && us.SkillId == community.SkillId);
-            if (!isMember) return StatusCode(403);
             if (string.IsNullOrWhiteSpace(model.Title))
                 ModelState.AddModelError(nameof(model.Title), "Write a title.");
             if (string.IsNullOrWhiteSpace(model.Content) && model.Image?.Length is not > 0)
@@ -453,6 +522,7 @@ namespace SkillBridge.Controllers
         public async Task<ActionResult> PostDetails(int id)
         {
             var post = await db.CommunityPosts
+                .AsNoTracking()
                 .Include(p => p.Community)
                 .ThenInclude(c => c.Skill)
                 .ThenInclude(s => s.SkillCategory)
@@ -462,8 +532,10 @@ namespace SkillBridge.Controllers
             if (post == null) return NotFound();
 
             var currentUserId = User.Identity.GetUserId();
-            bool isMember = !string.IsNullOrEmpty(currentUserId) &&
-                await db.UserSkills.AnyAsync(us => us.UserId == currentUserId && us.SkillId == post.Community.SkillId);
+            bool hasCurrentUser = !string.IsNullOrEmpty(currentUserId);
+
+            if (hasCurrentUser && await BlockRules.EitherBlockedAsync(db, currentUserId, post.CreatedByUserId))
+                return StatusCode(403);
 
             var commentAuthorIds = post.Comments.Where(c => !c.IsHidden).Select(c => c.CreatedByUserId)
                 .Append(post.CreatedByUserId).Distinct().ToList();
@@ -471,6 +543,20 @@ namespace SkillBridge.Controllers
             var commentAuthors = await db.UserInformations.AsNoTracking()
                 .Where(info => commentAuthorIds.Contains(info.UserId))
                 .ToDictionaryAsync(info => info.UserId);
+
+            var authorInfo = commentAuthors.GetValueOrDefault(post.CreatedByUserId);
+            if (authorInfo?.IsHidden == true && post.CreatedByUserId != currentUserId)
+                return NotFound();
+
+            var blockedIds = hasCurrentUser
+                ? (await db.MemberBlocks.AsNoTracking()
+                    .Where(b => b.BlockerId == currentUserId || b.BlockedId == currentUserId)
+                    .Select(b => b.BlockerId == currentUserId ? b.BlockedId : b.BlockerId)
+                    .ToListAsync()).ToHashSet()
+                : new HashSet<string>();
+
+            bool isMember = hasCurrentUser &&
+                await db.UserSkills.AsNoTracking().AnyAsync(us => us.UserId == currentUserId && us.SkillId == post.Community.SkillId);
 
             var authorSkill = await db.UserSkills.AsNoTracking()
                 .Where(us => us.UserId == post.CreatedByUserId && us.SkillId == post.Community.SkillId)
@@ -480,10 +566,16 @@ namespace SkillBridge.Controllers
                 ? (authorSkill.Status == "Teaching" ? $"Teaches {post.Community.Skill.Name} (Stage {authorSkill.KnownUpToStage ?? 1})" : $"Learns {post.Community.Skill.Name}")
                 : "Community Member";
 
-            var authorInfo = commentAuthors.GetValueOrDefault(post.CreatedByUserId);
             string authorAvatar = (authorInfo != null && !authorInfo.IsHidden && (User.Identity.IsAuthenticated || authorInfo.IsPublic))
                 ? ProfileImageHelper.GetProfileImage(authorInfo.ProfileImageUrl, authorInfo.FullName)
                 : ProfileImageHelper.GetProfileImage(null, "SkillBridge member");
+
+            var visibleComments = post.Comments
+                .Where(c => !c.IsHidden &&
+                    !blockedIds.Contains(c.CreatedByUserId) &&
+                    (!commentAuthors.TryGetValue(c.CreatedByUserId, out var ca) || !ca.IsHidden || c.CreatedByUserId == currentUserId))
+                .OrderBy(c => c.CreatedAt)
+                .ToList();
 
             var model = new PostDetailsViewModel
             {
@@ -502,19 +594,24 @@ namespace SkillBridge.Controllers
                 CreatedAt = post.CreatedAt,
                 IsMember = isMember,
                 IsAuthor = post.CreatedByUserId == currentUserId,
-                Comments = post.Comments.Where(c => !c.IsHidden).OrderBy(c => c.CreatedAt)
-                    .Select(c => new CommunityCommentViewModel
+                Comments = visibleComments
+                    .Select(c =>
                     {
-                        CommentId = c.Id,
-                        Content = c.Content,
-                        ImageUrl = c.ImageUrl,
-                        CreatedByFullName = DisplayName(commentAuthors.GetValueOrDefault(c.CreatedByUserId)),
-                        ProfileImageUrl = commentAuthors.TryGetValue(c.CreatedByUserId, out var author) &&
-                            !author.IsHidden && (User.Identity.IsAuthenticated || author.IsPublic)
-                            ? ProfileImageHelper.GetProfileImage(author.ProfileImageUrl, author.FullName)
-                            : ProfileImageHelper.GetProfileImage(null, "SkillBridge member"),
-                        CreatedAt = c.CreatedAt,
-                        IsAuthor = c.CreatedByUserId == currentUserId
+                        commentAuthors.TryGetValue(c.CreatedByUserId, out var cAuthor);
+                        return new CommunityCommentViewModel
+                        {
+                            CommentId = c.Id,
+                            Content = c.Content,
+                            ImageUrl = c.ImageUrl,
+                            CreatedByUserId = c.CreatedByUserId,
+                            CreatedByFullName = DisplayName(cAuthor),
+                            AuthorIsPublic = cAuthor?.IsPublic == true && !cAuthor.IsHidden,
+                            ProfileImageUrl = cAuthor != null && !cAuthor.IsHidden && (User.Identity.IsAuthenticated || cAuthor.IsPublic)
+                                ? ProfileImageHelper.GetProfileImage(cAuthor.ProfileImageUrl, cAuthor.FullName)
+                                : ProfileImageHelper.GetProfileImage(null, "SkillBridge member"),
+                            CreatedAt = c.CreatedAt,
+                            IsAuthor = c.CreatedByUserId == currentUserId
+                        };
                     }).ToList(),
                 NewComment = new CommunityCommentCreateModel
                 {
@@ -525,8 +622,6 @@ namespace SkillBridge.Controllers
             return View(model);
         }
 
-
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
@@ -535,13 +630,17 @@ namespace SkillBridge.Controllers
         {
             var currentUserId = User.Identity.GetUserId();
 
-            var post = db.CommunityPosts
+            var post = await db.CommunityPosts
                 .Include(p => p.Community)
-                .FirstOrDefault(p => p.Id == model.PostId);
+                .FirstOrDefaultAsync(p => p.Id == model.PostId);
 
             if (post == null || post.IsHidden) return NotFound();
-            bool isMember = db.UserSkills.Any(us => us.UserId == currentUserId && us.SkillId == post.Community.SkillId);
-            if (!isMember) return StatusCode(403);
+            if (await BlockRules.EitherBlockedAsync(db, currentUserId, post.CreatedByUserId))
+                return StatusCode(403);
+            if (post.CreatedByUserId != currentUserId &&
+                await db.UserInformations.AsNoTracking().AnyAsync(ui => ui.UserId == post.CreatedByUserId && ui.IsHidden))
+                return NotFound();
+
             if (string.IsNullOrWhiteSpace(model.Content) && model.Image?.Length is not > 0)
                 ModelState.AddModelError(nameof(model.Content), "Write a comment or add an image.");
             var imageError = CloudinaryImageService.Validate(model.Image);
@@ -557,8 +656,11 @@ namespace SkillBridge.Controllers
             if (model.Image?.Length > 0)
             {
                 try { uploaded = await images.UploadAsync(model.Image, "skillbridge/community", false); }
-                catch { TempData["CommunityNotice"] = "The image could not be uploaded. Please try again.";
-                    return RedirectToAction("PostDetails", new { id = model.PostId }); }
+                catch
+                {
+                    TempData["CommunityNotice"] = "The image could not be uploaded. Please try again.";
+                    return RedirectToAction("PostDetails", new { id = model.PostId });
+                }
             }
 
             var comment = new CommunityComment
@@ -571,7 +673,28 @@ namespace SkillBridge.Controllers
             };
 
             db.CommunityComments.Add(comment);
-            db.SaveChanges();
+
+            bool notifyAuthor = post.CreatedByUserId != currentUserId;
+            if (notifyAuthor)
+            {
+                var commenterName = await MemberNames.GetAsync(db, currentUserId);
+                var snippet = post.Title?.Length > 50 ? post.Title[..47] + "..." : post.Title;
+                db.Notifications.Add(new Notification
+                {
+                    UserId = post.CreatedByUserId,
+                    Type = "Community",
+                    ReferenceId = post.Id,
+                    Message = $"{commenterName} commented on your post \"{snippet}\"",
+                    IsRead = false,
+                    CreatedAt = DateTime.Now
+                });
+            }
+
+            await db.SaveChangesAsync();
+            if (notifyAuthor)
+            {
+                await HubNotifications.NotifyBadgesAsync(hubContext, logger, post.CreatedByUserId);
+            }
 
             return RedirectToAction("PostDetails", new { id = model.PostId });
         }
@@ -668,6 +791,5 @@ namespace SkillBridge.Controllers
             if (span.TotalDays < 7) return $"{(int)span.TotalDays}d ago";
             return dt.ToString("MMM dd, yyyy");
         }
-
     }
 }

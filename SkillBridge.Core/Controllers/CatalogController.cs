@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SkillBridge.Helpers;
+using SkillBridge.Hubs;
 using SkillBridge.Models;
 using SkillBridge.Services;
 
@@ -12,7 +15,18 @@ namespace SkillBridge.Controllers;
 public class CatalogController : Controller
 {
     private readonly ApplicationDbContext db;
-    public CatalogController(ApplicationDbContext db) => this.db = db;
+    private readonly IHubContext<ChatHub> hubContext;
+    private readonly ILogger<CatalogController> logger;
+
+    public CatalogController(
+        ApplicationDbContext db,
+        IHubContext<ChatHub> hubContext = null,
+        ILogger<CatalogController> logger = null)
+    {
+        this.db = db;
+        this.hubContext = hubContext;
+        this.logger = logger;
+    }
 
     public IActionResult Suggestions()
     {
@@ -23,7 +37,7 @@ public class CatalogController : Controller
     }
 
     [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-    public IActionResult Review(int id, string decision, List<string> stages)
+    public async Task<IActionResult> Review(int id, string decision, List<string> stages)
     {
         if (!IsCatalogEditor()) return Forbid();
         var suggestion = db.SkillSuggestions.FirstOrDefault(s => s.Id == id && s.Status == "Pending");
@@ -72,6 +86,7 @@ public class CatalogController : Controller
         });
         db.SaveChanges();
         transaction.Commit();
+        await HubNotifications.NotifyBadgesAsync(hubContext, logger, suggestion.UserId);
         TempData["CatalogNotice"] = "Suggestion reviewed.";
         return RedirectToAction(nameof(Suggestions));
     }

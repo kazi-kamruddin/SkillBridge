@@ -1,0 +1,141 @@
+@model SkillBridge.Models.SkillSelectionBoardViewModel
+@using System.Text.Json
+@{
+    var allSkills = (Model.AllSkillCategories ?? new List<SkillBridge.Models.SkillCategory>())
+        .SelectMany(c => c.Skills)
+        .ToList();
+
+    var skillStagesDict = allSkills.ToDictionary(
+        s => s.Id.ToString(),
+        s => s.SkillStages
+            .OrderBy(st => st.StageNumber)
+            .Select(st => new { id = st.StageNumber, name = st.Description })
+            .ToList()
+    );
+
+    var skillStagesDataJson = JsonSerializer.Serialize(skillStagesDict);
+    var toLearnIds = new HashSet<int>(Model.SkillsToLearn ?? Enumerable.Empty<int>());
+    var knownSkillStages = Model.KnownSkillStages ?? new Dictionary<int, int>();
+    var verifiedLearningStages = Model.VerifiedLearningStages ?? new Dictionary<int, int>();
+    var verifiedStagesJson = JsonSerializer.Serialize(
+        verifiedLearningStages.ToDictionary(kv => kv.Key.ToString(), kv => kv.Value)
+    );
+}
+
+<section class="sb-skill-board-wrapper" aria-label="Skill preferences selection">
+    <div class="sb-skill-board"
+         data-sb-skill-board
+         data-form-id="@Model.FormId">
+        <script type="application/json" data-sb-stages-json>@Html.Raw(skillStagesDataJson)</script>
+        <script type="application/json" data-sb-verified-json>@Html.Raw(verifiedStagesJson)</script>
+        <div class="sb-skill-hidden-inputs" data-sb-hidden-inputs hidden>
+            @foreach (var learnId in toLearnIds)
+            {
+                <input type="hidden" name="SkillsToLearn" value="@learnId" />
+            }
+            @{
+                var knownIndex = 0;
+            }
+            @foreach (var kv in knownSkillStages)
+            {
+                <input type="hidden" name="SkillsIKnow[@knownIndex].SkillId" value="@kv.Key" data-skill-id="@kv.Key" />
+                <input type="hidden" name="SkillsIKnow[@knownIndex].KnownUpToStage" value="@kv.Value" data-skill-id="@kv.Key" />
+                knownIndex++;
+            }
+        </div>
+
+        <!-- Left column: Skills You Want to Learn (Red accent) -->
+        <div class="sb-skill-panel sb-skill-panel-learn" id="skillsToLearnContainer">
+            <div class="sb-skill-panel-header">
+                <div class="sb-skill-panel-title-row">
+                    <span class="sb-swatch sb-swatch-learn" aria-hidden="true"></span>
+                    <h4>Skills You Want to Learn</h4>
+                    <span class="sb-count-pill sb-count-learn" data-sb-learn-count>@toLearnIds.Count selected</span>
+                </div>
+                <p class="sb-skill-panel-sub">Select skills you want guidance on. Selected skills turn red.</p>
+            </div>
+
+            @foreach (var category in Model.AllSkillCategories)
+            {
+                <div class="sb-skill-category-block">
+                    <h5 class="sb-skill-category-title">@category.Name</h5>
+                    <div class="sb-skill-grid" role="list">
+                        @foreach (var skill in category.Skills)
+                        {
+                            var isLearning = toLearnIds.Contains(skill.Id);
+                            <div class="sb-skill-cell" role="listitem">
+                                <button type="button"
+                                        class="sb-skill-btn sb-skill-learn-btn skill-learn @(isLearning ? "active is-selected" : "")"
+                                        data-skill-id="@skill.Id"
+                                        aria-pressed="@(isLearning ? "true" : "false")">@skill.Name<svg class="sb-skill-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.2 8.4l3.1 3.1L12.8 4.8" /></svg></button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="sb-skill-divider" role="separator" aria-orientation="vertical"></div>
+
+        <!-- Right column: Skills You Can Teach / Know (Blue accent + inline stage drawer) -->
+        <div class="sb-skill-panel sb-skill-panel-know" id="skillsIKnowContainer">
+            <div class="sb-skill-panel-header">
+                <div class="sb-skill-panel-title-row">
+                    <span class="sb-swatch sb-swatch-know" aria-hidden="true"></span>
+                    <h4>Skills You Can Teach</h4>
+                    <span class="sb-count-pill sb-count-know" data-sb-know-count>@knownSkillStages.Count selected</span>
+                </div>
+                <p class="sb-skill-panel-sub">Select a skill (blue) to choose up to which stage you can teach.</p>
+            </div>
+
+            @foreach (var category in Model.AllSkillCategories)
+            {
+                <div class="sb-skill-category-block skill-category-container" data-category="@category.Name">
+                    <h5 class="sb-skill-category-title">@category.Name</h5>
+                    <div class="sb-skill-grid sb-skill-know-grid" role="list">
+                        @foreach (var skill in category.Skills)
+                        {
+                            var sortedStages = skill.SkillStages.OrderBy(st => st.StageNumber).ToList();
+                            var totalStages = Math.Max(1, sortedStages.Count);
+                            var isKnown = knownSkillStages.TryGetValue(skill.Id, out var currentStage);
+                            var verifiedStage = 0;
+                            var hasVerified = verifiedLearningStages.TryGetValue(skill.Id, out verifiedStage) && verifiedStage > 0;
+                            var initialStage = isKnown
+                                ? Math.Clamp(currentStage, 1, totalStages)
+                                : Math.Clamp(hasVerified ? verifiedStage : 1, 1, totalStages);
+                            var stageLabel = initialStage == 1
+                                ? $"Stage 1 of {totalStages}"
+                                : $"Stages 1–{initialStage} of {totalStages}";
+                            <div class="sb-skill-cell sb-skill-know-cell @(isKnown ? "is-selected" : "")"
+                                 data-skill-id="@skill.Id"
+                                 role="listitem">
+                                <div class="sb-skill-know-card @(isKnown ? "is-selected" : "")">
+                                    <button type="button"
+                                            class="sb-skill-btn sb-skill-know-btn skill-know @(isKnown ? "active" : "")"
+                                            data-skill-id="@skill.Id"
+                                            data-skill-name="@skill.Name"
+                                            data-total-stages="@totalStages"
+                                            data-known-stage="@initialStage"
+                                            aria-pressed="@(isKnown ? "true" : "false")">@skill.Name<svg class="sb-skill-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.2 8.4l3.1 3.1L12.8 4.8" /></svg></button>
+                                    <button type="button"
+                                            class="sb-stage-trigger"
+                                            data-skill-id="@skill.Id"
+                                            aria-expanded="false"
+                                            aria-label="Choose taught stages for @skill.Name (@stageLabel)"
+                                            @(isKnown ? null : "hidden")>
+                                        <span class="sb-stage-trigger-text">@stageLabel</span>
+                                        <svg class="sb-chevron-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4" /></svg>
+                                    </button>
+                                </div>
+                                @if (hasVerified && !isKnown)
+                                {
+                                    <div class="sb-verified-hint">Verified up to Stage @verifiedStage</div>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>

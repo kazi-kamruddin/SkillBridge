@@ -80,13 +80,13 @@ public class AccountController : Controller
     {
         ViewBag.GoogleEnabled = GoogleEnabled;
         if (!ModelState.IsValid) return View(model);
-        if (!emailSender.IsConfigured || !TryGetPublicUrl(out _))
+        var emailVerificationReady = emailSender.IsConfigured && TryGetPublicUrl(out _);
+        var user = new ApplicationUser
         {
-            ModelState.AddModelError("", "Registration is temporarily unavailable while email verification is being configured.");
-            return View(model);
-        }
-
-        var user = new ApplicationUser { UserName = model.Email, Email = model.Email };
+            UserName = model.Email,
+            Email = model.Email,
+            EmailConfirmed = !emailVerificationReady
+        };
         var result = await userManager.CreateAsync(user, model.Password);
         if (!result.Succeeded)
         {
@@ -96,6 +96,13 @@ public class AccountController : Controller
 
         db.UserRatings.Add(new UserRating { UserId = user.Id });
         await db.SaveChangesAsync();
+
+        if (!emailVerificationReady)
+        {
+            await signInManager.SignInAsync(user, isPersistent: false);
+            return RedirectToAction("Index", "CompleteProfile");
+        }
+
         ViewBag.EmailDeliveryFailed = !await SendConfirmationAsync(user);
         return View("CheckEmail");
     }

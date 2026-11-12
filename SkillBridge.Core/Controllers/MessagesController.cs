@@ -54,6 +54,81 @@ namespace SkillBridge.Controllers
             return View("NoConversations");
         }
 
+        [HttpGet]
+        public async Task<ActionResult> Inbox()
+        {
+            var userId = User.Identity.GetUserId();
+
+            var conversations = await db.Conversations
+                .AsNoTracking()
+                .Where(c => c.User1Id == userId || c.User2Id == userId)
+                .Where(c => !db.MemberBlocks.Any(b =>
+                    (b.BlockerId == c.User1Id && b.BlockedId == c.User2Id) ||
+                    (b.BlockerId == c.User2Id && b.BlockedId == c.User1Id)))
+                .OrderByDescending(c => c.LastMessageAt)
+                .ThenByDescending(c => c.Id)
+                .ToListAsync();
+
+            var conversationIds = conversations.Select(c => c.Id).ToList();
+            var partnerIds = conversations.Select(c => c.User1Id == userId ? c.User2Id : c.User1Id).Distinct().ToList();
+
+            var partnerProfiles = await db.UserInformations
+                .AsNoTracking()
+                .Where(info => partnerIds.Contains(info.UserId))
+                .ToDictionaryAsync(info => info.UserId);
+
+            var latestMessageIds = conversationIds.Count > 0
+                ? await db.Messages.AsNoTracking()
+                    .Where(m => conversationIds.Contains(m.ConversationId))
+                    .GroupBy(m => m.ConversationId)
+                    .Select(group => group.OrderByDescending(m => m.CreatedAt).ThenByDescending(m => m.Id)
+                        .Select(m => m.Id).First())
+                    .ToListAsync()
+                : new List<int>();
+
+            var latestMessages = latestMessageIds.Count > 0
+                ? await db.Messages.AsNoTracking()
+                    .Where(m => latestMessageIds.Contains(m.Id))
+                    .ToListAsync()
+                : new List<Message>();
+
+            var previewsByConversation = latestMessages.ToDictionary(m => m.ConversationId, m =>
+            {
+                var text = MessageEncryptionService.Decrypt(m.Ciphertext, m.IV, m.Hmac);
+                if (string.IsNullOrWhiteSpace(text) && !string.IsNullOrWhiteSpace(m.ImagePublicId))
+                    return m.FromUserId == userId ? "You sent a photo" : "Sent an image";
+                return m.FromUserId == userId ? $"You: {text}" : text;
+            });
+
+            var unreadByConversation = conversationIds.Count > 0
+                ? await db.Messages.AsNoTracking()
+                    .Where(m => conversationIds.Contains(m.ConversationId) && m.ToUserId == userId && !m.IsRead)
+                    .GroupBy(m => m.ConversationId)
+                    .Select(group => new { ConversationId = group.Key, Count = group.Count() })
+                    .ToDictionaryAsync(x => x.ConversationId, x => x.Count)
+                : new Dictionary<int, int>();
+
+            var model = conversations.Select(c =>
+            {
+                var partnerId = c.User1Id == userId ? c.User2Id : c.User1Id;
+                partnerProfiles.TryGetValue(partnerId, out var info);
+                var partnerName = !string.IsNullOrWhiteSpace(info?.FullName) ? info.FullName : "SkillBridge member";
+                return new InboxConversationViewModel
+                {
+                    ConversationId = c.Id,
+                    PartnerUserId = partnerId,
+                    PartnerName = partnerName,
+                    PartnerProfession = info?.Profession,
+                    PartnerAvatarUrl = ProfileImageHelper.GetProfileImage(info?.ProfileImageUrl, partnerName),
+                    LastMessagePreview = previewsByConversation.TryGetValue(c.Id, out var preview) ? preview : "No messages yet",
+                    LastMessageAt = c.LastMessageAt,
+                    UnreadCount = unreadByConversation.TryGetValue(c.Id, out var count) ? count : 0
+                };
+            }).ToList();
+
+            return View("Index", model);
+        }
+
 
         // GET: /Messages/Chat/5
         // Show one conversation (with decrypted messages + sidebar lists)
@@ -126,6 +201,7 @@ namespace SkillBridge.Controllers
 
             var partnerVm = new ChatPartnerViewModel
             {
+                UserId = partnerId,
                 FullName = profileInfo?.FullName ?? "Unknown",
                 Profession = profileInfo?.Profession ?? "",
                 Location = profileInfo?.Location ?? "",
@@ -213,6 +289,7 @@ namespace SkillBridge.Controllers
                 // The message is already durable; a transient broadcast failure must not invite a duplicate retry.
                 logger.LogWarning(ex, "Could not broadcast saved chat message {MessageId}", msg.Id);
             }
+            await HubNotifications.NotifyBadgesAsync(hubContext, logger, otherUserId);
             return Ok(payload);
         }
 
@@ -275,6 +352,7 @@ namespace SkillBridge.Controllers
                     readerId = userId,
                     messageIds = unread.Select(m => m.Id).ToArray()
                 });
+                await HubNotifications.NotifyBadgesAsync(hubContext, logger, userId);
             }
             return Json(new { count = unread.Count });
         }
@@ -296,21 +374,13 @@ namespace SkillBridge.Controllers
 
             if (targetUserId == currentUserId)
                 return RedirectToAction("Index");
-            if (!await db.UserInformations.AnyAsync(info => info.UserId == targetUserId && !info.IsHidden))
+            if (!await db.UserInformations.AsNoTracking().AnyAsync(info => info.UserId == targetUserId && !info.IsHidden))
                 return StatusCode(403);
-            if (!await db.UserSkills.AnyAsync(s => s.UserId == currentUserId && s.Status == "Teaching" && s.KnownUpToStage > 0) ||
-                !await db.UserSkills.AnyAsync(s => s.UserId == currentUserId && s.Status == "Learning"))
-            {
-                TempData["AccountNotice"] = "Add a skill you can teach and one you want to learn before starting a conversation.";
-                return RedirectToAction("UpdateProfile", "Profile");
-            }
-            if (!await db.UserSkills.AnyAsync(s => s.UserId == targetUserId && s.Status == "Teaching" && s.KnownUpToStage > 0) ||
-                !await db.UserSkills.AnyAsync(s => s.UserId == targetUserId && s.Status == "Learning"))
-            {
-                TempData["ProfileNotice"] = "This member is still setting up their skills.";
-                return RedirectToAction("PublicProfile", "Profile", new { id = targetUserId });
-            }
-            if (BlockRules.EitherBlocked(db, currentUserId, targetUserId)) return StatusCode(403);
+            if (await BlockRules.EitherBlockedAsync(db, currentUserId, targetUserId))
+                return StatusCode(403);
+
+            var canonicalUser1 = string.CompareOrdinal(currentUserId, targetUserId) <= 0 ? currentUserId : targetUserId;
+            var canonicalUser2 = string.CompareOrdinal(currentUserId, targetUserId) <= 0 ? targetUserId : currentUserId;
 
             var conversation = await db.Conversations
                 .FirstOrDefaultAsync(c =>
@@ -321,14 +391,24 @@ namespace SkillBridge.Controllers
             {
                 conversation = new Conversation
                 {
-                    User1Id = currentUserId,
-                    User2Id = targetUserId,
+                    User1Id = canonicalUser1,
+                    User2Id = canonicalUser2,
                     CreatedAt = DateTime.Now,
                     LastMessageAt = DateTime.Now
                 };
 
                 db.Conversations.Add(conversation);
-                await db.SaveChangesAsync();
+                try
+                {
+                    await db.SaveChangesAsync();
+                }
+                catch (DbUpdateException)
+                {
+                    conversation = await db.Conversations
+                        .FirstOrDefaultAsync(c =>
+                            (c.User1Id == currentUserId && c.User2Id == targetUserId) ||
+                            (c.User1Id == targetUserId && c.User2Id == currentUserId));
+                }
             }
 
             return RedirectToAction("Chat", new { id = conversation.Id });

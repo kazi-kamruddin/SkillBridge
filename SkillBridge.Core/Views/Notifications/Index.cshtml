@@ -6,97 +6,76 @@
 @section Styles {
     <style>
         .notification-container {
-            --primary-color: #4361ee;
-            --secondary-color: #3f37c9;
-            --success-color: #4cc9f0;
-            --info-color: #4895ef;
-            --warning-color: #f72585;
-            --light-bg: #f8f9fa;
-            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --transition: all 0.3s ease;
-        }
-
-        .notification-container {
-            max-width: 800px;
+            max-width: 880px;
             margin: 2rem auto;
             padding: 0 15px;
         }
 
         .notification-header {
             display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid #eaeaea;
+            border-bottom: 2px solid var(--sb-border-card);
         }
 
         .notification-title {
-            font-weight: 700;
-            color: #2b2d42;
+            font-weight: 850;
+            color: var(--sb-ink);
             margin: 0;
         }
 
         .btn-modern {
-            border-radius: 8px;
+            border-radius: 12px;
+            min-height: 44px;
             padding: 0.5rem 1.2rem;
-            font-weight: 600;
-            transition: var(--transition);
-            border: none;
+            font-weight: 800;
         }
 
         .btn-primary-modern {
-            background: var(--primary-color);
-        }
-
-        .btn-primary-modern:hover {
-            background: var(--secondary-color);
-            transform: translateY(-2px);
-            box-shadow: var(--card-shadow);
+            background: var(--sb-blue-strong);
+            color: #ffffff;
         }
 
         .notification-list {
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: var(--card-shadow);
+            border-radius: 16px;
         }
 
         .notification-item {
             padding: 1.5rem;
-            border: none;
-            border-bottom: 1px solid #eaeaea;
-            transition: var(--transition);
-            background: white;
-        }
-
-        .notification-item:last-child {
-            border-bottom: none;
+            background: var(--sb-card);
+            color: var(--sb-ink);
+            border: 2px solid var(--sb-border-card);
+            border-radius: 14px;
+            margin-bottom: 0.85rem;
+            box-shadow: var(--sb-shadow-small);
         }
 
         .notification-item.unread {
-            background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);
-            border-left: 4px solid var(--info-color);
-        }
-
-        .notification-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+            background: var(--sb-blue);
+            border-left: 6px solid var(--sb-blue-strong);
         }
 
         .notification-content {
             flex: 1;
+            min-width: 0;
         }
 
         .notification-message {
             margin-bottom: 0.5rem;
             font-size: 1rem;
+            font-weight: 700;
             line-height: 1.5;
-            color: #2b2d42;
+            color: var(--sb-ink);
+            overflow-wrap: anywhere;
         }
 
         .notification-time {
             font-size: 0.85rem;
-            color: #6c757d;
+            color: var(--sb-muted);
             display: flex;
             align-items: center;
         }
@@ -109,83 +88,79 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            min-width: 180px;
         }
 
         .btn-sm-modern {
-            border-radius: 6px;
-            padding: 0.4rem 0.8rem;
+            border-radius: 10px;
+            min-height: 44px;
+            padding: 0.45rem 0.9rem;
             font-size: 0.85rem;
-            font-weight: 600;
-            transition: var(--transition);
+            font-weight: 800;
         }
 
         .btn-success-modern {
-            background: var(--success-color);
+            background: var(--sb-sage-deep);
             color: #fff;
         }
 
         .btn-danger-modern {
-            background: var(--warning-color);
+            background: var(--sb-coral-rich);
             color: #fff;
         }
 
         .btn-secondary-modern {
-            background: #6c757d;
-            color: #fff;
+            background: var(--sb-sage);
+            color: var(--sb-ink);
         }
 
         .skill-selection {
-            background: #f8f9fa;
+            background: var(--sb-surface-raised);
+            color: var(--sb-ink);
             padding: 1rem;
-            border-radius: 8px;
+            border-radius: 12px;
             margin-top: 1rem;
-            border-left: 3px solid var(--primary-color);
-        }
-
-        .form-control-modern {
-            border-radius: 6px;
-            border: 1px solid #dee2e6;
-            padding: 0.5rem 0.75rem;
-            transition: var(--transition);
-        }
-
-        .form-control-modern:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+            border: 2px solid var(--sb-border-card);
         }
 
         .empty-state {
             text-align: center;
             padding: 3rem 1rem;
-            color: #6c757d;
+            color: var(--sb-ink);
+            background: var(--sb-card);
+            border: 2px dashed var(--sb-border-card);
+            border-radius: 16px;
         }
 
         .empty-state i {
-            font-size: 4rem;
+            font-size: 3.5rem;
             margin-bottom: 1rem;
-            color: #dee2e6;
+            color: var(--sb-muted);
         }
 
         .empty-state h3 {
-            font-weight: 600;
+            font-weight: 800;
+            color: var(--sb-ink);
             margin-bottom: 0.5rem;
         }
 
+        .empty-state p {
+            color: var(--sb-muted);
+        }
+
         .badge-notification {
-            background: var(--warning-color);
+            background: var(--sb-coral-rich);
             color: white;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
-            margin-left: 5px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            margin-left: 6px;
+            border: 2px solid var(--sb-border-control);
         }
-
-        
     </style>
 }
     @Html.AntiForgeryToken()
@@ -208,8 +183,8 @@
                         <span class="badge-notification">@Model.Count(n => !n.IsRead)</span>
                     }
                 </h1>
-                <button id="markAllReadBtn" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary-modern btn-modern">
-                    <i class="fas fa-check-double me-2 tw:me-2"></i>Mark All as Read
+                <button id="markAllReadBtn" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary-modern btn-modern">
+                    <i class="fas fa-check-double me-2 tw:me-2" aria-hidden="true"></i>Mark All as Read
                 </button>
             </div>
 
@@ -226,57 +201,57 @@
                     {
                         <h2 class="h5 px-4 tw:px-6 pt-3 tw:pt-4">Action needed</h2>
                     }
-                    <div class="notification-item d-flex tw:flex justify-content-between tw:justify-between align-items-start tw:items-start @(n.IsRead ?"" : "unread")" data-id="@n.Id">
+                    <div class="notification-item d-flex tw:flex tw:flex-col tw:sm:flex-row tw:gap-4 justify-content-between tw:justify-between align-items-start tw:items-start @(n.IsRead ? "" : "unread")" data-id="@n.Id">
                         <div class="notification-content">
                             <div class="notification-message">@n.Message</div>
                             <div class="notification-time">
-                                <i class="far fa-clock"></i>@n.CreatedAt.ToLocalTime().ToString("g")
+                                <i class="far fa-clock" aria-hidden="true"></i>@n.CreatedAt.ToLocalTime().ToString("g")
                             </div>
 
                             @if (n.Type == "SkillRequest")
                             {
-                                <a href="@Url.Action("RequestDetails", "Profile", new { id = n.ReferenceId })" class="d-block tw:block mb-2 tw:mb-2">Read exchange proposal</a>
-                                <div class="skill-selection d-none tw:hidden" data-id="@n.Id">
-                                    <label class="form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold">Select skill to learn from requester:</label>
-                                    <select class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-control-modern skill-dropdown" data-id="@n.Id"></select>
-                                    <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary-modern btn-sm-modern mt-2 tw:mt-2 initialize-btn" data-id="@n.Id">
-                                        <i class="fas fa-play-circle me-1 tw:me-1"></i>Start Interaction
+                                <a href="@Url.Action("RequestDetails", "Profile", new { id = n.ReferenceId })" class="d-block tw:block mb-2 tw:mb-2 tw:dark:text-sb-blue-link">Read exchange proposal</a>
+                                <div class="skill-selection tw:hidden" data-id="@n.Id">
+                                    <label class="skill-selection-label form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold" for="skill-dropdown-@n.Id">Choose exchange mode:</label>
+                                    <select id="skill-dropdown-@n.Id" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none form-control-modern skill-dropdown" data-id="@n.Id"></select>
+                                    <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary-modern btn-sm-modern mt-2 tw:mt-2 initialize-btn" data-id="@n.Id">
+                                        <i class="fas fa-play-circle me-1 tw:me-1" aria-hidden="true"></i>Start Interaction
                                     </button>
                                 </div>
                             }
-                            else if (n.Type == "Exchange" || n.Type == "RequestUpdate" || n.Type == "Skill" || n.Type == "Catalog" ||
+                            else if (n.Type == "Exchange" || n.Type == "RequestUpdate" || n.Type == "Skill" || n.Type == "Catalog" || n.Type == "Community" ||
                                 (n.Type == "Info" && n.ReferenceId.HasValue))
                             {
-                                <a href="@SkillBridge.Helpers.NotificationLinkHelper.Resolve(n, Url)" class="d-block tw:block mb-2 tw:mb-2">View update</a>
+                                <a href="@SkillBridge.Helpers.NotificationLinkHelper.Resolve(n, Url)" class="d-block tw:block mb-2 tw:mb-2 tw:dark:text-sb-blue-link">View update</a>
                             }
                         </div>
 
-                        <div class="notification-actions">
+                        <div class="notification-actions tw:w-full tw:sm:w-auto tw:sm:min-w-[180px]">
                             @if (n.Type == "SkillRequest")
                             {
-                                <div class="d-flex tw:flex gap-2 tw:gap-2">
-                                    <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success-modern btn-sm-modern accept-btn" data-id="@n.Id">
-                                        <i class="fas fa-check me-1 tw:me-1"></i>Accept
+                                <div class="notification-decision-buttons d-flex tw:flex tw:flex-wrap gap-2 tw:gap-2">
+                                    <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-success-modern btn-sm-modern accept-btn" data-id="@n.Id">
+                                        <i class="fas fa-check me-1 tw:me-1" aria-hidden="true"></i>Accept
                                     </button>
-                                    <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-danger-modern btn-sm-modern decline-btn" data-id="@n.Id">
-                                        <i class="fas fa-times me-1 tw:me-1"></i>Decline
+                                    <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-danger-modern btn-sm-modern decline-btn" data-id="@n.Id">
+                                        <i class="fas fa-times me-1 tw:me-1" aria-hidden="true"></i>Decline
                                     </button>
                                 </div>
                             }
                             else if (n.Type != "Feedback" && !n.IsRead)
                             {
-                                <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
-                                    <i class="fas fa-eye me-1 tw:me-1"></i>Mark as Read
+                                <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
+                                    <i class="fas fa-eye me-1 tw:me-1" aria-hidden="true"></i>Mark as Read
                                 </button>
                             }
                             else if (n.Type == "Feedback" && !n.IsRead)
                             {
                                 <div class="d-flex tw:flex flex-column tw:flex-col gap-2 tw:gap-2">
-                                    <a href="@Url.Action("RateInteraction", "Interactions", new { interactionId = n.ReferenceId })" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary-modern btn-sm-modern">
-                                        <i class="fas fa-star me-1 tw:me-1"></i>Rate the Interaction
+                                    <a href="@Url.Action("RateInteraction", "Interactions", new { interactionId = n.ReferenceId })" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary-modern btn-sm-modern">
+                                        <i class="fas fa-star me-1 tw:me-1" aria-hidden="true"></i>Rate the Interaction
                                     </a>
-                                    <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
-                                        <i class="fas fa-eye me-1 tw:me-1"></i>Mark as Read
+                                    <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
+                                        <i class="fas fa-eye me-1 tw:me-1" aria-hidden="true"></i>Mark as Read
                                     </button>
                                 </div>
                             }
@@ -308,13 +283,18 @@
             $(document).on("click", ".decline-btn", function () {
                 var btn = $(this);
                 var id = btn.data("id");
+                btn.prop("disabled", true);
                 $.post("/Notifications/DeclineSkillRequest", { notificationId: id, __RequestVerificationToken: verificationToken }, function (res) {
                     if (res.success) {
                         btn.closest(".notification-item").fadeOut(300, function () {
                             $(this).remove();
                             updateNotificationCount();
                         });
+                    } else {
+                        btn.prop("disabled", false);
                     }
+                }).fail(function () {
+                    btn.prop("disabled", false);
                 });
             });
 
@@ -324,18 +304,32 @@
                 var id = btn.data("id");
                 var container = $(".skill-selection[data-id='" + id + "']");
                 var dropdown = container.find(".skill-dropdown");
+                var label = container.find(".skill-selection-label");
+                btn.prop("disabled", true);
 
                 $.get("/Notifications/AcceptSkillRequest", { notificationId: id }, function (res) {
-                    dropdown.empty();
-                    if (res.skills.length === 0) {
-                        dropdown.append('<option value="">No skills available</option>');
-                    } else {
-                        $.each(res.skills, function (i, skill) {
-                            dropdown.append($('<option>').val(skill.skillId).text(skill.name));
-                        });
+                    if (!res || res.canAcceptOneWay === false) {
+                        btn.prop("disabled", false);
+                        alert("This request is no longer available.");
+                        return;
                     }
-                    container.removeClass("d-none");
-                    btn.closest('.d-flex').hide();
+
+                    dropdown.empty();
+                    if (res.skills && res.skills.length > 0) {
+                        label.text("Select a skill to learn back (or accept as 1-way mentorship):");
+                        $.each(res.skills, function (i, skill) {
+                            dropdown.append($('<option>').val(skill.skillId).text('Swap: learn ' + skill.name));
+                        });
+                    } else {
+                        label.text("No reciprocal match listed — start as 1-way mentorship:");
+                    }
+                    dropdown.append($('<option>').val('').text('Accept as 1-way mentorship (teach without learning back)'));
+
+                    container.removeClass("d-none tw:hidden");
+                    btn.closest('.notification-decision-buttons').hide();
+                }).fail(function () {
+                    btn.prop("disabled", false);
+                    alert("Could not load exchange options. Please try again.");
                 });
             });
 
@@ -344,21 +338,26 @@
                 var btn = $(this);
                 var id = btn.data("id");
                 var dropdown = $(".skill-selection[data-id='" + id + "']").find(".skill-dropdown");
-                var selectedSkillId = dropdown.val();
-                if (!selectedSkillId) {
-                    alert("Please select a skill to learn from requester.");
-                    return;
-                }
+                var selectedSkillId = dropdown.val() || "";
+                btn.prop("disabled", true);
 
-                $.post("/Notifications/InitializeInteraction", { notificationId: id, skillId: selectedSkillId, __RequestVerificationToken: verificationToken }, function (res) {
-                    if (res.success) {
+                $.post("/Notifications/InitializeInteraction", {
+                    notificationId: id,
+                    skillId: selectedSkillId,
+                    __RequestVerificationToken: verificationToken
+                }, function (res) {
+                    if (res && res.success) {
                         btn.closest(".notification-item").fadeOut(300, function () {
                             $(this).remove();
                             updateNotificationCount();
                         });
                     } else {
+                        btn.prop("disabled", false);
                         alert("Failed to initialize interaction.");
                     }
+                }).fail(function () {
+                    btn.prop("disabled", false);
+                    alert("Failed to initialize interaction. Please try again.");
                 });
             });
 

@@ -5,7 +5,7 @@ else
     <ol class="list-group tw:flex tw:flex-col tw:gap-2 list-group-numbered mb-3 tw:mb-4">
         @foreach (var meeting in Model)
         {
-            <li class="list-group-item tw:rounded-xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card">
+            <li class="list-group-item tw:rounded-xl tw:border-2 tw:border-sb-border-card tw:bg-sb-card tw:p-4 tw:shadow-sb-small tw:dark:bg-sb-night-card">
                 <strong>@meeting.EventType</strong>
                 @if (meeting.EventType != "Earlier saved state") { <span>by @(meeting.IsMine ? "you" : "your partner")</span> }
                 <span> · @meeting.Format · </span>

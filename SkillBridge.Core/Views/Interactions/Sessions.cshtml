@@ -10,108 +10,128 @@
         }
 
         .stage {
-            flex: 1 1 calc(33.333% - 16px); /* 3 per row on desktop */
+            flex: 1 1 calc(33.333% - 16px);
             min-width: 220px;
             max-width: 350px;
-            min-height: 160px;
-
+            min-height: 170px;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* center vertically */
-            align-items: center; /* center horizontally */
-
-            border-radius: 10px;
-            padding: 15px;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid var(--sb-border-card);
+            border-radius: 16px;
+            padding: 16px;
             text-align: center;
-            font-weight: 500;
-            color: #fff;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            font-weight: 700;
+            color: var(--sb-ink);
+            box-shadow: var(--sb-shadow-small);
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
         }
-        .stage details { width: 100%; text-align: left; font-weight: 400; }
-        .stage details summary { cursor: pointer; }
-        .stage textarea { color: var(--text-color); background-color: var(--card-bg); border-color: var(--border-color); }
+        .stage details { width: 100%; text-align: left; font-weight: 500; }
+        .stage details summary { cursor: pointer; font-weight: 700; min-height: 44px; display: flex; align-items: center; }
+        .stage textarea { color: var(--sb-ink); background-color: var(--sb-surface-sunken); border-color: var(--sb-border-control); }
 
-            .stage span {
-                display: block;
-                margin-bottom: 12px;
-                font-size: 1rem;
-            }
+        .stage > span {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1rem;
+            font-weight: 800;
+        }
 
-            /* Stage Colors */
-            .stage.Red {
-                background: #dc3545; /* Bootstrap danger */
-            }
+        .stage-state {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border: 1.5px solid var(--sb-border-control);
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            background: var(--sb-card);
+            color: var(--sb-ink);
+        }
 
-            .stage.Yellow {
-                background: #ffc107; /* Bootstrap warning */
-                color: #333;
-            }
+        /* Stage Colors - harmonious across light & dark navy */
+        .stage.Red {
+            background: #f5d8d0;
+            color: #17242a;
+        }
+        .stage.Yellow {
+            background: #f7e4a8;
+            color: #17242a;
+        }
+        .stage.Green {
+            background: var(--sb-sage);
+            color: var(--sb-ink);
+        }
+        body[data-theme="dark"] .stage.Red {
+            background: var(--sb-coral);
+            color: var(--sb-ink);
+        }
+        body[data-theme="dark"] .stage.Yellow {
+            background: #3a3019;
+            color: #f6e7bd;
+        }
+        body[data-theme="dark"] .stage.Green {
+            background: var(--sb-sage);
+            color: var(--sb-ink);
+        }
 
-            .stage.Green {
-                background: #28a745; /* Bootstrap success */
-            }
-
-            .stage:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
-            }
+        .stage:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 var(--sb-shadow-slate);
+        }
 
         /* Buttons */
         .mark-done {
-            padding: 6px 14px;
+            min-height: 44px;
+            padding: 8px 16px;
             font-size: 0.9rem;
-            border: 2px solid #fff; /* makes it stand out */
-            border-radius: 6px;
+            font-weight: 800;
+            border: 2px solid var(--sb-border-control);
+            border-radius: 10px;
             cursor: pointer;
-            color: #fff;
-            background: transparent; /* ?? matches the stage background */
-            transition: background 0.2s ease, color 0.2s ease;
+            color: var(--sb-ink);
+            background: var(--sb-card);
+            box-shadow: var(--sb-shadow-small);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
-
-        .stage.Red .mark-done:hover {
-            background: #fff;
-            color: #dc3545; /* text matches Red stage */
-        }
-
-        .stage.Yellow .mark-done:hover {
-            background: #fff;
-            color: #ffc107; /* text matches Yellow stage */
-        }
-
-        .stage.Green .mark-done:hover {
-            background: #fff;
-            color: #28a745; /* text matches Green stage */
+        .mark-done:hover {
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 var(--sb-shadow-slate);
         }
 
         #end-interaction-btn {
-            margin-top: 25px;
-            padding: 10px 20px;
+            margin-top: 24px;
+            min-height: 44px;
+            padding: 10px 22px;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: 800;
         }
 
-        /* ?? Responsive Layout */
-        @@media (max-width: 992px) { /* tablet */
-            .stage {
-                flex: 1 1 calc(50% - 16px); /* 2 per row */
-            }
+        @@media (max-width: 992px) {
+            .stage { flex: 1 1 calc(50% - 16px); }
         }
-
-        @@media (max-width: 576px) { /* mobile */
-            .stage {
-                flex: 1 1 100%; /* 1 per row */
-            }
+        @@media (max-width: 576px) {
+            .stage { flex: 1 1 100%; max-width: none; }
         }
     </style>
+}
+
+@{
+    var tracks = Model.SkillBlocks.GroupBy(s => new { s.SkillId, s.SkillName }).ToList();
 }
 
 <div class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 mt-4 tw:mt-6 sb-session-page">
     @Html.AntiForgeryToken()
     <h1 class="h2 mb-2 tw:mb-2">Your exchange plan</h1>
+    @if (tracks.Count == 1)
+    {
+        <p class="tw:mb-2"><span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:bg-sb-blue tw:px-3 tw:py-1 tw:text-xs tw:font-bold tw:text-sb-ink tw:dark:border-sb-night-ink tw:dark:text-sb-night-ink">One-way mentorship</span></p>
+    }
     <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 mb-4 tw:mb-6">Both partners confirm each milestone. You can suggest changes to upcoming milestones; the other member must agree.</p>
     @if (TempData["PlanNotice"] != null) { <p class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-success tw:bg-sb-sage tw:text-sb-ink" role="status">@TempData["PlanNotice"]</p> }
 
-    <section class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink p-3 tw:p-4 mb-4 tw:mb-6" aria-labelledby="meeting-heading">
+    <section class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-border-card tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink p-4 tw:p-5 mb-4 tw:mb-6" aria-labelledby="meeting-heading">
         <h3 id="meeting-heading" class="h5">Plan your next meeting</h3>
         @if (Model.MeetingStartUtc.HasValue && Model.MeetingStatus != "Cancelled")
         {
@@ -120,11 +140,11 @@
             @if (!string.IsNullOrWhiteSpace(Model.MeetingNote)) { <p class="mb-2 tw:mb-2"><strong>Place or link:</strong> @Model.MeetingNote</p> }
             @if (Model.CanRespondToMeeting)
             {
-                <form method="post" action="@Url.Action("RespondToMeeting", "Interactions")" class="d-flex tw:flex gap-2 tw:gap-2 mb-2 tw:mb-2">
+                <form method="post" action="@Url.Action("RespondToMeeting", "Interactions")" class="d-flex tw:flex tw:flex-wrap gap-2 tw:gap-2 mb-2 tw:mb-2">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.InteractionId" />
-                    <button type="submit" name="decision" value="Accept" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success tw:bg-sb-sage-deep tw:text-sb-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Accept time</button>
-                    <button type="submit" name="decision" value="Decline" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Decline</button>
+                    <button type="submit" name="decision" value="Accept" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-success tw:bg-sb-sage-deep tw:text-white btn-sm tw:text-sm">Accept time</button>
+                    <button type="submit" name="decision" value="Decline" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:text-sm">Decline</button>
                 </form>
             }
             @if (Model.MeetingStatus == "Confirmed" || Model.MeetingStatus == "Proposed")
@@ -132,7 +152,7 @@
                 <form method="post" action="@Url.Action("CancelMeeting", "Interactions")" class="mb-2 tw:mb-2">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.InteractionId" />
-                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43] btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Cancel meeting</button>
+                    <button type="submit" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-danger tw:bg-sb-card tw:text-sb-danger-text btn-sm tw:text-sm">Cancel meeting</button>
                 </form>
             }
             @if (Model.MeetingStatus == "Confirmed" && Model.MeetingStartUtc <= DateTime.UtcNow)
@@ -140,25 +160,25 @@
                 <form method="post" action="@Url.Action("CompleteMeeting", "Interactions")" class="mb-2 tw:mb-2">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" value="@Model.InteractionId" />
-                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-success btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Mark meeting completed</button>
+                    <button type="submit" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-success tw:bg-sb-card tw:text-sb-success-text btn-sm tw:text-sm">Mark meeting completed</button>
                 </form>
             }
         }
         else if (Model.MeetingStatus == "Cancelled" || Model.MeetingStatus == "Declined")
         { <p>The previous time was @Model.MeetingStatus.ToLowerInvariant(). You can propose another.</p> }
         <details>
-            <summary>Propose a meeting time</summary>
+            <summary class="tw:cursor-pointer tw:font-bold tw:py-2">Propose a meeting time</summary>
             <form id="meetingForm" method="post" action="@Url.Action("ProposeMeeting", "Interactions")" class="mt-3 tw:mt-4" style="max-width: 550px;">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="id" value="@Model.InteractionId" />
                 <input type="hidden" name="startsAtUtc" id="startsAtUtc" />
                 <label for="meetingLocal" class="form-label tw:mb-1 tw:block tw:font-bold">Time in your local time zone</label>
-                <input id="meetingLocal" type="datetime-local" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" required />
+                <input id="meetingLocal" type="datetime-local" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 mb-2 tw:mb-2" required />
                 <label for="meetingFormat" class="form-label tw:mb-1 tw:block tw:font-bold">Format</label>
-                <select id="meetingFormat" name="format" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" required><option value="Online">Online</option><option value="In person">In person</option></select>
+                <select id="meetingFormat" name="format" class="form-select tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 mb-2 tw:mb-2" required><option value="Online">Online</option><option value="In person">In person</option></select>
                 <label for="meetingNote" class="form-label tw:mb-1 tw:block tw:font-bold">Meeting place or call link</label>
-                <input id="meetingNote" name="note" maxlength="300" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" placeholder="Required for an in-person meeting" />
-                <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Send proposal</button>
+                <input id="meetingNote" name="note" maxlength="300" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 mb-2 tw:mb-3" placeholder="Required for an in-person meeting" />
+                <button type="submit" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary tw:bg-sb-blue-strong tw:text-white btn-sm tw:text-sm">Send proposal</button>
             </form>
         </details>
     </section>
@@ -167,15 +187,15 @@
     <partial name="_MeetingHistory" model="Model.MeetingHistory" />
 
     <div class="exchange-tracks">
-        @foreach (var track in Model.SkillBlocks.GroupBy(s => new { s.SkillId, s.SkillName }))
+        @foreach (var track in tracks)
         {
             var proposal = Model.PlanProposals.FirstOrDefault(p => p.SkillId == track.Key.SkillId);
-            <section class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink p-3 tw:p-4 mb-4 tw:mb-6 exchange-track" aria-label="@track.Key.SkillName plan">
+            <section class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-border-card tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink p-4 tw:p-5 mb-4 tw:mb-6 exchange-track" aria-label="@track.Key.SkillName plan">
                 <h2 class="h4">@track.Key.SkillName</h2>
                 <p class="small tw:text-sm text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">@track.Count(s => s.Status == "Green") of @track.Count() milestones completed</p>
                 @if (proposal != null)
                 {
-                    <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink">
+                    <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-border-card tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink">
                         <strong>@(proposal.ProposedByMe ? "Waiting for your partner to review these changes" : "Your partner suggested this plan")</strong>
                         <ol class="mb-2 tw:mb-2 mt-2 tw:mt-2">@foreach (var step in proposal.Steps) { <li>@step.Title</li> }</ol>
                         <form method="post" action="@Url.Action("RespondToPlan", "Interactions")" class="d-flex tw:flex gap-2 tw:gap-2 flex-wrap tw:flex-wrap">
@@ -183,11 +203,11 @@
                             <input type="hidden" name="interactionId" value="@Model.InteractionId" />
                             <input type="hidden" name="skillId" value="@track.Key.SkillId" />
                             @if (proposal.ProposedByMe)
-                            { <button type="submit" name="decision" value="Withdraw" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Withdraw proposal</button> }
+                            { <button type="submit" name="decision" value="Withdraw" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:text-sm">Withdraw proposal</button> }
                             else
                             {
-                                <button type="submit" name="decision" value="Accept" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success tw:bg-sb-sage-deep tw:text-sb-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Accept plan</button>
-                                <button type="submit" name="decision" value="Decline" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Decline</button>
+                                <button type="submit" name="decision" value="Accept" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-success tw:bg-sb-sage-deep tw:text-white btn-sm tw:text-sm">Accept plan</button>
+                                <button type="submit" name="decision" value="Decline" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:text-sm">Decline</button>
                             }
                         </form>
                     </div>
@@ -210,11 +230,11 @@
                                 <form method="post" action="@Url.Action("SaveStageNote", "Interactions")" class="mt-2 tw:mt-2">
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="sessionId" value="@stage.SessionId" />
-                                    <label class="small tw:text-sm" for="covered-@stage.SessionId">What you covered</label>
-                                    <textarea id="covered-@stage.SessionId" name="whatWeCovered" maxlength="1000" required class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-control-sm tw:min-h-9 tw:px-2.5 tw:py-1.5 tw:text-sm mb-1 tw:mb-1">@stage.Notes.FirstOrDefault(n => n.IsMine)?.WhatWeCovered</textarea>
-                                    <label class="small tw:text-sm" for="next-@stage.SessionId">Your next step</label>
-                                    <textarea id="next-@stage.SessionId" name="nextStep" maxlength="500" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-control-sm tw:min-h-9 tw:px-2.5 tw:py-1.5 tw:text-sm mb-1 tw:mb-1">@stage.Notes.FirstOrDefault(n => n.IsMine)?.NextStep</textarea>
-                                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-light tw:bg-sb-card tw:text-sb-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm">Save note</button>
+                                    <label class="small tw:text-sm tw:font-bold" for="covered-@stage.SessionId">What you covered</label>
+                                    <textarea id="covered-@stage.SessionId" name="whatWeCovered" maxlength="1000" required class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none tw:text-sm mb-1 tw:mb-1">@stage.Notes.FirstOrDefault(n => n.IsMine)?.WhatWeCovered</textarea>
+                                    <label class="small tw:text-sm tw:font-bold" for="next-@stage.SessionId">Your next step</label>
+                                    <textarea id="next-@stage.SessionId" name="nextStep" maxlength="500" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none tw:text-sm mb-2 tw:mb-2">@stage.Notes.FirstOrDefault(n => n.IsMine)?.NextStep</textarea>
+                                    <button type="submit" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-light tw:bg-sb-card tw:text-sb-ink btn-sm tw:text-sm">Save note</button>
                                 </form>
                             </details>
                         </div>
@@ -223,7 +243,7 @@
                 @if (proposal == null && track.Any(s => s.IsEditable))
                 {
                     <details class="mt-3 tw:mt-4 plan-editor">
-                        <summary>Suggest changes to upcoming milestones</summary>
+                        <summary class="tw:cursor-pointer tw:font-bold tw:py-2">Suggest changes to upcoming milestones</summary>
                         <p class="small tw:text-sm text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 mt-2 tw:mt-2">Rename, move, remove or add steps. Completed and already confirmed milestones stay in place. Your partner must accept the proposal.</p>
                         <form method="post" action="@Url.Action("ProposePlan", "Interactions")" class="plan-form" data-fixed-count="@track.Count(s => !s.IsEditable)" data-original-count="@track.Count(s => s.IsEditable)">
                             @Html.AntiForgeryToken()
@@ -236,15 +256,17 @@
                                     var stage = editableStages[planIndex];
                                     <div class="plan-step d-flex tw:flex flex-wrap tw:flex-wrap gap-2 tw:gap-2 align-items-center tw:items-center mb-2 tw:mb-2" data-session-id="@stage.SessionId">
                                         <input type="hidden" class="plan-session-id" name="steps[@planIndex].SessionId" value="@stage.SessionId" />
-                                        <input class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink flex-grow-1 tw:flex-1 plan-title" name="steps[@planIndex].Title" style="max-width:450px" value="@stage.Description" maxlength="200" required aria-label="Milestone title" />
-                                        <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm plan-up" aria-label="Move milestone earlier">↑</button>
-                                        <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm plan-down" aria-label="Move milestone later">↓</button>
-                                        <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43] btn-sm tw:px-3 tw:py-1.5 tw:text-sm plan-remove" disabled="@(stage.Notes.Count > 0)">Remove</button>
+                                        <input class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none flex-grow-1 tw:flex-1 plan-title" name="steps[@planIndex].Title" style="max-width:450px" value="@stage.Description" maxlength="200" required aria-label="Milestone title" />
+                                        <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:min-w-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-3 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:text-sm plan-up" aria-label="Move milestone earlier">↑</button>
+                                        <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:min-w-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-3 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:text-sm plan-down" aria-label="Move milestone later">↓</button>
+                                        <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-danger tw:bg-sb-card tw:text-sb-danger-text btn-sm tw:text-sm plan-remove" disabled="@(stage.Notes.Count > 0)">Remove</button>
                                     </div>
                                 }
                             </div>
-                            <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong btn-sm tw:px-3 tw:py-1.5 tw:text-sm plan-add">Add milestone</button>
-                            <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white btn-sm tw:px-3 tw:py-1.5 tw:text-sm ms-2 tw:ms-2">Send plan proposal</button>
+                            <div class="tw:flex tw:flex-wrap tw:gap-2 tw:mt-3">
+                                <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong tw:dark:bg-sb-night-card tw:dark:text-sb-blue-link btn-sm tw:text-sm plan-add">Add milestone</button>
+                                <button type="submit" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary tw:bg-sb-blue-strong tw:text-white btn-sm tw:text-sm">Send plan proposal</button>
+                            </div>
                             <p class="small tw:text-sm text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 mt-2 tw:mt-2">Add or remove up to three milestones per proposal, with at most 12 per skill. Milestones with notes cannot be removed.</p>
                         </form>
                     </details>
@@ -256,16 +278,16 @@
     <!-- End Interaction Button -->
     @if (Model.SkillBlocks.All(s => s.Status == "Green"))
     {
-        <button id="end-interaction-btn" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success tw:bg-sb-sage-deep tw:text-sb-ink">Complete exchange</button>
+        <button id="end-interaction-btn" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-5 tw:py-2.5 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-success tw:bg-sb-sage-deep tw:text-white">Complete exchange</button>
     }
     <details class="mt-4 tw:mt-6">
-        <summary>Need to end this exchange early?</summary>
+        <summary class="tw:cursor-pointer tw:font-bold tw:py-2">Need to end this exchange early?</summary>
         <form method="post" action="@Url.Action("StopInteraction", "Interactions")" class="mt-3 tw:mt-4" style="max-width: 600px;">
             @Html.AntiForgeryToken()
             <input type="hidden" name="id" value="@Model.InteractionId" />
             <label class="form-label tw:mb-1 tw:block tw:font-bold" for="end-reason">Tell the other member why</label>
-            <textarea id="end-reason" name="reason" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" maxlength="500" required></textarea>
-            <button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43]" type="submit" onclick="return confirm('End this exchange without completing it?')">End exchange early</button>
+            <textarea id="end-reason" name="reason" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 mb-2 tw:mb-3" maxlength="500" required></textarea>
+            <button class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-danger tw:bg-sb-card tw:text-sb-danger-text" type="submit" onclick="return confirm('End this exchange without completing it?')">End exchange early</button>
         </form>
     </details>
 </div>
@@ -286,10 +308,10 @@
                 form.find(".plan-steps").append(
                     '<div class="plan-step d-flex tw:flex flex-wrap tw:flex-wrap gap-2 tw:gap-2 align-items-center tw:items-center mb-2 tw:mb-2" data-session-id="0">' +
                     '<input type="hidden" class="plan-session-id" value="0" />' +
-                    '<input class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink flex-grow-1 tw:flex-1 plan-title" style="max-width:450px" maxlength="200" required aria-label="Milestone title" placeholder="New milestone" />' +
-                    '<button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm plan-up" aria-label="Move milestone earlier">↑</button>' +
-                    '<button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:px-3 tw:py-1.5 tw:text-sm plan-down" aria-label="Move milestone later">↓</button>' +
-                    '<button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-danger tw:bg-sb-card tw:text-[#944f43] btn-sm tw:px-3 tw:py-1.5 tw:text-sm plan-remove">Remove</button></div>');
+                    '<input class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none flex-grow-1 tw:flex-1 plan-title" style="max-width:450px" maxlength="200" required aria-label="Milestone title" placeholder="New milestone" />' +
+                    '<button type="button" class="btn tw:inline-flex tw:min-h-11 tw:min-w-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-3 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:text-sm plan-up" aria-label="Move milestone earlier">↑</button>' +
+                    '<button type="button" class="btn tw:inline-flex tw:min-h-11 tw:min-w-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-3 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-secondary tw:bg-sb-card tw:text-sb-ink btn-sm tw:text-sm plan-down" aria-label="Move milestone later">↓</button>' +
+                    '<button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-danger tw:bg-sb-card tw:text-sb-danger-text btn-sm tw:text-sm plan-remove">Remove</button></div>');
                 form.find(".plan-step:last .plan-title").trigger("focus");
             });
             $(document).on("click", ".plan-remove", function () {
@@ -349,7 +371,7 @@
                             button.remove();
 
                             if ($(".stage").length === $(".stage.Green").length && $("#end-interaction-btn").length === 0) {
-                                $(".exchange-tracks").after('<button id="end-interaction-btn" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success tw:bg-sb-sage-deep tw:text-sb-ink">Complete exchange</button>');
+                                $(".exchange-tracks").after('<button id="end-interaction-btn" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-5 tw:py-2.5 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-success tw:bg-sb-sage-deep tw:text-white">Complete exchange</button>');
                                 attachEndInteractionClick();
                             }
                         }

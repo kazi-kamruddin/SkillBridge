@@ -167,7 +167,9 @@ namespace SkillBridge.Models
         public string Content { get; set; }
         public string ImageUrl { get; set; }
         public string ProfileImageUrl { get; set; }
+        public string CreatedByUserId { get; set; }
         public string CreatedByFullName { get; set; }
+        public bool AuthorIsPublic { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsAuthor { get; set; }
     }

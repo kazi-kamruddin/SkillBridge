@@ -41,11 +41,13 @@ namespace SkillBridge.Models
 
     public class UserSkillViewModel
     {
+        public int SkillId { get; set; }
         public string SkillName { get; set; }
         public string CategoryName { get; set; }
         public int KnownUpToStage { get; set; }
         public int TotalStages { get; set; }
         public string Status { get; set; }
+        public bool AlreadyTeaching { get; set; }
     }
 
     public class UpdateProfileViewModel
@@ -84,6 +86,7 @@ namespace SkillBridge.Models
         public List<UserKnownSkill> SkillsIKnow { get; set; } = new List<UserKnownSkill>();
 
         public List<SkillCategory> AllSkillCategories { get; set; } = new List<SkillCategory>();
+        public Dictionary<int, int> VerifiedLearningStages { get; set; } = new();
 
         public class UserKnownSkill
         {
@@ -94,6 +97,15 @@ namespace SkillBridge.Models
 
 
 
+
+    public class SkillSelectionBoardViewModel
+    {
+        public string FormId { get; set; }
+        public List<SkillCategory> AllSkillCategories { get; set; } = new List<SkillCategory>();
+        public List<int> SkillsToLearn { get; set; } = new List<int>();
+        public Dictionary<int, int> KnownSkillStages { get; set; } = new();
+        public Dictionary<int, int> VerifiedLearningStages { get; set; } = new();
+    }
 
     public class ChangePasswordViewModel
     {

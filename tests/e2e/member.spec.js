@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const { test, expect } = require('@playwright/test');
 
 const credentialFile = process.env.SKILLBRIDGE_TEST_ACCOUNTS_FILE;
-const accounts = credentialFile ? JSON.parse(fs.readFileSync(credentialFile, 'utf8')) : null;
+const accounts = credentialFile ? JSON.parse(fs.readFileSync(credentialFile, 'utf8').replace(/^\uFEFF/, '')) : null;
 const allowWrites = process.env.SKILLBRIDGE_MUTATING_TESTS === '1';
 
 test.skip(!accounts, 'Set SKILLBRIDGE_TEST_ACCOUNTS_FILE to an ignored local credentials file.');
