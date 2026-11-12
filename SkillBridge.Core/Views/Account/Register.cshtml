@@ -8,7 +8,7 @@
 }
 
 <div class="d-flex tw:flex justify-content-center tw:justify-center align-items-center tw:items-center sb-auth-screen">
-    <div class="card tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink shadow tw:shadow-sb sb-auth-card sb-register-card">
+    <div class="card tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-border-card tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink shadow tw:shadow-sb sb-auth-card sb-register-card">
 
         <!-- Left Side (Red Banner with Switch to Login) -->
         <div class="sb-auth-aside sb-auth-aside-red">
@@ -22,12 +22,12 @@
         <div class="sb-auth-form">
             <span class="sb-eyebrow">YOUR NEXT SKILL STARTS HERE</span>
             <h1 class="mb-4 tw:mb-6">Join the exchange.</h1>
-            <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 small tw:text-sm">Create your account, then add your name to explore. Add skills whenever you're ready to connect with another member. You can keep your profile private from signed-out visitors.</p>
+            <p class="text-muted tw:text-sb-muted small tw:text-sm">Create your account, then add your name to explore. Add skills whenever you're ready to connect with another member. You can keep your profile private from signed-out visitors.</p>
 
             @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { role = "form" }))
             {
                 @Html.AntiForgeryToken()
-                @Html.ValidationSummary("", new { @class = "text-danger tw:text-[#a34f42]" })
+                @Html.ValidationSummary("", new { @class = "text-danger tw:text-sb-danger-text tw:font-bold tw:text-sm tw:mb-3" })
 
                 <!-- Email -->
                 <div class="form-group tw:mb-4 mb-3">
@@ -36,7 +36,7 @@
                         <span class="input-group-text">
                             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
                         </span>
-                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-none tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", placeholder = "Enter your email" })
+                        @Html.TextBoxFor(m => m.Email, new { @class = "form-control tw:min-h-11 tw:w-full tw:rounded-none tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none", placeholder = "Enter your email" })
                     </div>
                 </div>
 
@@ -47,8 +47,8 @@
                         <span class="input-group-text">
                             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
                         </span>
-                        @Html.PasswordFor(m => m.Password, new { @class = "form-control tw:min-h-11 tw:w-full tw:border-2 tw:border-r-0 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", placeholder = "Enter your password" })
-                        <button type="button" class="btn sb-password-toggle tw:inline-flex tw:items-center tw:justify-center tw:px-3 tw:border-2 tw:border-l-0 tw:border-sb-muted/40 tw:bg-sb-card tw:text-sb-ink tw:hover:bg-sb-blue tw:focus:outline-none tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink tw:dark:hover:bg-sb-blue" aria-label="Show password" title="Show password">
+                        @Html.PasswordFor(m => m.Password, new { @class = "form-control tw:min-h-11 tw:w-full tw:border-2 tw:border-r-0 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none", placeholder = "Enter your password" })
+                        <button type="button" class="btn sb-password-toggle tw:inline-flex tw:min-h-11 tw:min-w-11 tw:items-center tw:justify-center tw:px-3 tw:border-2 tw:border-l-0 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:text-sb-ink tw:hover:bg-sb-blue tw:focus:outline-none" aria-label="Show password" title="Show password">
                             <svg class="sb-eye-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
                                 <circle cx="12" cy="12" r="3"/>
@@ -70,8 +70,8 @@
                         <span class="input-group-text">
                             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
                         </span>
-                        @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control tw:min-h-11 tw:w-full tw:border-2 tw:border-r-0 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink", placeholder = "Confirm your password" })
-                        <button type="button" class="btn sb-password-toggle tw:inline-flex tw:items-center tw:justify-center tw:px-3 tw:border-2 tw:border-l-0 tw:border-sb-muted/40 tw:bg-sb-card tw:text-sb-ink tw:hover:bg-sb-blue tw:focus:outline-none tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink tw:dark:hover:bg-sb-blue" aria-label="Show password" title="Show password">
+                        @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control tw:min-h-11 tw:w-full tw:border-2 tw:border-r-0 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none", placeholder = "Confirm your password" })
+                        <button type="button" class="btn sb-password-toggle tw:inline-flex tw:min-h-11 tw:min-w-11 tw:items-center tw:justify-center tw:px-3 tw:border-2 tw:border-l-0 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:text-sb-ink tw:hover:bg-sb-blue tw:focus:outline-none" aria-label="Show password" title="Show password">
                             <svg class="sb-eye-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
                                 <circle cx="12" cy="12" r="3"/>
@@ -86,7 +86,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white sb-auth-submit w-100 tw:w-full">
+                <button type="submit" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2.5 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary tw:bg-sb-blue-strong tw:text-white sb-auth-submit w-100 tw:w-full">
                     Create account
                 </button>
             }
@@ -94,7 +94,7 @@
             {
                 <form method="post" action="@Url.Action("GoogleSignIn", "Account")" class="mt-3 tw:mt-4">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-secondary tw:bg-sb-card tw:text-sb-ink w-100 tw:w-full">Continue with Google</button>
+                    <button type="submit" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-secondary tw:bg-sb-card tw:text-sb-ink w-100 tw:w-full">Continue with Google</button>
                 </form>
             }
         </div>

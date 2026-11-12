@@ -3,49 +3,49 @@
     ViewBag.Title = "Explore Skills";
 }
 
-<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8" aria-labelledby="title">
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8 tw:text-sb-ink" aria-labelledby="title">
     <div class="d-flex tw:flex flex-wrap tw:flex-wrap justify-content-between tw:justify-between align-items-center tw:items-center gap-3 tw:gap-4 mb-4 tw:mb-6 sb-page-heading">
         <div>
             <span class="sb-eyebrow">WHAT WILL YOU LEARN NEXT?</span>
             <h1 id="title">Explore skills.</h1>
-            <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 mb-0 tw:mb-0">Browse the skills people share on SkillBridge.</p>
+            <p class="text-muted tw:text-sb-muted mb-0 tw:mb-0">Browse the skills people share on SkillBridge.</p>
         </div>
         @if (!User.Identity.IsAuthenticated)
         {
-            <a class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white" href="@Url.Action("Register", "Account")">Join to find your matches</a>
+            <a class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary tw:bg-sb-blue-strong tw:text-white" href="@Url.Action("Register", "Account")">Join to find your matches</a>
         }
     </div>
 
-    <form method="get" action="@Url.Action("Skills", "Explore")" class="row tw:grid tw:grid-cols-12 tw:gap-4 g-2 tw:gap-2 mb-4 tw:mb-6" role="search">
+    <form method="get" action="@Url.Action("Skills", "Explore")" class="row tw:grid tw:grid-cols-12 tw:gap-4 g-2 tw:gap-3 mb-4 tw:mb-6" role="search">
         <div class="col-sm-9 tw:col-span-12 tw:sm:col-span-9">
-            <label for="skill-search" class="form-label tw:mb-1 tw:block tw:font-bold">Find a skill by name or goal</label>
-            <input id="skill-search" name="q" value="@Model.Query" maxlength="100" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink" placeholder="Try spreadsheets, databases, or 3D design" />
+            <label for="skill-search" class="form-label tw:mb-1.5 tw:block tw:font-bold">Find a skill by name or goal</label>
+            <input id="skill-search" name="q" value="@Model.Query" maxlength="100" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none" placeholder="Try spreadsheets, databases, or 3D design" />
         </div>
-        <div class="col-sm-3 tw:col-span-12 tw:sm:col-span-3 align-self-end tw:self-end"><button class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary tw:bg-sb-blue-strong tw:text-white w-100 tw:w-full" type="submit">Search skills</button></div>
+        <div class="col-sm-3 tw:col-span-12 tw:sm:col-span-3 align-self-end tw:self-end"><button class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary tw:bg-sb-blue-strong tw:text-white w-100 tw:w-full" type="submit">Search skills</button></div>
     </form>
     @if (TempData["SkillNotice"] is string skillNotice)
-    { <p class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink" role="status">@skillNotice</p> }
+    { <p class="alert tw:rounded-xl tw:border-2 tw:border-sb-border-card tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink" role="status">@skillNotice</p> }
     @if (User.Identity.IsAuthenticated)
     {
         @if (Model.CanReviewSuggestions)
-        { <p><a href="@Url.Action("Suggestions", "Catalog")">Review skill suggestions</a></p> }
-        <details class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink p-3 tw:p-4 mb-4 tw:mb-6">
-            <summary>Suggest a missing skill</summary>
-            <p class="small tw:text-sm text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 mt-2 tw:mt-2">Suggestions are reviewed before they appear in the directory.</p>
+        { <p><a class="tw:font-extrabold tw:text-sb-blue-strong tw:dark:text-sb-blue-link" href="@Url.Action("Suggestions", "Catalog")">Review skill suggestions</a></p> }
+        <details class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-border-card tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small p-3 tw:p-5 mb-4 tw:mb-6">
+            <summary class="tw:font-extrabold tw:text-sb-ink">Suggest a missing skill</summary>
+            <p class="small tw:text-sm text-muted tw:text-sb-muted mt-2 tw:mt-2">Suggestions are reviewed before they appear in the directory.</p>
             <form method="post" action="@Url.Action("SuggestSkill", "Explore")">
                 @Html.AntiForgeryToken()
                 <label for="suggested-skill" class="form-label tw:mb-1 tw:block tw:font-bold">Skill name</label>
-                <input id="suggested-skill" name="name" maxlength="100" minlength="2" required class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" />
+                <input id="suggested-skill" name="name" maxlength="100" minlength="2" required class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none mb-2 tw:mb-3" />
                 <label for="suggested-category" class="form-label tw:mb-1 tw:block tw:font-bold">Suggested category</label>
-                <input id="suggested-category" name="categoryName" maxlength="100" minlength="2" required class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2" />
+                <input id="suggested-category" name="categoryName" maxlength="100" minlength="2" required class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none mb-2 tw:mb-3" />
                 <label for="suggested-reason" class="form-label tw:mb-1 tw:block tw:font-bold">Why should we add it?</label>
-                <textarea id="suggested-reason" name="reason" maxlength="500" minlength="10" required class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink mb-2 tw:mb-2"></textarea>
-                <button type="submit" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong">Send suggestion</button>
+                <textarea id="suggested-reason" name="reason" maxlength="500" minlength="10" required class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none mb-2 tw:mb-3"></textarea>
+                <button type="submit" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-primary tw:bg-sb-card tw:text-sb-blue-strong tw:dark:text-sb-blue-link">Send suggestion</button>
             </form>
         </details>
         @if (Model.MySuggestions.Any())
         {
-            <details class="mb-4 tw:mb-6"><summary>Your recent suggestions</summary>
+            <details class="mb-4 tw:mb-6"><summary class="tw:font-bold tw:text-sb-ink">Your recent suggestions</summary>
                 <ul class="mt-2 tw:mt-2">@foreach (var suggestion in Model.MySuggestions) { <li>@suggestion.Name — @suggestion.Status</li> }</ul>
             </details>
         }
@@ -53,34 +53,36 @@
 
     @if (!Model.Skills.Any())
     {
-        <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink">@(string.IsNullOrWhiteSpace(Model.Query) ? "The skills directory is being prepared." : "No skills match that search. Try a broader goal or skill name.")</div>
+        <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-border-card tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink">@(string.IsNullOrWhiteSpace(Model.Query) ? "The skills directory is being prepared." : "No skills match that search. Try a broader goal or skill name.")</div>
     }
     else
     {
         @foreach (var category in Model.Skills.GroupBy(s => s.CategoryName))
         {
-            <section class="mb-4 tw:mb-6" aria-label="@category.Key">
-                <h2 class="h4 mb-3 tw:mb-4">@category.Key</h2>
+            <section class="mb-4 tw:mb-8" aria-label="@category.Key">
+                <div class="sb-section-heading">
+                    <h2 class="h4 tw:mb-0">@category.Key</h2>
+                </div>
                 <div class="row tw:grid tw:grid-cols-12 tw:gap-4 g-3">
                     @foreach (var skill in category)
                     {
                         <div class="col-md-6 tw:col-span-12 tw:md:col-span-6 col-lg-4 tw:lg:col-span-4">
-                            <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink h-100 tw:h-full shadow-sm">
+                            <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-border-card tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small h-100 tw:h-full">
                                 <div class="card-body tw:p-5">
-                                    <h3 class="h5"><a class="tw:text-sb-blue-strong tw:dark:text-[#9db2ff] tw:font-extrabold tw:no-underline tw:hover:underline" href="@Url.Action("Detail", "Explore", new { id = skill.SkillId })">@skill.SkillName</a></h3>
+                                    <h3 class="h5 tw:mb-3"><a class="tw:inline-block tw:py-0.5 tw:text-sb-blue-strong tw:dark:text-sb-blue-link tw:font-extrabold tw:no-underline tw:hover:underline" href="@Url.Action("Detail", "Explore", new { id = skill.SkillId })">@skill.SkillName</a></h3>
                                     @if (skill.Teachers.Any())
                                     {
-                                        <p class="small tw:text-sm text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 mb-2 tw:mb-2">Members sharing this skill:</p>
-                                        <ul class="mb-0 tw:mb-0">
+                                        <p class="small tw:text-sm text-muted tw:text-sb-muted mb-2 tw:mb-2">Members sharing this skill:</p>
+                                        <ul class="list-unstyled mb-0 tw:mb-0 tw:space-y-1">
                                             @foreach (var teacher in skill.Teachers)
                                             {
-                                                <li><a class="tw:text-sb-blue-strong tw:dark:text-[#9db2ff] tw:hover:underline" href="@Url.Action("PublicProfile", "Profile", new { id = teacher.UserId })">@teacher.FullName</a></li>
+                                                <li><a class="tw:inline-block tw:py-1 tw:font-semibold tw:text-sb-blue-strong tw:dark:text-sb-blue-link tw:hover:underline" href="@Url.Action("PublicProfile", "Profile", new { id = teacher.UserId })">@teacher.FullName</a></li>
                                             }
                                         </ul>
                                     }
                                     else
                                     {
-                                        <p class="small tw:text-sm text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 mb-0 tw:mb-0">No public profiles for this skill yet.</p>
+                                        <p class="small tw:text-sm text-muted tw:text-sb-muted mb-0 tw:mb-0">No public profiles for this skill yet.</p>
                                     }
                                 </div>
                             </div>

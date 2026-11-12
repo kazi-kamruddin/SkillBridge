@@ -48,7 +48,7 @@
                     @if (User.Identity.IsAuthenticated)
                     {
                         <li class="nav-item tw:list-none">@Html.ActionLink("Interactions", "Index", "Interactions", new { area = "" }, new { @class = "nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" })</li>
-                        <li class="nav-item tw:list-none"><a class="nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" href="@Url.Action("Index", "Messages")">Messages <span id="messageBadge" class="badge tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:px-2.5 tw:py-1 tw:text-xs tw:font-bold tw:bg-sb-coral" style="display:none;"></span></a></li>
+                        <li class="nav-item tw:list-none"><a class="nav-link tw:inline-flex tw:items-center tw:justify-center tw:rounded-full tw:px-3 tw:py-2 tw:font-bold" href="@Url.Action("Index", "Messages")">Messages <span id="messageBadge" class="badge tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:px-2.5 tw:py-0.5 tw:text-xs tw:font-extrabold tw:bg-[#b83226] tw:text-white" style="display:none;"></span></a></li>
                     }
                 </ul>
 
@@ -85,13 +85,13 @@
                         <li class="nav-item tw:list-none">
                             <a class="nav-link sb-notification-link tw:inline-flex tw:items-center tw:justify-center" href="@Url.Action("Index", "Notifications")" title="Notifications">
                                 <svg class="sb-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
-                                <span id="notifBadge" class="notification-badge badge tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:px-2.5 tw:py-1 tw:text-xs tw:font-bold bg-danger tw:bg-sb-coral sb-notification-badge" style="display:none;"></span>
+                                <span id="notifBadge" class="notification-badge badge tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:px-2 tw:py-0.5 tw:text-xs tw:font-extrabold bg-danger tw:bg-[#b83226] tw:text-white sb-notification-badge" style="display:none;"></span>
                             </a>
                         </li>
                     }
 
                     <li class="nav-item tw:list-none">
-                        <button id="themeToggle" type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-0 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle color theme">
+                        <button id="themeToggle" type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-white/55 tw:p-0 tw:font-extrabold tw:transition-colors tw:dark:border-sb-border-control theme-toggle" title="Toggle Dark/Light Mode" aria-label="Toggle color theme">
                             <svg class="sb-nav-icon sb-moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"/></svg>
                             <svg class="sb-nav-icon sb-sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/></svg>
                         </button>

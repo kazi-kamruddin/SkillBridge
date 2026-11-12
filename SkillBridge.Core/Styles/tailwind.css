@@ -12,18 +12,32 @@
 @theme {
     --color-sb-paper: var(--sb-paper);
     --color-sb-card: var(--sb-card);
+    --color-sb-surface-raised: var(--sb-surface-raised);
+    --color-sb-surface-sunken: var(--sb-surface-sunken);
     --color-sb-sage: var(--sb-sage);
     --color-sb-sage-deep: var(--sb-sage-deep);
     --color-sb-blue: var(--sb-blue);
     --color-sb-blue-strong: var(--sb-blue-strong);
+    --color-sb-blue-link: var(--sb-blue-link);
     --color-sb-coral: var(--sb-coral);
+    --color-sb-coral-rich: var(--sb-coral-rich);
+    --color-sb-yellow: var(--sb-gold);
+    --color-sb-accent-text: var(--sb-accent-text);
     --color-sb-ink: var(--sb-ink);
     --color-sb-muted: var(--sb-muted);
     --color-sb-line: var(--sb-line);
+    --color-sb-border-card: var(--sb-border-card);
+    --color-sb-border-control: var(--sb-border-control);
+    --color-sb-border-focus: var(--sb-border-focus);
+    --color-sb-aside-blue: var(--sb-aside-blue);
+    --color-sb-aside-coral: var(--sb-aside-coral);
+    --color-sb-danger: var(--sb-danger);
+    --color-sb-danger-text: var(--sb-danger-text);
     --color-sb-night: #0f1416;
     --color-sb-night-card: #182024;
     --color-sb-night-ink: #edeae2;
     --font-display: "Trebuchet MS", "Segoe UI", sans-serif;
     --shadow-sb: var(--sb-card-shadow);
     --shadow-sb-small: var(--sb-card-shadow-small);
+    --shadow-sb-lg: var(--sb-card-shadow-lg);
 }

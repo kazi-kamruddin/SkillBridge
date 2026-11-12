@@ -5,7 +5,7 @@
 @if (User.Identity.IsAuthenticated)
 {
     <li class="nav-item tw:list-none">
-        <a class="nav-link tw:flex tw:items-center" href="@Url.Action("Index", "Profile")" title="Manage">
+        <a class="nav-link tw:flex tw:items-center" href="@Url.Action("Index", "Profile")" title="Manage profile">
             @{ var navProfile = ProfileDb.UserInformations.FirstOrDefault(info => info.UserId == User.Identity.GetUserId()); }
             <img src="@ProfileImageHelper.GetProfileImage(navProfile?.ProfileImageUrl, navProfile?.FullName)"
                  alt="Profile Image" class="tw:rounded-full" width="40" height="40" />
