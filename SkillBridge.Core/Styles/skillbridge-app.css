@@ -169,7 +169,7 @@ body[data-theme="dark"] .sb-category-symbol { color: #17242a; }
 :where(button:disabled, [type="button"]:disabled, [type="submit"]:disabled) { cursor: not-allowed; }
 
 /* Use the available canvas and keep inner page containers from nesting gutters. */
-body .main-content { flex: 1 0 auto; padding-top: 118px; }
+body .main-content { flex: 1 0 auto; padding-top: 102px; }
 body .main-content > .container { width: min(100%, 1500px); max-width: 1500px; padding-inline: clamp(16px, 3vw, 42px); }
 body .main-content > .container > .container { width: 100%; max-width: none; padding-inline: 0; margin-inline: 0; }
 body .main-content .sb-public-profile,
@@ -649,7 +649,7 @@ body .sb-nav .sb-notification-badge:not(:empty) { position: absolute; top: -7px;
     body .main-content .notification-actions { width: 100%; min-width: 0; }
     body .main-content .notification-actions > .btn,
     body .main-content .notification-actions > div { width: 100%; }
-    body .main-content { padding-top: 105px; }
+    body .main-content { padding-top: 92px; }
     body .main-content > .container { padding-inline: 16px; }
     body .main-content > .container > .container { padding-inline: 0; }
     body .main-content .sb-profile-content-grid { grid-template-columns: 1fr; }
@@ -667,7 +667,7 @@ body .sb-nav .sb-notification-badge:not(:empty) { position: absolute; top: -7px;
 
 /* Phone layout: keep every control reachable without shrinking the desktop design. */
 @media (max-width: 767px) {
-    body .main-content { padding-top: 96px; }
+    body .main-content { padding-top: 86px; }
     body .main-content > .container { width: 100%; }
     body .main-content > .container > .container,
     body .main-content > .container > main.container { width: 100%; max-width: none; margin-inline: 0; }
@@ -677,7 +677,7 @@ body .sb-nav .sb-notification-badge:not(:empty) { position: absolute; top: -7px;
     body .main-content :is(input, select, textarea) { min-width: 0; }
     body .main-content input[type="file"]:not(.sb-chat-file-input) { width: 100%; overflow: hidden; }
 
-    body .sb-nav { top: 10px; width: calc(100% - 20px); padding: 5px 8px; }
+    body .sb-nav { top: 0; width: calc(100% - 20px); padding: 5px 8px; border-radius: 0 0 22px 22px; }
     body .sb-nav-shell { min-width: 0; }
     body .sb-nav .sb-menu-toggle { min-height: 44px; }
     body .sb-nav .sb-nav-content.is-open { max-height: calc(100dvh - 85px); overflow-y: auto; overscroll-behavior: contain; padding: 12px 4px 4px; }
