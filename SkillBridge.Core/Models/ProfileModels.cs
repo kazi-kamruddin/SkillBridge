@@ -98,6 +98,15 @@ namespace SkillBridge.Models
 
 
 
+    public class SkillSelectionBoardViewModel
+    {
+        public string FormId { get; set; }
+        public List<SkillCategory> AllSkillCategories { get; set; } = new List<SkillCategory>();
+        public List<int> SkillsToLearn { get; set; } = new List<int>();
+        public Dictionary<int, int> KnownSkillStages { get; set; } = new();
+        public Dictionary<int, int> VerifiedLearningStages { get; set; } = new();
+    }
+
     public class ChangePasswordViewModel
     {
         [Required]

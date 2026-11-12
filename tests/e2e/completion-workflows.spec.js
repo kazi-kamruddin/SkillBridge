@@ -2,7 +2,7 @@ const fs = require('node:fs');
 const { test, expect } = require('@playwright/test');
 
 const credentialFile = process.env.SKILLBRIDGE_TEST_ACCOUNTS_FILE;
-const accounts = credentialFile ? JSON.parse(fs.readFileSync(credentialFile, 'utf8')) : null;
+const accounts = credentialFile ? JSON.parse(fs.readFileSync(credentialFile, 'utf8').replace(/^\uFEFF/, '')) : null;
 const allowWrites = process.env.SKILLBRIDGE_MUTATING_TESTS === '1';
 
 async function signIn(page, account) {
@@ -181,5 +181,100 @@ test.describe('Phase 1-3 completion member workflows', () => {
 
     await teacher.close();
     await learner.close();
+  });
+
+  test('UpdateProfile renders side-by-side Red/Blue skill board, inline stage drawer, 3 MB avatar guard, and 320px dark/light layout', async ({ page }) => {
+    test.setTimeout(90_000);
+    await signIn(page, accounts.accountA);
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/Profile/UpdateProfile');
+    if (/\/CompleteProfile/i.test(page.url())) {
+      const expand = page.locator('details').filter({ hasText: 'Add more details and skills now' });
+      if (await expand.count()) await expand.locator('summary').click();
+    }
+
+    const learnPanel = page.locator('#skillsToLearnContainer');
+    const knowPanel = page.locator('#skillsIKnowContainer');
+    const divider = page.locator('.sb-skill-divider');
+    await expect(learnPanel).toBeVisible();
+    await expect(knowPanel).toBeVisible();
+    await expect(divider).toBeVisible();
+
+    const [learnBox, knowBox] = await Promise.all([learnPanel.boundingBox(), knowPanel.boundingBox()]);
+    expect(Math.abs(learnBox.y - knowBox.y)).toBeLessThan(20);
+    expect(learnBox.x + learnBox.width).toBeLessThan(knowBox.x);
+
+    // Three skills per row in the desktop Programming category grid.
+    const firstLearnGridYs = await learnPanel.locator('.sb-skill-grid').first().locator('.sb-skill-cell').evaluateAll(els =>
+      els.slice(0, 3).map(e => Math.round(e.getBoundingClientRect().top))
+    );
+    expect(new Set(firstLearnGridYs).size).toBe(1);
+
+    // Toggle Learn skill -> highlighted Red & count increments.
+    const learnPython = learnPanel.locator('.skill-learn').filter({ hasText: /^\s*Python\s*$/ });
+    const learnInitialPressed = await learnPython.getAttribute('aria-pressed');
+    await learnPython.click();
+    await expect(learnPython).toHaveAttribute('aria-pressed', learnInitialPressed === 'true' ? 'false' : 'true');
+    if (learnInitialPressed === 'true') await learnPython.click();
+    await expect(learnPython).toHaveAttribute('aria-pressed', 'true');
+    await expect.poll(() => learnPython.evaluate(el => getComputedStyle(el).backgroundColor)).toMatch(/^rgb\((201, 59, 43|177, 49, 34)\)$/);
+
+    // Toggle Teach skill -> highlighted Blue, drawer opens inline directly under that skill's row, stages 1..3 Blue.
+    const knowPython = knowPanel.locator('.skill-know').filter({ hasText: /^\s*Python\s*$/ });
+    if (await knowPython.getAttribute('aria-pressed') === 'true') {
+      await knowPython.click();
+      await expect(knowPython).toHaveAttribute('aria-pressed', 'false');
+    }
+    await knowPython.click();
+    await expect(knowPython).toHaveAttribute('aria-pressed', 'true');
+    const knowCard = knowPanel.locator('.sb-skill-know-card').filter({ has: page.locator('.skill-know').filter({ hasText: /^\s*Python\s*$/ }) });
+    await expect.poll(() => knowCard.evaluate(el => getComputedStyle(el).backgroundColor)).toMatch(/^rgb\((50, 77, 178|41, 65, 156)\)$/);
+
+    const drawer = knowPanel.locator('.sb-stage-drawer');
+    await expect(drawer).toBeVisible();
+    const [cardBox, drawerBox] = await Promise.all([knowCard.boundingBox(), drawer.boundingBox()]);
+    expect(drawerBox.y).toBeGreaterThan(cardBox.y + cardBox.height - 2);
+    expect(drawerBox.y - (cardBox.y + cardBox.height)).toBeLessThan(80);
+
+    // Stage 1 is pre-selected; selecting Stage 3 highlights stages 1..3 in blue & updates trigger summary.
+    await expect(drawer.locator('.stage-option').nth(0)).toHaveClass(/is-selected/);
+    await expect(drawer.locator('.stage-option').nth(1)).not.toHaveClass(/is-selected/);
+    await drawer.locator('.stage-option[data-stage="3"]').click();
+    for (let i = 0; i < 3; i++) {
+      await expect(drawer.locator('.stage-option').nth(i)).toHaveClass(/is-selected/);
+    }
+    await expect(drawer.locator('.stage-option').nth(3)).not.toHaveClass(/is-selected/);
+    const trigger = knowCard.locator('.sb-stage-trigger');
+    await expect(trigger).toContainText(/Stages 1[–-]3 of/);
+
+    // Close via Escape and verify trigger regains focus.
+    await drawer.locator('.stage-option[data-stage="3"]').press('Escape');
+    await expect(drawer).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+
+    // 3 MB avatar client-side guard & live circular preview check.
+    const oversizedBuf = Buffer.alloc(3 * 1024 * 1024 + 64, 1);
+    await page.locator('#ProfileImage').setInputFiles({ name: 'too-big.png', mimeType: 'image/png', buffer: oversizedBuf });
+    await expect(page.locator('[data-sb-avatar-error]')).toBeVisible();
+    await expect(page.locator('[data-sb-avatar-error]')).toContainText(/exceeds the 3 MB limit/i);
+
+    const tinyPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==', 'base64');
+    await page.locator('#ProfileImage').setInputFiles({ name: 'avatar-ok.png', mimeType: 'image/png', buffer: tinyPng });
+    await expect(page.locator('[data-sb-avatar-error]')).toBeHidden();
+    await expect(page.locator('[data-sb-avatar-name]')).toHaveText('avatar-ok.png');
+    await expect(page.locator('[data-sb-avatar-img]')).toHaveAttribute('src', /^blob:/);
+
+    // Check dark mode + 320px zero horizontal overflow.
+    for (const vp of [{ width: 1280, height: 800 }, { width: 320, height: 700 }]) {
+      await page.setViewportSize(vp);
+      for (const theme of ['light', 'dark']) {
+        await page.evaluate(mode => {
+          document.documentElement.setAttribute('data-theme', mode);
+          document.body.setAttribute('data-theme', mode);
+        }, theme);
+        const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
+        expect(scrollWidth, `Profile form overflows at ${vp.width}px (${theme})`).toBeLessThanOrEqual(vp.width + 1);
+      }
+    }
   });
 });

@@ -12,7 +12,7 @@ using SkillBridge.Models;
 if (Environment.GetEnvironmentVariable("SKILLBRIDGE_MUTATING_TESTS") != "1" ||
     string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SKILLBRIDGE_TEST_ACCOUNTS_FILE")))
     throw new InvalidOperationException("Enable disposable-account writes and provide SKILLBRIDGE_TEST_ACCOUNTS_FILE.");
-using var accounts = JsonDocument.Parse(File.ReadAllText(Environment.GetEnvironmentVariable("SKILLBRIDGE_TEST_ACCOUNTS_FILE")));
+using var accounts = JsonDocument.Parse(File.ReadAllText(Environment.GetEnvironmentVariable("SKILLBRIDGE_TEST_ACCOUNTS_FILE")).TrimStart('\uFEFF'));
 var connection = new NpgsqlConnectionStringBuilder(Environment.GetEnvironmentVariable("SKILLBRIDGE_DB_CONNECTION"))
 {
     SslMode = SslMode.VerifyFull,

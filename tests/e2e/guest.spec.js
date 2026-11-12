@@ -103,7 +103,11 @@ test('about page lets visitors browse the team on desktop and mobile', async ({ 
   const portraits = page.locator('.sb-team-card');
   await expect(portraits).toHaveCount(3);
   await expect(portraits.nth(0)).toHaveAttribute('aria-pressed', 'true');
-  await portraits.nth(1).click();
+  await expect(portraits.nth(0)).toHaveAttribute('aria-label', /Kazi Kamruddin Ahmed, Project Leader/);
+  await expect(portraits.nth(1)).toHaveAttribute('aria-label', /Rakibul Islam Rahi, FrontEnd/);
+  await expect(portraits.nth(2)).toHaveAttribute('aria-label', /Abdullah Ishtiaq, Testing/);
+
+  await portraits.nth(1).hover();
   await expect(portraits.nth(1)).toHaveAttribute('aria-pressed', 'true');
   await expect(page.locator('.sb-team-counter')).toHaveText('02 / 03');
   await page.getByRole('button', { name: 'Next developer' }).click();
@@ -115,6 +119,6 @@ test('about page lets visitors browse the team on desktop and mobile', async ({ 
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Kazi', exact: true }).click();
-  await expect(portraits.nth(1)).toHaveAttribute('aria-pressed', 'true');
+  await expect(portraits.nth(0)).toHaveAttribute('aria-pressed', 'true');
   expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(0);
 });

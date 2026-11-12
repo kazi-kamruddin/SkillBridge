@@ -5,6 +5,13 @@ using Microsoft.AspNetCore.Http;
 using SkillBridge.Helpers;
 using SkillBridge.Services;
 
+Environment.SetEnvironmentVariable("SKILLBRIDGE_CLOUDINARY_CLOUD_NAME", null);
+Environment.SetEnvironmentVariable("SKILLBRIDGE_CLOUDINARY_API_KEY", null);
+Environment.SetEnvironmentVariable("SKILLBRIDGE_CLOUDINARY_API_SECRET", null);
+using var unconfiguredHttp = new HttpClient(new MockCloudinaryHandler());
+var unconfiguredService = new CloudinaryImageService(unconfiguredHttp);
+Checks.That(!unconfiguredService.IsConfigured, "Cloudinary service should report unconfigured when credentials are missing");
+
 Environment.SetEnvironmentVariable("SKILLBRIDGE_CLOUDINARY_CLOUD_NAME", "test-cloud");
 Environment.SetEnvironmentVariable("SKILLBRIDGE_CLOUDINARY_API_KEY", "test-key");
 Environment.SetEnvironmentVariable("SKILLBRIDGE_CLOUDINARY_API_SECRET", "test-secret");
@@ -14,12 +21,26 @@ var png = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0 };
 using var stream = new MemoryStream(png);
 var file = new FormFile(stream, 0, png.Length, "file", "picture.png");
 Checks.That(CloudinaryImageService.Validate(file) == null, "PNG header should be accepted");
+
+const long maxAvatarBytes = 3 * 1024 * 1024;
+var exact3Mb = new byte[maxAvatarBytes];
+Array.Copy(png, exact3Mb, png.Length);
+using var exact3MbStream = new MemoryStream(exact3Mb);
+Checks.That(CloudinaryImageService.Validate(new FormFile(exact3MbStream, 0, exact3Mb.Length, "file", "exact-3mb.png"), maxAvatarBytes) == null,
+    "Exact 3 MB avatar should pass 3 MB limit");
+var over3Mb = new byte[maxAvatarBytes + 1];
+Array.Copy(png, over3Mb, png.Length);
+using var over3MbStream = new MemoryStream(over3Mb);
+Checks.That(CloudinaryImageService.Validate(new FormFile(over3MbStream, 0, over3Mb.Length, "file", "over-3mb.png"), maxAvatarBytes) == "Choose an image smaller than 3 MB.",
+    "Avatar over 3 MB must be rejected with 3 MB message");
+
 using var badStream = new MemoryStream(Encoding.UTF8.GetBytes("not an image"));
 Checks.That(CloudinaryImageService.Validate(new FormFile(badStream, 0, badStream.Length, "file", "bad.png")) != null,
     "File extension alone must not pass validation");
 
 using var http = new HttpClient(new MockCloudinaryHandler());
 var service = new CloudinaryImageService(http);
+Checks.That(service.IsConfigured, "Cloudinary service should report configured when credentials are set");
 var upload = await service.UploadAsync(file, "skillbridge/chat", true);
 Checks.That(upload.PublicId == "skillbridge/chat/demo" && upload.Format == "png", "Authenticated upload result");
 var downloaded = await service.DownloadAuthenticatedAsync(upload.PublicId, upload.Format);

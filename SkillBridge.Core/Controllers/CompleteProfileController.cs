@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SkillBridge.Models;
 using SkillBridge.Services;
 
@@ -17,13 +18,19 @@ namespace SkillBridge.Controllers
     [Authorize]
     public class CompleteProfileController : Controller
     {
+        private const long MaxAvatarBytes = 3 * 1024 * 1024;
         private readonly ApplicationDbContext db;
         private readonly CloudinaryImageService images;
+        private readonly ILogger<CompleteProfileController> logger;
 
-        public CompleteProfileController(ApplicationDbContext db, CloudinaryImageService images)
+        public CompleteProfileController(
+            ApplicationDbContext db,
+            CloudinaryImageService images,
+            ILogger<CompleteProfileController> logger = null)
         {
             this.db = db;
             this.images = images;
+            this.logger = logger;
         }
 
         ////////////////////////////////////////////////////////////////////////////
@@ -55,7 +62,7 @@ namespace SkillBridge.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
-        [RequestSizeLimit(3 * 1024 * 1024)]
+        [RequestSizeLimit(5 * 1024 * 1024)]
         public async Task<ActionResult> Index(CompleteProfileViewModel model)
         {
             var userId = User.Identity.GetUserId();
@@ -65,14 +72,14 @@ namespace SkillBridge.Controllers
             if (string.IsNullOrWhiteSpace(model.FullName))
                 ModelState.AddModelError(nameof(model.FullName), "Full name is required.");
 
-            var learningIds = model.SkillsToLearn ?? new List<int>();
-            var teachingSkills = model.SkillsIKnow ?? new List<CompleteProfileViewModel.UserKnownSkill>();
+            var learningIds = model.SkillsToLearn ??= new List<int>();
+            var teachingSkills = model.SkillsIKnow ??= new List<CompleteProfileViewModel.UserKnownSkill>();
             var validSkillIds = new HashSet<int>(await db.Skills.AsNoTracking().Select(s => s.Id).ToListAsync());
             var maxStageBySkill = (await db.SkillStages.AsNoTracking().ToListAsync())
                 .GroupBy(s => s.SkillId)
                 .ToDictionary(g => g.Key, g => g.Max(s => s.StageNumber));
 
-            var imageError = CloudinaryImageService.Validate(model.ProfileImage, 2 * 1024 * 1024);
+            var imageError = CloudinaryImageService.Validate(model.ProfileImage, MaxAvatarBytes);
             if (imageError != null) ModelState.AddModelError(nameof(model.ProfileImage), imageError);
             if (learningIds.Any(id => !validSkillIds.Contains(id)) ||
                 teachingSkills.Any(s => !validSkillIds.Contains(s.SkillId) ||
@@ -94,13 +101,25 @@ namespace SkillBridge.Controllers
             UploadedImage uploaded = null;
             if (model.ProfileImage?.Length > 0)
             {
+                if (!images.IsConfigured)
+                {
+                    logger?.LogWarning("Profile photo upload skipped for user {UserId}: Cloudinary environment variables are not configured.", userId);
+                    ModelState.AddModelError(nameof(model.ProfileImage), "Photo uploads are unavailable because Cloudinary credentials are not configured on this server. Clear the selected file to save your profile without a photo.");
+                    model.AllSkillCategories = await db.SkillCategories
+                        .AsNoTracking()
+                        .Include("Skills.SkillStages")
+                        .ToListAsync();
+                    return View(model);
+                }
+
                 try
                 {
                     uploaded = await images.UploadAsync(model.ProfileImage, "skillbridge/avatars", false);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError(nameof(model.ProfileImage), "The image could not be uploaded. Please try again.");
+                    logger?.LogError(ex, "Profile photo upload failed on onboarding for user {UserId}.", userId);
+                    ModelState.AddModelError(nameof(model.ProfileImage), "The image could not be uploaded right now. Please try another JPEG, PNG, or WebP image up to 3 MB, or clear it to continue without a photo.");
                     model.AllSkillCategories = await db.SkillCategories
                         .AsNoTracking()
                         .Include("Skills.SkillStages")

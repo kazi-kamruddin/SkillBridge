@@ -159,22 +159,24 @@ namespace SkillBridge.Controllers
         // POST: /Profile/UpdateProfile
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [RequestSizeLimit(3 * 1024 * 1024)]
+        [RequestSizeLimit(5 * 1024 * 1024)]
         public async Task<ActionResult> UpdateProfile(UpdateProfileViewModel model)
         {
+            const long maxAvatarBytes = 3 * 1024 * 1024;
             var userId = User.Identity.GetUserId();
             var userInfo = await db.UserInformations.FirstOrDefaultAsync(u => u.UserId == userId);
             if (userInfo == null)
                 return RedirectToAction("Index", "CompleteProfile");
 
-            var learningIds = model.SkillsToLearn ?? new List<int>();
-            var teachingSkills = model.SkillsIKnow ?? new List<UpdateProfileViewModel.UserKnownSkill>();
+            model.AvailableDays ??= new List<int>();
+            var learningIds = model.SkillsToLearn ??= new List<int>();
+            var teachingSkills = model.SkillsIKnow ??= new List<UpdateProfileViewModel.UserKnownSkill>();
             var validSkillIds = (await db.Skills.AsNoTracking().Select(s => s.Id).ToListAsync()).ToHashSet();
             var allStages = await db.SkillStages.AsNoTracking().ToListAsync();
             var maxStageBySkill = allStages
                 .GroupBy(s => s.SkillId)
                 .ToDictionary(g => g.Key, g => g.Max(s => s.StageNumber));
-            var imageError = CloudinaryImageService.Validate(model.ProfileImage, 2 * 1024 * 1024);
+            var imageError = CloudinaryImageService.Validate(model.ProfileImage, maxAvatarBytes);
             if (imageError != null) ModelState.AddModelError(nameof(model.ProfileImage), imageError);
             if (learningIds.Any(id => !validSkillIds.Contains(id)) ||
                 teachingSkills.Any(s => !validSkillIds.Contains(s.SkillId) ||
@@ -208,10 +210,24 @@ namespace SkillBridge.Controllers
             UploadedImage uploaded = null;
             if (model.ProfileImage?.Length > 0)
             {
-                try { uploaded = await images.UploadAsync(model.ProfileImage, "skillbridge/avatars", false); }
-                catch
+                if (!images.IsConfigured)
                 {
-                    ModelState.AddModelError(nameof(model.ProfileImage), "The image could not be uploaded. Please try again.");
+                    logger.LogWarning("Profile photo upload skipped for user {UserId}: Cloudinary environment variables are not configured.", userId);
+                    ModelState.AddModelError(nameof(model.ProfileImage), "Photo uploads are unavailable because Cloudinary credentials are not configured on this server. Clear the selected file to save your profile changes without changing your photo.");
+                    model.AllSkillCategories = await db.SkillCategories.AsNoTracking().Include("Skills.SkillStages").ToListAsync();
+                    model.ExistingProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo.ProfileImageUrl, userInfo.FullName);
+                    model.VerifiedLearningStages = await db.UserSkills.AsNoTracking()
+                        .Where(s => s.UserId == userId && s.Status == "Learning" && (s.KnownUpToStage ?? 0) > 0)
+                        .GroupBy(s => s.SkillId)
+                        .ToDictionaryAsync(g => g.Key, g => g.Max(x => x.KnownUpToStage ?? 0));
+                    return View(model);
+                }
+
+                try { uploaded = await images.UploadAsync(model.ProfileImage, "skillbridge/avatars", false); }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Profile photo upload failed during profile update for user {UserId}.", userId);
+                    ModelState.AddModelError(nameof(model.ProfileImage), "The image could not be uploaded right now. Please try another JPEG, PNG, or WebP image up to 3 MB, or clear the file to save your other changes.");
                     model.AllSkillCategories = await db.SkillCategories.AsNoTracking().Include("Skills.SkillStages").ToListAsync();
                     model.ExistingProfileImageUrl = ProfileImageHelper.GetProfileImage(userInfo.ProfileImageUrl, userInfo.FullName);
                     model.VerifiedLearningStages = await db.UserSkills.AsNoTracking()

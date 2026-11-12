@@ -18,15 +18,24 @@ public sealed class CloudinaryImageService
     public CloudinaryImageService(HttpClient client)
     {
         this.client = client;
-        cloudName = Environment.GetEnvironmentVariable("SKILLBRIDGE_CLOUDINARY_CLOUD_NAME");
-        apiKey = Environment.GetEnvironmentVariable("SKILLBRIDGE_CLOUDINARY_API_KEY");
-        apiSecret = Environment.GetEnvironmentVariable("SKILLBRIDGE_CLOUDINARY_API_SECRET");
+        cloudName = Environment.GetEnvironmentVariable("SKILLBRIDGE_CLOUDINARY_CLOUD_NAME")?.Trim();
+        apiKey = Environment.GetEnvironmentVariable("SKILLBRIDGE_CLOUDINARY_API_KEY")?.Trim();
+        apiSecret = Environment.GetEnvironmentVariable("SKILLBRIDGE_CLOUDINARY_API_SECRET")?.Trim();
     }
+
+    public bool IsConfigured =>
+        !string.IsNullOrWhiteSpace(cloudName) &&
+        !string.IsNullOrWhiteSpace(apiKey) &&
+        !string.IsNullOrWhiteSpace(apiSecret);
 
     public static string Validate(IFormFile file, long maximumBytes = 5 * 1024 * 1024)
     {
         if (file == null || file.Length == 0) return null;
-        if (file.Length > maximumBytes) return $"Choose an image smaller than {maximumBytes / 1024 / 1024} MB.";
+        if (file.Length > maximumBytes)
+        {
+            var limitMb = Math.Max(1, (long)Math.Round(maximumBytes / (1024d * 1024d)));
+            return $"Choose an image smaller than {limitMb} MB.";
+        }
         return DetectContentType(file) == null ? "Choose a JPEG, PNG, or WebP image." : null;
     }
 
@@ -66,8 +75,23 @@ public sealed class CloudinaryImageService
         form.Add(imageContent, "file", contentType == "image/jpeg" ? "upload.jpg" :
             contentType == "image/png" ? "upload.png" : "upload.webp");
         using var response = await client.PostAsync($"https://api.cloudinary.com/v1_1/{Uri.EscapeDataString(cloudName)}/image/upload", form);
-        response.EnsureSuccessStatusCode();
-        using var payload = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var responseBody = await response.Content.ReadAsStringAsync();
+        if (!response.IsSuccessStatusCode)
+        {
+            var detail = responseBody;
+            try
+            {
+                using var errorDoc = JsonDocument.Parse(responseBody);
+                if (errorDoc.RootElement.TryGetProperty("error", out var errObj) &&
+                    errObj.TryGetProperty("message", out var errMsg))
+                {
+                    detail = errMsg.GetString();
+                }
+            }
+            catch (JsonException) { }
+            throw new InvalidOperationException($"Cloudinary upload failed ({(int)response.StatusCode}): {detail}");
+        }
+        using var payload = JsonDocument.Parse(responseBody);
         var root = payload.RootElement;
         return new UploadedImage(root.GetProperty("public_id").GetString(),
             root.GetProperty("format").GetString(), root.GetProperty("secure_url").GetString());

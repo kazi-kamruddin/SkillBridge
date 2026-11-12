@@ -501,7 +501,8 @@ body .main-content #markAllReadBtn { color: #fff; }
 .sb-chat-bubble-other { background: var(--sb-sage); color: var(--sb-ink); }
 .sb-chat-list .conversation-preview { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 body .sb-chat #sendMessageForm > .btn { align-self: flex-end; }
-.invalid-feedback { display: block; margin-top: .25rem; color: #a34f42; font-size: .9rem; font-weight: 650; }
+.invalid-feedback { display: block; margin-top: .25rem; color: #a52518; font-size: .9rem; font-weight: 700; }
+body[data-theme="dark"] .invalid-feedback { color: #ffb4a8; }
 .sb-menu-toggle { display: none; }
 .sb-nav-content { display: flex; justify-content: space-between; align-items: center; width: 100%; }
 .sb-nav .sb-nav-shell { display: flex; align-items: center; }
@@ -877,4 +878,683 @@ footer {
         min-width: 100%;
     }
 }
+
+/* ==========================================================================
+   Profile Photo Uploader & Validation Callouts
+   ========================================================================== */
+
+.sb-field-error {
+    display: block;
+    margin-top: .35rem;
+    color: #a52518;
+    font-size: .9rem;
+    font-weight: 750;
+}
+body[data-theme="dark"] .sb-field-error {
+    color: #ffb4a8;
+}
+
+.sb-validation-summary.validation-summary-valid {
+    display: none;
+}
+.sb-validation-summary.validation-summary-errors {
+    margin-bottom: 1.15rem;
+    padding: .85rem 1rem;
+    border: 2px solid #c93b2b;
+    border-radius: 12px;
+    background: #fdeceb;
+    color: #7a1911;
+    font-weight: 700;
+    box-shadow: 3px 3px 0 var(--sb-line);
+}
+.sb-validation-summary.validation-summary-errors ul {
+    margin: 0;
+    padding-left: 1.2rem;
+}
+body[data-theme="dark"] .sb-validation-summary.validation-summary-errors {
+    background: #3b1c1a;
+    border-color: #ff8e80;
+    color: #ffd6d0;
+}
+
+.sb-avatar-picker {
+    display: flex;
+    flex-direction: column;
+    gap: .65rem;
+}
+.sb-avatar-preview {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .85rem;
+    max-width: 100%;
+    padding: .65rem .85rem;
+    border: 2px solid var(--sb-line);
+    border-radius: 14px;
+    background: var(--sb-card);
+    box-shadow: var(--sb-card-shadow-small);
+}
+.sb-avatar-preview[hidden] {
+    display: none;
+}
+.sb-avatar-preview.is-marked-removed img {
+    opacity: .35;
+    filter: grayscale(1);
+}
+.sb-avatar-preview-slot {
+    display: contents;
+}
+.sb-avatar-preview-img {
+    width: 64px;
+    height: 64px;
+    flex: 0 0 64px;
+    border-radius: 999px;
+    border: 2px solid var(--sb-line);
+    object-fit: cover;
+    background: var(--sb-paper);
+}
+.sb-avatar-preview-meta {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+    min-width: 0;
+}
+.sb-avatar-preview-name {
+    font-weight: 800;
+    font-size: .92rem;
+    color: var(--sb-ink);
+    overflow-wrap: anywhere;
+}
+.sb-avatar-preview-size {
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--sb-muted);
+}
+.sb-avatar-clear-btn {
+    margin-left: auto;
+    flex-shrink: 0;
+    border: 2px solid var(--sb-line);
+    border-radius: 9px;
+    padding: .35rem .65rem;
+    background: var(--sb-paper);
+    color: var(--sb-ink);
+    font-size: .8rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+.sb-avatar-clear-btn:hover {
+    background: var(--sb-coral);
+}
+.sb-avatar-client-error {
+    padding: .65rem .85rem;
+    border: 2px solid #c93b2b;
+    border-radius: 11px;
+    background: #fdeceb;
+    color: #7a1911;
+    font-size: .88rem;
+    font-weight: 750;
+}
+.sb-avatar-client-error[hidden] {
+    display: none;
+}
+body[data-theme="dark"] .sb-avatar-client-error {
+    background: #3b1c1a;
+    border-color: #ff8e80;
+    color: #ffd6d0;
+}
+
+/* ==========================================================================
+   Side-by-Side Skill Selection Board (Learn = Red, Teach = Blue)
+   ========================================================================== */
+
+.sb-skill-board-wrapper {
+    width: 100%;
+    margin: .5rem 0 1rem;
+}
+
+.sb-skill-board {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.sb-skill-divider {
+    width: 100%;
+    height: 2px;
+    background: var(--sb-line);
+    border-radius: 999px;
+}
+
+@media (min-width: 1024px) {
+    .sb-skill-board {
+        grid-template-columns: minmax(0, 1fr) 2px minmax(0, 1fr);
+        gap: 1.35rem;
+        align-items: stretch;
+    }
+
+    .sb-skill-divider {
+        width: 2px;
+        height: 100%;
+        min-height: 240px;
+    }
+}
+
+.sb-skill-panel {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .95rem;
+}
+
+.sb-skill-panel-header {
+    padding: .85rem 1rem;
+    border: 2px solid var(--sb-line);
+    border-radius: 14px;
+    background: var(--sb-paper);
+    box-shadow: var(--sb-card-shadow-small);
+}
+
+.sb-skill-panel-learn .sb-skill-panel-header {
+    background: #fcf1ef;
+}
+.sb-skill-panel-know .sb-skill-panel-header {
+    background: #eef2fc;
+}
+body[data-theme="dark"] .sb-skill-panel-learn .sb-skill-panel-header {
+    background: #281918;
+    border-color: #8f473f;
+}
+body[data-theme="dark"] .sb-skill-panel-know .sb-skill-panel-header {
+    background: #172138;
+    border-color: #4f6fcf;
+}
+
+.sb-skill-panel-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+}
+
+.sb-skill-panel-title-row h4 {
+    margin: 0 !important;
+    font-size: 1.15rem;
+    font-weight: 900;
+}
+
+.sb-swatch {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+    border-radius: 4px;
+    border: 2px solid var(--sb-line);
+}
+.sb-swatch-learn { background: #c93b2b; }
+.sb-swatch-know { background: #324db2; }
+body[data-theme="dark"] .sb-swatch-learn { background: #e04f3e; border-color: #ffb0a6; }
+body[data-theme="dark"] .sb-swatch-know { background: #4f73eb; border-color: #a8beff; }
+
+.sb-count-pill {
+    margin-left: auto;
+    padding: .18rem .58rem;
+    border-radius: 999px;
+    border: 1.5px solid var(--sb-line);
+    font-size: .78rem;
+    font-weight: 850;
+}
+.sb-count-learn {
+    background: #fde0dc;
+    color: #7d1e14;
+}
+.sb-count-know {
+    background: #dfe6fb;
+    color: #1c317d;
+}
+body[data-theme="dark"] .sb-count-learn {
+    background: #4e221e;
+    border-color: #ff9d91;
+    color: #ffd5cf;
+}
+body[data-theme="dark"] .sb-count-know {
+    background: #1f3266;
+    border-color: #96b2ff;
+    color: #dce5ff;
+}
+
+.sb-skill-panel-sub {
+    margin: .35rem 0 0 !important;
+    font-size: .86rem;
+    font-weight: 650;
+    color: var(--sb-muted);
+    line-height: 1.35;
+}
+
+.sb-skill-category-block {
+    min-width: 0;
+}
+
+.sb-skill-category-title {
+    margin: 0 0 .45rem !important;
+    font-size: .92rem;
+    font-weight: 850;
+    letter-spacing: .01em;
+    color: var(--sb-muted);
+}
+
+.sb-skill-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .5rem;
+    align-items: start;
+}
+
+@media (min-width: 440px) {
+    .sb-skill-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 680px) {
+    .sb-skill-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.sb-skill-cell {
+    min-width: 0;
+}
+
+/* Base skill button shared feel */
+.sb-skill-btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .4rem;
+    padding: .55rem .72rem;
+    border: 2px solid var(--sb-line);
+    border-radius: 12px;
+    background: var(--sb-card);
+    color: var(--sb-ink);
+    font-size: .88rem;
+    font-weight: 800;
+    line-height: 1.25;
+    text-align: left;
+    overflow-wrap: break-word;
+    cursor: pointer;
+    box-shadow: 2px 2px 0 var(--sb-line);
+    transition: background-color .14s ease, border-color .14s ease, color .14s ease, transform .14s ease, box-shadow .14s ease;
+}
+
+.sb-skill-check {
+    width: 0;
+    height: 15px;
+    flex: 0 0 auto;
+    opacity: 0;
+    overflow: hidden;
+    transition: width .14s ease, opacity .14s ease;
+}
+
+/* Want to Learn: RED selection & hover affordance */
+.sb-skill-learn-btn:hover {
+    background: #fdf0ee;
+    border-color: #c93b2b;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--sb-line);
+}
+body[data-theme="dark"] .sb-skill-learn-btn:hover {
+    background: #2d1b19;
+    border-color: #ff8e80;
+}
+
+.sb-skill-learn-btn.active,
+.sb-skill-learn-btn.is-selected {
+    background: #c93b2b;
+    border-color: #17242a;
+    color: #ffffff;
+    box-shadow: 3px 3px 0 #17242a;
+}
+.sb-skill-learn-btn.active:hover,
+.sb-skill-learn-btn.is-selected:hover {
+    background: #b13122;
+    border-color: #17242a;
+    color: #ffffff;
+}
+.sb-skill-learn-btn.active .sb-skill-check,
+.sb-skill-learn-btn.is-selected .sb-skill-check {
+    width: 15px;
+    opacity: 1;
+}
+body[data-theme="dark"] .sb-skill-learn-btn.active,
+body[data-theme="dark"] .sb-skill-learn-btn.is-selected {
+    background: #b83226;
+    border-color: #ff9d91;
+    color: #ffffff;
+    box-shadow: 3px 3px 0 #06090a;
+}
+body[data-theme="dark"] .sb-skill-learn-btn.active:hover,
+body[data-theme="dark"] .sb-skill-learn-btn.is-selected:hover {
+    background: #cb3a2d;
+    border-color: #ffb8af;
+}
+
+/* Skills You Can Teach: BLUE selection & stage trigger */
+.sb-skill-know-card {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid var(--sb-line);
+    border-radius: 12px;
+    background: var(--sb-card);
+    color: var(--sb-ink);
+    box-shadow: 2px 2px 0 var(--sb-line);
+    overflow: hidden;
+    transition: background-color .14s ease, border-color .14s ease, color .14s ease, transform .14s ease, box-shadow .14s ease;
+}
+
+.sb-skill-know-card:hover {
+    background: #eff3fd;
+    border-color: #324db2;
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 var(--sb-line);
+}
+body[data-theme="dark"] .sb-skill-know-card:hover {
+    background: #1b2742;
+    border-color: #7ea0ff;
+}
+
+.sb-skill-know-btn {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    color: inherit;
+    min-height: 44px;
+    transform: none !important;
+}
+.sb-skill-know-btn.active .sb-skill-check {
+    width: 15px;
+    opacity: 1;
+}
+
+.sb-skill-know-card.is-selected {
+    background: #324db2;
+    border-color: #17242a;
+    color: #ffffff;
+    box-shadow: 3px 3px 0 #17242a;
+}
+.sb-skill-know-card.is-selected:hover {
+    background: #29419c;
+    border-color: #17242a;
+}
+body[data-theme="dark"] .sb-skill-know-card.is-selected {
+    background: #3456cc;
+    border-color: #96b2ff;
+    color: #ffffff;
+    box-shadow: 3px 3px 0 #06090a;
+}
+body[data-theme="dark"] .sb-skill-know-card.is-selected:hover {
+    background: #3d61db;
+    border-color: #b5c9ff;
+}
+
+.sb-stage-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .35rem;
+    padding: .36rem .72rem;
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, .28);
+    background: rgba(10, 18, 48, .22);
+    color: #ffffff;
+    font-size: .78rem;
+    font-weight: 800;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color .14s ease;
+}
+.sb-stage-trigger[hidden] {
+    display: none;
+}
+.sb-stage-trigger:hover,
+.sb-stage-trigger[aria-expanded="true"] {
+    background: rgba(10, 18, 48, .42);
+}
+.sb-chevron-icon {
+    width: 14px;
+    height: 14px;
+    flex: 0 0 14px;
+    transition: transform .16s ease;
+}
+.sb-stage-trigger[aria-expanded="true"] .sb-chevron-icon {
+    transform: rotate(180deg);
+}
+
+.sb-verified-hint {
+    margin-top: .28rem;
+    padding-left: .2rem;
+    font-size: .74rem;
+    font-weight: 800;
+    color: #25409e;
+}
+body[data-theme="dark"] .sb-verified-hint {
+    color: #a8beff;
+}
+
+/* Inline Stage Dropdown Drawer directly below the clicked skill's row */
+.sb-stage-drawer {
+    grid-column: 1 / -1;
+    margin: .15rem 0 .35rem;
+    padding: .85rem .95rem;
+    border: 2px solid #324db2;
+    border-radius: 14px;
+    background: #eef2fc;
+    color: var(--sb-ink);
+    box-shadow: 4px 4px 0 var(--sb-line);
+    animation: sbDrawerIn .15s ease-out;
+}
+body[data-theme="dark"] .sb-stage-drawer {
+    background: #16223b;
+    border-color: #7ea0ff;
+    color: #edeae2;
+    box-shadow: 4px 4px 0 #06090a;
+}
+
+@keyframes sbDrawerIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.sb-stage-drawer-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+}
+
+.sb-stage-drawer-title-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .45rem;
+    min-width: 0;
+}
+
+.sb-stage-drawer-title {
+    font-size: .95rem;
+    font-weight: 900;
+}
+
+.sb-stage-drawer-status {
+    padding: .15rem .52rem;
+    border-radius: 999px;
+    border: 1.5px solid #324db2;
+    background: #ffffff;
+    color: #1d327d;
+    font-size: .76rem;
+    font-weight: 850;
+}
+body[data-theme="dark"] .sb-stage-drawer-status {
+    background: #243663;
+    border-color: #96b2ff;
+    color: #e6ecff;
+}
+
+.sb-stage-drawer-actions {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+}
+
+.sb-drawer-action-btn {
+    padding: .28rem .65rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--sb-line);
+    background: var(--sb-card);
+    color: var(--sb-ink);
+    font-size: .78rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+.sb-drawer-done-btn {
+    background: #324db2;
+    border-color: #17242a;
+    color: #ffffff;
+}
+.sb-drawer-done-btn:hover {
+    background: #253b8f;
+}
+body[data-theme="dark"] .sb-drawer-done-btn {
+    background: #3456cc;
+    border-color: #96b2ff;
+    color: #ffffff;
+}
+.sb-drawer-remove-btn:hover {
+    background: #fdeceb;
+    border-color: #c93b2b;
+    color: #8d1f15;
+}
+body[data-theme="dark"] .sb-drawer-remove-btn:hover {
+    background: #421d1a;
+    border-color: #ff9d91;
+    color: #ffd5cf;
+}
+
+.sb-stage-drawer-hint {
+    margin: .35rem 0 .65rem !important;
+    font-size: .82rem;
+    color: var(--sb-muted);
+    font-weight: 650;
+}
+
+.sb-stage-options-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+}
+
+.sb-stage-drawer .sb-stage-option {
+    max-width: 100%;
+    min-height: 2.35rem;
+    justify-content: flex-start;
+    gap: .45rem;
+    border-radius: 10px;
+    padding: .42rem .72rem;
+    background: var(--sb-card);
+    border: 2px solid var(--sb-line);
+    color: var(--sb-ink);
+    font-size: .84rem;
+    font-weight: 750;
+    line-height: 1.25;
+    text-align: left;
+    white-space: normal;
+}
+.sb-stage-drawer .sb-stage-option:hover {
+    border-color: #324db2;
+    background: #dfe6fb;
+}
+body[data-theme="dark"] .sb-stage-drawer .sb-stage-option:hover {
+    border-color: #96b2ff;
+    background: #233359;
+}
+
+.sb-stage-num {
+    display: inline-grid;
+    place-items: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    flex: 0 0 1.35rem;
+    border-radius: 999px;
+    background: var(--sb-paper);
+    border: 1.5px solid var(--sb-line);
+    color: var(--sb-ink);
+    font-size: .74rem;
+    font-weight: 900;
+}
+
+.sb-stage-name {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.sb-stage-drawer .sb-stage-option.is-selected {
+    background: #324db2;
+    border-color: #17242a;
+    color: #ffffff;
+    box-shadow: 2px 2px 0 #17242a;
+}
+.sb-stage-drawer .sb-stage-option.is-selected .sb-stage-num {
+    background: #ffffff;
+    border-color: #17242a;
+    color: #1d327d;
+}
+body[data-theme="dark"] .sb-stage-drawer .sb-stage-option.is-selected {
+    background: #3456cc;
+    border-color: #96b2ff;
+    color: #ffffff;
+    box-shadow: 2px 2px 0 #06090a;
+}
+body[data-theme="dark"] .sb-stage-drawer .sb-stage-option.is-selected .sb-stage-num {
+    background: #ffffff;
+    border-color: #17242a;
+    color: #1c327d;
+}
+
+@media (max-width: 639px) {
+    .sb-stage-drawer .sb-stage-option {
+        width: 100%;
+    }
+}
+
+:is(.sb-skill-learn-btn, .sb-skill-know-btn, .sb-stage-trigger, .sb-drawer-action-btn, .sb-stage-drawer .sb-stage-option, .sb-avatar-clear-btn):focus-visible {
+    outline: 3px solid var(--sb-blue-strong);
+    outline-offset: 2px;
+}
+
+.sb-skill-know-card.is-selected :is(.sb-skill-know-btn, .sb-stage-trigger):focus-visible,
+.sb-skill-learn-btn:is(.active, .is-selected):focus-visible,
+.sb-stage-drawer .sb-stage-option.is-selected:focus-visible,
+.sb-drawer-done-btn:focus-visible {
+    outline: 3px solid #f7f4eb;
+    outline-offset: -3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sb-stage-drawer {
+        animation: none;
+    }
+    .sb-skill-btn,
+    .sb-skill-know-card,
+    .sb-stage-trigger,
+    .sb-chevron-icon,
+    .sb-skill-check {
+        transition: none;
+    }
+}
+
 
