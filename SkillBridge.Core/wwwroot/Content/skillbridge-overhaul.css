@@ -40,6 +40,9 @@ body .sb-profile-redesign > .mt-4:last-child { justify-content: flex-start !impo
 
 /* Saved members are people, with portraits and match context. */
 body .sb-saved-hero { background: var(--sb-coral-rich); }
+body .main-content .sb-saved-hero .sb-eyebrow,
+body .main-content .sb-saved-hero p,
+body .main-content .sb-post-editor-aside .sb-eyebrow { color: var(--sb-ink) !important; }
 body .sb-saved-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 1.4rem; }
 body .sb-saved-card { display: flex; flex-direction: column; align-items: flex-start; min-height: 340px; padding: 1.35rem; background: var(--sb-card); border: 2px solid var(--sb-border-card); border-radius: 17px; box-shadow: var(--sb-card-shadow); }
 body .sb-saved-card:nth-child(3n+2) { background: var(--sb-blue); }
@@ -110,7 +113,7 @@ body .sb-post-editor-aside h2 { margin: .5rem 0; font-size: 2rem; font-weight: 9
 body .sb-editor-example { display: flex; flex-direction: column; gap: .5rem; padding: 1rem; margin-top: 1.5rem; border: 2px solid var(--sb-border-card); border-radius: 9px; background: var(--sb-surface-sunken); color: var(--sb-ink); }
 body .sb-editor-example span { font-size: .7rem; font-weight: 900; letter-spacing: .12em; }
 body .sb-editor-toolbar { display: flex; gap: .35rem; margin-bottom: .4rem; }
-body .sb-editor-toolbar button { min-width: 42px; height: 38px; border: 2px solid var(--sb-border-control); border-radius: 6px; background: var(--sb-blue); color: var(--sb-ink); }
+body .sb-editor-toolbar button { min-width: 44px; min-height: 44px; border: 2px solid var(--sb-border-control); border-radius: 8px; background: var(--sb-blue); color: var(--sb-ink); font-weight: 850; }
 body .sb-editor-toolbar button:hover { background: var(--sb-sage); }
 body .sb-editor-textarea { min-height: 220px; }
 body .sb-post-details-page { max-width: 1140px; }
@@ -128,7 +131,8 @@ body .sb-post-details-page .comment-body > p { white-space: pre-wrap; }
 body .sb-card-remove { position: absolute; top: .9rem; right: .9rem; z-index: 1; }
 body .comment-card.has-remove .comment-body { padding-right: 85px; }
 
-body[data-theme="dark"] .sb-profile-hero, body[data-theme="dark"] .sb-member-hero, body[data-theme="dark"] .sb-member-next, body[data-theme="dark"] .sb-member-quote, body[data-theme="dark"] .sb-saved-card, body[data-theme="dark"] .sb-post-editor-aside, body[data-theme="dark"] .sb-community-category { background: var(--sb-surface-raised); color: var(--sb-ink); border-color: var(--sb-border-card); box-shadow: var(--sb-card-shadow); }
+body[data-theme="dark"] .sb-profile-hero, body[data-theme="dark"] .sb-member-hero, body[data-theme="dark"] .sb-member-next, body[data-theme="dark"] .sb-member-quote, body[data-theme="dark"] .sb-saved-card, body[data-theme="dark"] .sb-community-category { background: var(--sb-surface-raised); color: var(--sb-ink); border-color: var(--sb-border-card); box-shadow: var(--sb-card-shadow); }
+body[data-theme="dark"] .sb-post-editor-aside { background: var(--sb-coral-rich); color: var(--sb-ink); border-color: var(--sb-border-card); box-shadow: var(--sb-card-shadow); }
 body[data-theme="dark"] .sb-profile-facts span, body[data-theme="dark"] .sb-saved-match, body[data-theme="dark"] .sb-community-monogram { background: var(--sb-card); color: var(--sb-ink); border-color: var(--sb-border-card); }
 body[data-theme="dark"] .sb-member-hero h1.dashboard-welcome, body[data-theme="dark"] .sb-saved-card h2 a, body[data-theme="dark"] .sb-category-title strong { color: var(--sb-ink); }
 body[data-theme="dark"] .sb-member-hero h1 em { color: var(--sb-blue-link); }
@@ -149,7 +153,9 @@ body[data-theme="dark"] .sb-post-editor-card, body[data-theme="dark"] .sb-post-e
     body .sb-category-count { display: none; }
     body .sb-community-category > summary { gap: .6rem; padding: .85rem; }
     body .sb-category-symbol { width: 44px; height: 44px; }
-    body .sb-card-remove { position: static; float: right; margin-left: .5rem; }
+    body .sb-card-remove { position: static; float: none; margin: 0 0 .75rem; }
+    body .comment-card.has-remove { flex-wrap: wrap; }
+    body .comment-card.has-remove .sb-card-remove { order: 3; flex-basis: 100%; margin: .75rem 0 0; }
     body .sb-post-story.has-remove .card-body { padding-right: 1.4rem; }
     body .comment-card.has-remove .comment-body { padding-right: 0; }
 }

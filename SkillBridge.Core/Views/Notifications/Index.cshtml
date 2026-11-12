@@ -19,7 +19,7 @@
             align-items: center;
             margin-bottom: 2rem;
             padding-bottom: 1rem;
-            border-bottom: 2px solid var(--sb-line);
+            border-bottom: 2px solid var(--sb-border-card);
         }
 
         .notification-title {
@@ -29,7 +29,8 @@
         }
 
         .btn-modern {
-            border-radius: 10px;
+            border-radius: 12px;
+            min-height: 44px;
             padding: 0.5rem 1.2rem;
             font-weight: 800;
         }
@@ -41,22 +42,21 @@
 
         .notification-list {
             border-radius: 16px;
-            overflow: hidden;
         }
 
         .notification-item {
             padding: 1.5rem;
             background: var(--sb-card);
             color: var(--sb-ink);
-            border: 2px solid var(--sb-line);
+            border: 2px solid var(--sb-border-card);
             border-radius: 14px;
             margin-bottom: 0.85rem;
-            box-shadow: var(--sb-card-shadow-small);
+            box-shadow: var(--sb-shadow-small);
         }
 
         .notification-item.unread {
             background: var(--sb-blue);
-            border-left: 5px solid var(--sb-blue-strong);
+            border-left: 6px solid var(--sb-blue-strong);
         }
 
         .notification-content {
@@ -91,19 +91,20 @@
         }
 
         .btn-sm-modern {
-            border-radius: 8px;
-            padding: 0.4rem 0.8rem;
+            border-radius: 10px;
+            min-height: 44px;
+            padding: 0.45rem 0.9rem;
             font-size: 0.85rem;
-            font-weight: 750;
+            font-weight: 800;
         }
 
         .btn-success-modern {
-            background: #2f7d64;
+            background: var(--sb-sage-deep);
             color: #fff;
         }
 
         .btn-danger-modern {
-            background: #c93b2b;
+            background: var(--sb-coral-rich);
             color: #fff;
         }
 
@@ -113,12 +114,12 @@
         }
 
         .skill-selection {
-            background: var(--sb-sage);
+            background: var(--sb-surface-raised);
             color: var(--sb-ink);
             padding: 1rem;
-            border-radius: 10px;
+            border-radius: 12px;
             margin-top: 1rem;
-            border: 2px solid var(--sb-line);
+            border: 2px solid var(--sb-border-card);
         }
 
         .empty-state {
@@ -126,7 +127,7 @@
             padding: 3rem 1rem;
             color: var(--sb-ink);
             background: var(--sb-card);
-            border: 2px dashed var(--sb-line);
+            border: 2px dashed var(--sb-border-card);
             border-radius: 16px;
         }
 
@@ -147,18 +148,18 @@
         }
 
         .badge-notification {
-            background: #c93b2b;
+            background: var(--sb-coral-rich);
             color: white;
             border-radius: 50%;
-            width: 26px;
-            height: 26px;
+            width: 28px;
+            height: 28px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-size: 0.78rem;
             font-weight: 800;
             margin-left: 6px;
-            border: 2px solid var(--sb-line);
+            border: 2px solid var(--sb-border-control);
         }
     </style>
 }
@@ -182,8 +183,8 @@
                         <span class="badge-notification">@Model.Count(n => !n.IsRead)</span>
                     }
                 </h1>
-                <button id="markAllReadBtn" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary-modern btn-modern">
-                    <i class="fas fa-check-double me-2 tw:me-2"></i>Mark All as Read
+                <button id="markAllReadBtn" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary-modern btn-modern">
+                    <i class="fas fa-check-double me-2 tw:me-2" aria-hidden="true"></i>Mark All as Read
                 </button>
             </div>
 
@@ -204,24 +205,24 @@
                         <div class="notification-content">
                             <div class="notification-message">@n.Message</div>
                             <div class="notification-time">
-                                <i class="far fa-clock"></i>@n.CreatedAt.ToLocalTime().ToString("g")
+                                <i class="far fa-clock" aria-hidden="true"></i>@n.CreatedAt.ToLocalTime().ToString("g")
                             </div>
 
                             @if (n.Type == "SkillRequest")
                             {
-                                <a href="@Url.Action("RequestDetails", "Profile", new { id = n.ReferenceId })" class="d-block tw:block mb-2 tw:mb-2">Read exchange proposal</a>
+                                <a href="@Url.Action("RequestDetails", "Profile", new { id = n.ReferenceId })" class="d-block tw:block mb-2 tw:mb-2 tw:dark:text-sb-blue-link">Read exchange proposal</a>
                                 <div class="skill-selection tw:hidden" data-id="@n.Id">
                                     <label class="skill-selection-label form-label tw:mb-1 tw:block tw:font-bold fw-semibold tw:font-semibold" for="skill-dropdown-@n.Id">Choose exchange mode:</label>
-                                    <select id="skill-dropdown-@n.Id" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-muted/40 tw:bg-sb-card tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-blue-strong tw:focus:outline-none tw:focus:ring-2 tw:focus:ring-sb-blue/70 tw:dark:border-sb-night-ink/50 tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink form-control-modern skill-dropdown" data-id="@n.Id"></select>
-                                    <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary-modern btn-sm-modern mt-2 tw:mt-2 initialize-btn" data-id="@n.Id">
-                                        <i class="fas fa-play-circle me-1 tw:me-1"></i>Start Interaction
+                                    <select id="skill-dropdown-@n.Id" class="form-control tw:min-h-11 tw:w-full tw:rounded-lg tw:border-2 tw:border-sb-border-control tw:bg-sb-surface-sunken tw:px-3 tw:py-2 tw:text-sb-ink tw:focus:border-sb-border-focus tw:focus:outline-none form-control-modern skill-dropdown" data-id="@n.Id"></select>
+                                    <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary-modern btn-sm-modern mt-2 tw:mt-2 initialize-btn" data-id="@n.Id">
+                                        <i class="fas fa-play-circle me-1 tw:me-1" aria-hidden="true"></i>Start Interaction
                                     </button>
                                 </div>
                             }
                             else if (n.Type == "Exchange" || n.Type == "RequestUpdate" || n.Type == "Skill" || n.Type == "Catalog" || n.Type == "Community" ||
                                 (n.Type == "Info" && n.ReferenceId.HasValue))
                             {
-                                <a href="@SkillBridge.Helpers.NotificationLinkHelper.Resolve(n, Url)" class="d-block tw:block mb-2 tw:mb-2">View update</a>
+                                <a href="@SkillBridge.Helpers.NotificationLinkHelper.Resolve(n, Url)" class="d-block tw:block mb-2 tw:mb-2 tw:dark:text-sb-blue-link">View update</a>
                             }
                         </div>
 
@@ -229,28 +230,28 @@
                             @if (n.Type == "SkillRequest")
                             {
                                 <div class="notification-decision-buttons d-flex tw:flex tw:flex-wrap gap-2 tw:gap-2">
-                                    <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-success-modern btn-sm-modern accept-btn" data-id="@n.Id">
-                                        <i class="fas fa-check me-1 tw:me-1"></i>Accept
+                                    <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-success-modern btn-sm-modern accept-btn" data-id="@n.Id">
+                                        <i class="fas fa-check me-1 tw:me-1" aria-hidden="true"></i>Accept
                                     </button>
-                                    <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-danger-modern btn-sm-modern decline-btn" data-id="@n.Id">
-                                        <i class="fas fa-times me-1 tw:me-1"></i>Decline
+                                    <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-danger-modern btn-sm-modern decline-btn" data-id="@n.Id">
+                                        <i class="fas fa-times me-1 tw:me-1" aria-hidden="true"></i>Decline
                                     </button>
                                 </div>
                             }
                             else if (n.Type != "Feedback" && !n.IsRead)
                             {
-                                <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
-                                    <i class="fas fa-eye me-1 tw:me-1"></i>Mark as Read
+                                <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
+                                    <i class="fas fa-eye me-1 tw:me-1" aria-hidden="true"></i>Mark as Read
                                 </button>
                             }
                             else if (n.Type == "Feedback" && !n.IsRead)
                             {
                                 <div class="d-flex tw:flex flex-column tw:flex-col gap-2 tw:gap-2">
-                                    <a href="@Url.Action("RateInteraction", "Interactions", new { interactionId = n.ReferenceId })" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-primary-modern btn-sm-modern">
-                                        <i class="fas fa-star me-1 tw:me-1"></i>Rate the Interaction
+                                    <a href="@Url.Action("RateInteraction", "Interactions", new { interactionId = n.ReferenceId })" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-primary-modern btn-sm-modern">
+                                        <i class="fas fa-star me-1 tw:me-1" aria-hidden="true"></i>Rate the Interaction
                                     </a>
-                                    <button type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-ink tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:border-sb-night-ink btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
-                                        <i class="fas fa-eye me-1 tw:me-1"></i>Mark as Read
+                                    <button type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-4 tw:py-2 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-secondary-modern btn-sm-modern mark-read" data-id="@n.Id">
+                                        <i class="fas fa-eye me-1 tw:me-1" aria-hidden="true"></i>Mark as Read
                                     </button>
                                 </div>
                             }

@@ -3,23 +3,25 @@
 <main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 my-5 tw:my-8">
     <h1 class="h2">Exchange history</h1>
     <p class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">Your completed exchanges, shared milestones, notes, and ratings.</p>
-    <a href="@Url.Action("Index", "Interactions")">Current exchanges</a>
+    <a class="tw:inline-flex tw:min-h-11 tw:items-center tw:font-extrabold tw:dark:text-sb-blue-link" href="@Url.Action("Index", "Interactions")">← Current exchanges</a>
     @if (Model.Count == 0) { <p class="mt-4 tw:mt-6">No completed exchanges yet.</p> }
     <div class="row tw:grid tw:grid-cols-12 tw:gap-4 g-3 mt-2 tw:mt-2">
         @foreach (var exchange in Model)
         {
             var isOneWay = string.IsNullOrWhiteSpace(exchange.SkillYouLearn) || string.IsNullOrWhiteSpace(exchange.SkillYouTeach);
             <article class="col-md-6 tw:col-span-12 tw:md:col-span-6 col-xl-4 tw:xl:col-span-4">
-                <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-ink tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:border-sb-night-ink tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink h-100 tw:h-full p-3 tw:p-4">
-                    <h2 class="h5">@exchange.OtherUserName</h2>
-                    @if (isOneWay)
-                    {
-                        <p class="mb-2 tw:mb-2"><span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:bg-sb-blue tw:px-2.5 tw:py-0.5 tw:text-xs tw:font-bold tw:text-sb-ink tw:dark:border-sb-night-ink tw:dark:text-sb-night-ink">One-way mentorship</span></p>
-                    }
-                    <p class="mb-1 tw:mb-1">Learned: @(string.IsNullOrWhiteSpace(exchange.SkillYouLearn) ? "None (1-way mentorship)" : exchange.SkillYouLearn)</p>
-                    <p>Taught: @(string.IsNullOrWhiteSpace(exchange.SkillYouTeach) ? "None (1-way mentorship)" : exchange.SkillYouTeach)</p>
-                    <p class="small tw:text-sm text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">Finished @(exchange.EndedAt?.ToString("d") ?? "before dates were tracked")</p>
-                    <a href="@Url.Action("Details", "Interactions", new { id = exchange.InteractionId })">View exchange record</a>
+                <div class="card tw:overflow-hidden tw:rounded-2xl tw:border-2 tw:border-sb-border-card tw:bg-sb-card tw:text-sb-ink tw:shadow-sb-small tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink h-100 tw:h-full tw:flex tw:flex-col tw:justify-between p-4 tw:p-5">
+                    <div>
+                        <h2 class="h5">@exchange.OtherUserName</h2>
+                        @if (isOneWay)
+                        {
+                            <p class="mb-2 tw:mb-2"><span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-border-control tw:bg-sb-blue tw:px-2.5 tw:py-0.5 tw:text-xs tw:font-bold tw:text-sb-ink">One-way mentorship</span></p>
+                        }
+                        <p class="mb-1 tw:mb-1">Learned: @(string.IsNullOrWhiteSpace(exchange.SkillYouLearn) ? "None (1-way mentorship)" : exchange.SkillYouLearn)</p>
+                        <p>Taught: @(string.IsNullOrWhiteSpace(exchange.SkillYouTeach) ? "None (1-way mentorship)" : exchange.SkillYouTeach)</p>
+                        <p class="small tw:text-sm text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70">Finished @(exchange.EndedAt?.ToString("d") ?? "before dates were tracked")</p>
+                    </div>
+                    <a class="tw:inline-flex tw:min-h-11 tw:items-center tw:font-extrabold tw:dark:text-sb-blue-link" href="@Url.Action("Details", "Interactions", new { id = exchange.InteractionId })">View exchange record →</a>
                 </div>
             </article>
         }

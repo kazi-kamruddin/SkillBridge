@@ -1,163 +1,106 @@
 @model List<SkillBridge.Models.InteractionIndexViewModel>
+@{
+    ViewBag.Title = "Your Interactions";
+}
 
 @section Styles {
     <style>
-        .container {
-            margin-top: 2rem;
-        }
-
-        h2 {
-            font-weight: 700;
-            margin-bottom: 2rem;
-            font-size: 2rem;
-            color: var(--text-color);
-            position: relative;
-            padding-bottom: 0.8rem;
-        }
-
-            h2::after {
-                content: '';
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                width: 60px;
-                height: 4px;
-                background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-                border-radius: 2px;
-            }
-
-        /* Grid Layout */
-        .row {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
-        }
-
-        /* Interaction Card */
-        .interaction-card {
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            box-shadow: var(--shadow);
-            transition: var(--transition);
-            border: 1px solid var(--border-color);
-            min-height: 250px;
+        .sb-interactions-page .interaction-card {
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            min-height: 250px;
+            padding: 1.5rem;
+            border-radius: 18px;
+            border: 2px solid var(--sb-border-card);
+            background: var(--sb-card);
+            color: var(--sb-ink);
+            box-shadow: var(--sb-shadow);
             position: relative;
-            overflow: hidden;
+            transition: transform 0.16s ease, box-shadow 0.16s ease;
         }
-
-            .interaction-card::before {
-                content: '';
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 4px;
-                background: linear-gradient(45deg, var(--primary-color), var(--accent-color));
-            }
-
-            .interaction-card:hover {
-                transform: translateY(-6px);
-                box-shadow: var(--shadow-lg);
-            }
-
-            .interaction-card h4 {
-                font-weight: 600;
-                color: var(--primary-color);
-                margin-bottom: 1rem;
-                font-size: 1.2rem;
-            }
-
-            .interaction-card p {
-                margin: 0.4rem 0;
-                font-size: 0.95rem;
-                color: var(--text-color);
-            }
-
-            .interaction-card strong {
-                color: var(--primary-color);
-            }
-
-            /* Action Button */
-            .interaction-card a {
-                margin-top: auto;
-                align-self: flex-start;
-                padding: 0.6rem 1.2rem;
-                font-size: 0.85rem;
-                font-weight: 600;
-                color: #fff;
-                background-color: var(--primary-color);
-                border-radius: 6px;
-                text-decoration: none;
-                transition: var(--transition);
-            }
-
-                .interaction-card a:hover {
-                    background-color: var(--primary-dark);
-                    transform: translateY(-2px);
-                    color: #fff;
-                    text-decoration: none;
-                }
-
-        /* Responsive */
-        @@media (max-width: 768px) {
-            h2 {
-                font-size: 1.8rem;
-            }
+        .sb-interactions-page .interaction-card:hover {
+            transform: translate(2px, 2px);
+            box-shadow: var(--sb-shadow-small);
         }
-
-        @@media (max-width: 576px) {
-            .container {
-                margin-top: 1rem;
-            }
-
-            h2 {
-                font-size: 1.6rem;
-            }
-
-            .interaction-card {
-                padding: 1.2rem;
-                min-height: 220px;
-            }
+        .sb-interactions-page .interaction-card h2 {
+            font-size: 1.35rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            color: var(--sb-ink);
+            margin: 0 0 0.75rem;
+        }
+        .sb-interactions-page .interaction-card p {
+            margin: 0.35rem 0;
+            font-size: 0.95rem;
+            color: var(--sb-ink);
+        }
+        .sb-interactions-page .interaction-card strong {
+            color: var(--sb-accent-text);
+        }
+        body[data-theme="dark"] .sb-interactions-page .interaction-card strong {
+            color: var(--sb-blue-link);
         }
     </style>
 }
 
-<div class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4">
-    <h2>Your Interactions</h2>
-    <p><a href="@Url.Action("History", "Interactions")">View completed exchange history</a></p>
+<main class="container tw:mx-auto tw:w-full tw:max-w-[1400px] tw:px-4 tw:py-6 sb-interactions-page">
+    <header class="sb-page-heading tw:mb-6">
+        <div class="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-4">
+            <div>
+                <div class="sb-hero-kicker"><span class="sb-eyebrow">ACTIVE EXCHANGES</span></div>
+                <h1 class="tw:m-0">Your Interactions</h1>
+                <p class="tw:mb-0">Track shared milestones, coordinate upcoming meetings, and complete exchanges with your learning partners.</p>
+            </div>
+            <a href="@Url.Action("History", "Interactions")"
+               class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:bg-sb-card tw:px-4 tw:py-2 tw:text-sm tw:font-extrabold tw:text-sb-blue-strong tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] tw:dark:bg-sb-night-card tw:dark:text-sb-blue-link">
+                View completed exchange history
+            </a>
+        </div>
+    </header>
+
     @if (!Model.Any())
     {
-        <div class="alert tw:rounded-xl tw:border-2 tw:border-sb-ink tw:p-4 tw:shadow-sb-small alert-info tw:bg-sb-blue tw:text-sb-ink">
-            You have no current exchanges. <a href="@Url.Action("History", "Interactions")">View your completed exchanges</a>, or <a href="@Url.Action("Index", "Explore")">explore matching members</a> to start another.
+        <div class="alert tw:rounded-2xl tw:border-2 tw:border-sb-border-card tw:bg-sb-blue tw:p-6 tw:text-sb-ink tw:shadow-sb-small" role="status">
+            <p class="tw:mb-3 tw:font-bold">You have no active exchanges right now.</p>
+            <div class="tw:flex tw:flex-wrap tw:gap-3">
+                <a href="@Url.Action("Index", "Explore")" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:bg-sb-blue-strong tw:px-4 tw:py-2 tw:text-sm tw:font-extrabold tw:text-white tw:shadow-sb-small">Explore matching members</a>
+                <a href="@Url.Action("History", "Interactions")" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:bg-sb-card tw:px-4 tw:py-2 tw:text-sm tw:font-extrabold tw:text-sb-ink tw:shadow-sb-small tw:dark:bg-sb-night-card tw:dark:text-sb-night-ink">View completed exchanges</a>
+            </div>
         </div>
     }
-    <div class="row tw:grid tw:grid-cols-12 tw:gap-4">
+    <div class="row tw:grid tw:grid-cols-12 tw:gap-5">
         @foreach (var interaction in Model)
         {
             var isOneWay = string.IsNullOrWhiteSpace(interaction.SkillYouLearn) || string.IsNullOrWhiteSpace(interaction.SkillYouTeach);
             <div class="interaction-card tw:col-span-12 tw:md:col-span-6 tw:xl:col-span-4">
-                <h4>@interaction.OtherUserName</h4>
-                @if (isOneWay)
-                {
-                    <p><span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-ink tw:bg-sb-blue tw:px-2.5 tw:py-0.5 tw:text-xs tw:font-bold tw:text-sb-ink tw:dark:border-sb-night-ink tw:dark:text-sb-night-ink">One-way mentorship</span></p>
-                }
-                <p><strong>Teaching:</strong> @(string.IsNullOrWhiteSpace(interaction.SkillYouTeach) ? "None (1-way mentorship)" : interaction.SkillYouTeach)</p>
-                <p><strong>Learning:</strong> @(string.IsNullOrWhiteSpace(interaction.SkillYouLearn) ? "None (1-way mentorship)" : interaction.SkillYouLearn)</p>
-                <p><strong>Status:</strong> @interaction.Status</p>
-                @if (interaction.Status == "Ended")
-                {
-                    <p><strong>Reason:</strong> @interaction.EndReason</p>
-                    <a href="@Url.Action("Details", "Interactions", new { id = interaction.InteractionId })">View record</a>
-                }
-                else
-                {
-                    <a href="@Url.Action("Sessions", "Interactions", new { id = interaction.InteractionId })">View Details</a>
-                }
+                <div>
+                    <div class="tw:mb-3 tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2">
+                        <h2 class="tw:m-0">@interaction.OtherUserName</h2>
+                        <span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-border-control tw:bg-sb-sage tw:px-2.5 tw:py-0.5 tw:text-xs tw:font-bold tw:text-sb-ink">@interaction.Status</span>
+                    </div>
+                    @if (isOneWay)
+                    {
+                        <p class="tw:mb-2"><span class="badge tw:inline-flex tw:items-center tw:rounded-full tw:border tw:border-sb-border-control tw:bg-sb-blue tw:px-2.5 tw:py-0.5 tw:text-xs tw:font-bold tw:text-sb-ink">One-way mentorship</span></p>
+                    }
+                    <p><strong>Teaching:</strong> @(string.IsNullOrWhiteSpace(interaction.SkillYouTeach) ? "None (1-way mentorship)" : interaction.SkillYouTeach)</p>
+                    <p><strong>Learning:</strong> @(string.IsNullOrWhiteSpace(interaction.SkillYouLearn) ? "None (1-way mentorship)" : interaction.SkillYouLearn)</p>
+                    @if (interaction.Status == "Ended" && !string.IsNullOrWhiteSpace(interaction.EndReason))
+                    {
+                        <p><strong>Reason:</strong> @interaction.EndReason</p>
+                    }
+                </div>
+                <div class="tw:mt-4 tw:pt-2">
+                    @if (interaction.Status == "Ended")
+                    {
+                        <a class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:bg-sb-blue-strong tw:px-4 tw:py-2 tw:text-sm tw:font-extrabold tw:text-white tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px]" href="@Url.Action("Details", "Interactions", new { id = interaction.InteractionId })">View record</a>
+                    }
+                    else
+                    {
+                        <a class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:bg-sb-blue-strong tw:px-4 tw:py-2 tw:text-sm tw:font-extrabold tw:text-white tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px]" href="@Url.Action("Sessions", "Interactions", new { id = interaction.InteractionId })">View Details</a>
+                    }
+                </div>
             </div>
         }
     </div>
-</div>
+</main>
