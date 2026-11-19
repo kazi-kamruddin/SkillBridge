@@ -83,6 +83,7 @@ namespace SkillBridge.Controllers
         // POST: Mark notification as read
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> MarkAsRead(int id)
         {
             var userId = User.Identity.GetUserId();
@@ -344,6 +345,7 @@ namespace SkillBridge.Controllers
         ////////////////////////////////////////////////////////////////////////////
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<JsonResult> MarkAllAsRead()
         {
             var userId = User.Identity.GetUserId();

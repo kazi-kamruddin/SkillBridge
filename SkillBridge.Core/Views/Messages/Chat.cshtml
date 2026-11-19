@@ -98,7 +98,7 @@
                         <button id="dismissChatImageError" type="button" class="btn sb-chat-error-dismiss" aria-label="Dismiss error" title="Dismiss error"><span aria-hidden="true">×</span></button>
                     </div>
                     <div id="chatImagePreview" class="sb-chat-image-preview" hidden>
-                        <img id="chatImageThumbnail" alt="Selected image preview" />
+                        <div id="chatImageThumbnailSlot" style="flex:0 0 auto; line-height:0;"></div>
                         <span id="chatImageName"></span>
                         <span id="chatImageSize" class="text-muted tw:text-sb-muted tw:dark:text-sb-night-ink/70 ms-1 small"></span>
                         <button id="removeChatImage" type="button" class="btn tw:inline-flex tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-3 tw:py-1.5 tw:text-sm tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-outline-secondary tw:bg-sb-card tw:text-sb-ink" aria-label="Remove attached image" title="Remove attached image"><span aria-hidden="true">×</span></button>
@@ -117,6 +117,8 @@
             {
                 <div class="text-center tw:text-center mb-3 tw:mb-4">
                     <img src="@Url.Content(otherUserProfile.ProfileImageUrl)"
+                         alt="@(otherUserProfile.FullName)'s profile photo"
+                         width="100" height="100"
                          class="rounded-circle tw:rounded-full tw:border-2 tw:border-sb-border-card" style="width:100px; height:100px; object-fit:cover;" />
                     <h6 class="mt-2 tw:mt-2">@otherUserProfile.FullName</h6>
                     @if (!string.IsNullOrWhiteSpace(otherUserProfile.Profession) || !string.IsNullOrWhiteSpace(otherUserProfile.Location))
@@ -211,7 +213,7 @@
                 imagePreviewUrl = null;
                 if (clearInput) $('#chatImage').val('');
                 $('#chatImagePreview').prop('hidden', true);
-                $('#chatImageThumbnail').removeAttr('src');
+                $('#chatImageThumbnail').remove();
                 $('#chatImageName').text('');
                 $('#chatImageSize').text('');
             }
@@ -360,7 +362,12 @@
                 }
 
                 imagePreviewUrl = URL.createObjectURL(file);
-                $('#chatImageThumbnail').attr('src', imagePreviewUrl);
+                var thumb = $('#chatImageThumbnail');
+                if (!thumb.length) {
+                    thumb = $('<img>', { id: 'chatImageThumbnail', alt: 'Selected image preview', width: 52, height: 52 });
+                    $('#chatImageThumbnailSlot').empty().append(thumb);
+                }
+                thumb.attr('src', imagePreviewUrl);
                 $('#chatImageName').text(file.name);
                 var formattedSize = file.size >= 1024 * 1024
                     ? (file.size / (1024 * 1024)).toFixed(1) + ' MB'

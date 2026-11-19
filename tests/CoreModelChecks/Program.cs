@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using System.Text.Encodings.Web;
 using SkillBridge.Controllers;
 using SkillBridge.Helpers;
@@ -159,6 +160,54 @@ using var interactionsCtrl = new InteractionsController(db);
 using var catalogCtrl = new CatalogController(db);
 using var notificationsCtrl = new NotificationsController(db);
 Console.WriteLine("Phase 3 notification link, inbox model, SignalR null-safety, and controller ctor checks passed.");
+
+// Phase 5 mutation/gap hardening: missing-stage-1 boundary, full notification routing, EtM crypto tamper detection, and global POST CSRF check.
+var skippedStageOneSessions = new[]
+{
+    new InteractionSession { SkillId = 1, StageNumber = 1, CatalogStageNumber = 2, User1Confirmed = true, User2Confirmed = true },
+    new InteractionSession { SkillId = 1, StageNumber = 2, CatalogStageNumber = 3, User1Confirmed = true, User2Confirmed = true }
+};
+if (ExchangeProgressHelper.MaxStageCompleted(skippedStageOneSessions, 1) != 0 ||
+    ExchangeProgressHelper.MaxStageCompleted(null, 1) != 0 ||
+    ExchangeProgressHelper.FormatExchangeSkills(null, "u1") != (null, null))
+    throw new Exception("ExchangeProgressHelper missing-stage-1 / null guard check failed.");
+
+if (NotificationLinkHelper.Resolve(new Notification { Type = "SkillRequest", ReferenceId = 7 }, stubUrl) != "/Profile/RequestDetails?id=7" ||
+    NotificationLinkHelper.Resolve(new Notification { Type = "Exchange", ReferenceId = 8 }, stubUrl) != "/Interactions/Details?id=8" ||
+    NotificationLinkHelper.Resolve(new Notification { Type = "Feedback", ReferenceId = 9 }, stubUrl) != "/Interactions/RateInteraction" ||
+    NotificationLinkHelper.Resolve(new Notification { Type = "Skill", ReferenceId = 3 }, stubUrl) != "/Explore/Detail?id=3" ||
+    NotificationLinkHelper.Resolve(new Notification { Type = "Catalog" }, stubUrl) != "/Explore/Skills" ||
+    NotificationLinkHelper.Resolve(new Notification { Type = "Info", ReferenceId = 10, Message = "This exchange request is no longer available." }, stubUrl) != "/Profile/RequestDetails?id=10" ||
+    NotificationLinkHelper.Resolve(new Notification { Type = "Info", ReferenceId = 11, Message = "Exchange ended" }, stubUrl) != "/Interactions/Details?id=11" ||
+    NotificationLinkHelper.Resolve(new Notification { Type = "Unknown" }, stubUrl) != "/Notifications/Index")
+    throw new Exception("NotificationLinkHelper route matrix check failed.");
+
+if (string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("SKILLBRIDGE_MESSAGE_KEY")))
+{
+    var ephemeralKey = Enumerable.Range(1, 32).Select(i => (byte)i).ToArray();
+    Environment.SetEnvironmentVariable("SKILLBRIDGE_MESSAGE_KEY", Convert.ToBase64String(ephemeralKey));
+}
+var (cipher, iv, hmac) = MessageEncryptionService.Encrypt("Hello SkillBridge E2E!");
+if (MessageEncryptionService.Decrypt(cipher, iv, hmac) != "Hello SkillBridge E2E!")
+    throw new Exception("MessageEncryptionService roundtrip check failed.");
+var tamperedCipher = (byte[])cipher.Clone();
+tamperedCipher[0] ^= 0xFF;
+if (MessageEncryptionService.Decrypt(tamperedCipher, iv, hmac) != "[Message authentication failed]" ||
+    MessageEncryptionService.Decrypt(null, iv, hmac) != "[Encrypted message unavailable]")
+    throw new Exception("MessageEncryptionService tamper/null sentinel check failed.");
+
+var missingCsrfPosts = typeof(HomeController).Assembly
+    .GetTypes()
+    .Where(t => typeof(Controller).IsAssignableFrom(t) && !t.IsAbstract)
+    .SelectMany(t => t.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+        .Where(m => m.GetCustomAttribute<HttpPostAttribute>() != null &&
+                    m.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>() == null &&
+                    t.GetCustomAttribute<ValidateAntiForgeryTokenAttribute>() == null)
+        .Select(m => $"{t.Name}.{m.Name}"))
+    .ToList();
+if (missingCsrfPosts.Count > 0)
+    throw new Exception($"Missing [ValidateAntiForgeryToken] on HttpPost action(s): {string.Join(", ", missingCsrfPosts)}");
+Console.WriteLine("Mutation-gap hardening checks (stage boundary, routing matrix, EtM crypto tamper, CSRF reflection) passed.");
 
 sealed class StubUrlHelper : IUrlHelper
 {

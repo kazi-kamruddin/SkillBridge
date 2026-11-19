@@ -159,6 +159,7 @@ namespace SkillBridge.Controllers
         // POST: /Profile/UpdateProfile
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         [RequestSizeLimit(5 * 1024 * 1024)]
         public async Task<ActionResult> UpdateProfile(UpdateProfileViewModel model)
         {
@@ -368,7 +369,7 @@ namespace SkillBridge.Controllers
             return View();
         }
 
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> SetPassword(SetPasswordViewModel model)
         {
             var user = await UserManager.GetUserAsync(User);
@@ -389,6 +390,7 @@ namespace SkillBridge.Controllers
         // POST: /Profile/ChangePassword
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> ChangePassword(ChangePasswordViewModel model)
         {
             if (!ModelState.IsValid)
@@ -436,18 +438,27 @@ namespace SkillBridge.Controllers
                 .Where(us => us.UserId == id)
                 .ToListAsync();
 
-            var skillsToTeachVm = new List<SkillViewModel>();
-            foreach (var skill in userSkills.Where(us => us.Status == "Teaching"))
+            var teachingSkills = userSkills.Where(us => us.Status == "Teaching").ToList();
+            var latestRequestsBySkill = new Dictionary<int, string>();
+            if (currentUserId != null && currentUserId != id && teachingSkills.Count > 0)
             {
-                var existingRequest = currentUserId != null
-                    ? await db.SkillRequests
-                        .AsNoTracking()
-                        .Where(r => r.SkillId == skill.SkillId &&
-                                    r.RequesterId == currentUserId &&
-                                    r.ReceiverId == id)
-                        .OrderByDescending(r => r.CreatedAt)
-                        .FirstOrDefaultAsync()
-                    : null;
+                var teachingSkillIds = teachingSkills.Select(us => us.SkillId).Distinct().ToList();
+                var sentRequests = await db.SkillRequests
+                    .AsNoTracking()
+                    .Where(r => r.RequesterId == currentUserId &&
+                                r.ReceiverId == id &&
+                                teachingSkillIds.Contains(r.SkillId))
+                    .Select(r => new { r.SkillId, r.Status, r.CreatedAt })
+                    .ToListAsync();
+                latestRequestsBySkill = sentRequests
+                    .GroupBy(r => r.SkillId)
+                    .ToDictionary(g => g.Key, g => g.OrderByDescending(r => r.CreatedAt).First().Status);
+            }
+
+            var skillsToTeachVm = new List<SkillViewModel>();
+            foreach (var skill in teachingSkills)
+            {
+                var hasStatus = latestRequestsBySkill.TryGetValue(skill.SkillId, out var existingStatus);
 
                 skillsToTeachVm.Add(new SkillViewModel
                 {
@@ -458,10 +469,10 @@ namespace SkillBridge.Controllers
                     TotalStages = skill.Skill.SkillStages.Count,
                     RequestStatus = (skill.KnownUpToStage.GetValueOrDefault() < 1 || currentUserId == null || currentUserId == id)
                         ? "Hidden"
-                        : (existingRequest != null
-                            ? (existingRequest.Status == "Pending" ? "Pending" :
-                               existingRequest.Status == "Accepted" ? "Accepted" :
-                               existingRequest.Status == "Withdrawn" ? "Withdrawn" : "Declined")
+                        : (hasStatus
+                            ? (existingStatus == "Pending" ? "Pending" :
+                               existingStatus == "Accepted" ? "Accepted" :
+                               existingStatus == "Withdrawn" ? "Withdrawn" : "Declined")
                             : "None")
                 });
             }
@@ -695,46 +706,59 @@ namespace SkillBridge.Controllers
             return View(blocks);
         }
 
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> Block(string id)
         {
             var userId = User.Identity.GetUserId();
             if (string.IsNullOrEmpty(id) || id == userId || !await db.Users.AsNoTracking().AnyAsync(u => u.Id == id)) return NotFound();
             if (!await db.MemberBlocks.AnyAsync(b => b.BlockerId == userId && b.BlockedId == id))
             {
+                await using var transaction = await db.Database.BeginTransactionAsync();
                 db.MemberBlocks.Add(new MemberBlock { BlockerId = userId, BlockedId = id });
-                var pendingRequests = await db.SkillRequests.Where(r => r.Status == "Pending" &&
-                    ((r.RequesterId == userId && r.ReceiverId == id) ||
-                     (r.RequesterId == id && r.ReceiverId == userId))).ToListAsync();
-                foreach (var request in pendingRequests) request.Status = "Declined";
-
-                var ongoingInteractions = await db.Interactions.Where(i => i.Status == "Ongoing" &&
-                    ((i.User1Id == userId && i.User2Id == id) ||
-                     (i.User1Id == id && i.User2Id == userId))).ToListAsync();
-                foreach (var interaction in ongoingInteractions)
-                {
-                    interaction.Status = "Ended";
-                    interaction.EndReason = "A member blocked further contact.";
-                    interaction.EndedByUserId = userId;
-                    interaction.EndedAt = DateTime.Now;
-                }
-
-                var requestIds = pendingRequests.Select(r => (int?)r.Id).ToList();
-                var notifications = await db.Notifications.Where(n => n.Type == "SkillRequest" &&
-                    (n.UserId == userId || n.UserId == id) && requestIds.Contains(n.ReferenceId)).ToListAsync();
-                foreach (var notification in notifications)
-                {
-                    notification.Type = "Info";
-                    notification.Message = "This exchange request is no longer available.";
-                    notification.IsRead = true;
-                }
                 await db.SaveChangesAsync();
+
+                var pendingRequestIds = await db.SkillRequests
+                    .Where(r => r.Status == "Pending" &&
+                        ((r.RequesterId == userId && r.ReceiverId == id) ||
+                         (r.RequesterId == id && r.ReceiverId == userId)))
+                    .Select(r => (int?)r.Id)
+                    .ToListAsync();
+                if (pendingRequestIds.Count > 0)
+                {
+                    await db.SkillRequests
+                        .Where(r => r.Status == "Pending" &&
+                            ((r.RequesterId == userId && r.ReceiverId == id) ||
+                             (r.RequesterId == id && r.ReceiverId == userId)))
+                        .ExecuteUpdateAsync(setters => setters.SetProperty(r => r.Status, "Declined"));
+
+                    await db.Notifications
+                        .Where(n => n.Type == "SkillRequest" &&
+                            (n.UserId == userId || n.UserId == id) &&
+                            pendingRequestIds.Contains(n.ReferenceId))
+                        .ExecuteUpdateAsync(setters => setters
+                            .SetProperty(n => n.Type, "Info")
+                            .SetProperty(n => n.Message, "This exchange request is no longer available.")
+                            .SetProperty(n => n.IsRead, true));
+                }
+
+                var endedAt = DateTime.Now;
+                await db.Interactions
+                    .Where(i => i.Status == "Ongoing" &&
+                        ((i.User1Id == userId && i.User2Id == id) ||
+                         (i.User1Id == id && i.User2Id == userId)))
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(i => i.Status, "Ended")
+                        .SetProperty(i => i.EndReason, "A member blocked further contact.")
+                        .SetProperty(i => i.EndedByUserId, userId)
+                        .SetProperty(i => i.EndedAt, endedAt));
+
+                await transaction.CommitAsync();
                 await HubNotifications.NotifyBadgesAsync(hubContext, logger, userId, id);
             }
             return RedirectToAction(nameof(BlockedMembers));
         }
 
-        [HttpPost, ValidateAntiForgeryToken]
+        [HttpPost, ValidateAntiForgeryToken, EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> Unblock(string id)
         {
             var userId = User.Identity.GetUserId();

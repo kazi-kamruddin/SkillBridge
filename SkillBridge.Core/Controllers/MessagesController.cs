@@ -143,7 +143,7 @@ namespace SkillBridge.Controllers
 
             if (conversation == null) return NotFound();
             var otherId = conversation.User1Id == userId ? conversation.User2Id : conversation.User1Id;
-            if (BlockRules.EitherBlocked(db, userId, otherId)) return StatusCode(403);
+            if (await BlockRules.EitherBlockedAsync(db, userId, otherId)) return StatusCode(403);
 
             var decryptedMessages = conversation.Messages
                 .OrderBy(m => m.CreatedAt)
@@ -241,7 +241,7 @@ namespace SkillBridge.Controllers
             if (conversation == null) return NotFound();
 
             var otherUserId = (conversation.User1Id == userId) ? conversation.User2Id : conversation.User1Id;
-            if (BlockRules.EitherBlocked(db, userId, otherUserId)) return StatusCode(403);
+            if (await BlockRules.EitherBlockedAsync(db, userId, otherUserId)) return StatusCode(403);
 
             UploadedImage uploaded = null;
             if (image?.Length > 0)
@@ -303,7 +303,7 @@ namespace SkillBridge.Controllers
                 (c.User1Id == userId || c.User2Id == userId));
             if (conversation == null) return NotFound();
             var otherId = conversation.User1Id == userId ? conversation.User2Id : conversation.User1Id;
-            if (BlockRules.EitherBlocked(db, userId, otherId)) return StatusCode(403);
+            if (await BlockRules.EitherBlockedAsync(db, userId, otherId)) return StatusCode(403);
             try
             {
                 var bytes = await images.DownloadAuthenticatedAsync(message.ImagePublicId, message.ImageFormat);
@@ -339,19 +339,26 @@ namespace SkillBridge.Controllers
                 (c.User1Id == userId || c.User2Id == userId));
             if (conversation == null) return NotFound();
             var otherId = conversation.User1Id == userId ? conversation.User2Id : conversation.User1Id;
-            if (BlockRules.EitherBlocked(db, userId, otherId)) return StatusCode(403);
+            if (await BlockRules.EitherBlockedAsync(db, userId, otherId)) return StatusCode(403);
             var unread = await db.Messages.Where(m => m.ConversationId == conversationId &&
                 m.ToUserId == userId && !m.IsRead).ToListAsync();
             if (unread.Count > 0)
             {
                 foreach (var message in unread) message.IsRead = true;
                 await db.SaveChangesAsync();
-                await hubContext.Clients.Group($"convo-{conversationId}").SendAsync("messagesRead", new
+                try
                 {
-                    conversationId,
-                    readerId = userId,
-                    messageIds = unread.Select(m => m.Id).ToArray()
-                });
+                    await hubContext.Clients.Group($"convo-{conversationId}").SendAsync("messagesRead", new
+                    {
+                        conversationId,
+                        readerId = userId,
+                        messageIds = unread.Select(m => m.Id).ToArray()
+                    });
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Could not broadcast read receipt for conversation {ConversationId}", conversationId);
+                }
                 await HubNotifications.NotifyBadgesAsync(hubContext, logger, userId);
             }
             return Json(new { count = unread.Count });

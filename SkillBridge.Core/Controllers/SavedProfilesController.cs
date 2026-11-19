@@ -53,7 +53,7 @@ public class SavedProfilesController : Controller
         var userId = User.Identity.GetUserId();
         if (string.IsNullOrWhiteSpace(id) || id == userId) return BadRequest();
         if (!await db.UserInformations.AnyAsync(p => p.UserId == id && !p.IsHidden)) return NotFound();
-        if (BlockRules.EitherBlocked(db, userId, id)) return StatusCode(403);
+        if (await BlockRules.EitherBlockedAsync(db, userId, id)) return StatusCode(403);
         if (!await db.SavedProfiles.AnyAsync(s => s.UserId == userId && s.TargetUserId == id))
         {
             db.SavedProfiles.Add(new SavedProfile { UserId = userId, TargetUserId = id });

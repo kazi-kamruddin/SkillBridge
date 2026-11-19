@@ -264,16 +264,16 @@ namespace SkillBridge.Controllers
                 .FirstOrDefaultAsync(s => s.Id == id);
             if (skill == null) return NotFound();
             var userId = User.Identity.GetUserId();
-            var teachersRaw = await (from userSkill in db.UserSkills.AsNoTracking()
+            var teachers = await (from userSkill in db.UserSkills.AsNoTracking()
                             join info in db.UserInformations.AsNoTracking() on userSkill.UserId equals info.UserId
                             where userSkill.SkillId == id && userSkill.Status == "Teaching" &&
                                 userSkill.KnownUpToStage > 0 && !info.IsHidden &&
-                                (info.IsPublic || userId != null) && info.UserId != userId
-                            select new { info.UserId, info.FullName }).ToListAsync();
-
-            var teachers = teachersRaw
-                .Where(t => userId == null || !BlockRules.EitherBlocked(db, userId, t.UserId))
-                .Select(t => new GuestTeacherViewModel { UserId = t.UserId, FullName = t.FullName }).ToList();
+                                (info.IsPublic || userId != null) && info.UserId != userId &&
+                                (userId == null || !db.MemberBlocks.Any(b =>
+                                    (b.BlockerId == userId && b.BlockedId == info.UserId) ||
+                                    (b.BlockerId == info.UserId && b.BlockedId == userId)))
+                            select new GuestTeacherViewModel { UserId = info.UserId, FullName = info.FullName })
+                            .ToListAsync();
 
             var communityId = await db.Communities.AsNoTracking()
                 .Where(c => c.SkillId == id)

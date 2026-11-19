@@ -68,7 +68,7 @@ jobs:
       - name: Check the live SkillBridge site
         run: |
           set -euo pipefail
-          for path in health Explore/Skills Communities; do
+          for path in health ready Explore/Skills Communities; do
             echo "Checking /$path"
             curl --fail --location --show-error --silent --output /dev/null \
               --retry 6 --retry-delay 10 --max-time 30 \

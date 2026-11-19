@@ -471,6 +471,7 @@ namespace SkillBridge.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> MarkStageDone(int stageNumber, int interactionId, int skillId)
         {
             var userId = User.Identity.GetUserId();
@@ -556,19 +557,26 @@ namespace SkillBridge.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> StopInteraction(int id, string reason)
         {
             var userId = User.Identity.GetUserId();
+            await using var transaction = await db.Database.BeginTransactionAsync();
             var interaction = await db.Interactions.FirstOrDefaultAsync(i => i.Id == id &&
                 (i.User1Id == userId || i.User2Id == userId));
             if (interaction == null) return NotFound();
             if (interaction.Status != "Ongoing") return StatusCode(409);
             reason = (reason ?? "").Trim();
             if (reason.Length is < 1 or > 500) return BadRequest("Give a reason of at most 500 characters.");
-            interaction.Status = "Ended";
-            interaction.EndReason = reason;
-            interaction.EndedByUserId = userId;
-            interaction.EndedAt = DateTime.Now;
+            var endedAt = DateTime.Now;
+            var claimed = await db.Interactions
+                .Where(i => i.Id == id && i.Status == "Ongoing" && (i.User1Id == userId || i.User2Id == userId))
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(i => i.Status, "Ended")
+                    .SetProperty(i => i.EndReason, reason)
+                    .SetProperty(i => i.EndedByUserId, userId)
+                    .SetProperty(i => i.EndedAt, endedAt));
+            if (claimed != 1) return StatusCode(409);
             var otherUserId = interaction.User1Id == userId ? interaction.User2Id : interaction.User1Id;
             db.Notifications.Add(new Notification
             {
@@ -576,15 +584,17 @@ namespace SkillBridge.Controllers
                 Type = "Exchange",
                 ReferenceId = id,
                 Message = "The other member ended your exchange. Open Interactions to see the reason.",
-                CreatedAt = DateTime.Now
+                CreatedAt = endedAt
             });
             await db.SaveChangesAsync();
+            await transaction.CommitAsync();
             await HubNotifications.NotifyBadgesAsync(hubContext, logger, otherUserId);
             return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> EndInteraction(int id)
         {
             await using var transaction = await db.Database.BeginTransactionAsync();
@@ -703,6 +713,7 @@ namespace SkillBridge.Controllers
         // Submit rating via AJAX
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting(RateLimitPolicies.MemberWrites)]
         public async Task<ActionResult> SubmitRating(InteractionRatingViewModel model)
         {
             if (!ModelState.IsValid)

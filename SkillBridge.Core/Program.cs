@@ -80,7 +80,8 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
-builder.Services.AddHttpClient<IEmailSender, BrevoEmailSender>();
+builder.Services.AddHttpClient<IEmailSender, BrevoEmailSender>(client =>
+    client.Timeout = TimeSpan.FromSeconds(15));
 builder.Services.AddHttpClient<CloudinaryImageService>();
 builder.Services.AddRateLimiter(options =>
 {
@@ -141,6 +142,19 @@ app.UseAuthentication();
 app.UseRateLimiter();
 app.UseAuthorization();
 app.MapGet("/health", () => Results.Ok("ok"));
+app.MapGet("/ready", async (ApplicationDbContext db, ILoggerFactory loggerFactory, CancellationToken cancellationToken) =>
+{
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync("SELECT 1", cancellationToken);
+        return Results.Ok(new { status = "ready" });
+    }
+    catch (Exception ex)
+    {
+        loggerFactory.CreateLogger("SkillBridge.Readiness").LogError(ex, "Database readiness check failed.");
+        return Results.Json(new { status = "unavailable" }, statusCode: StatusCodes.Status503ServiceUnavailable);
+    }
+});
 app.MapHub<ChatHub>("/chatHub");
 app.MapControllerRoute("default", "{controller=Home}/{action=Index}/{id?}");
 app.Run();

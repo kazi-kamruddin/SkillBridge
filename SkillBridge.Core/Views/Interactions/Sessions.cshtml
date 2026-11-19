@@ -219,7 +219,7 @@
                             <span>Milestone @stage.StageNumber: @stage.Description</span>
                             <small class="stage-state mb-2 tw:mb-2">@(stage.Status == "Green" ? "Completed" : stage.UserConfirmed ? "Awaiting partner" : stage.IsLocked ? "Upcoming" : "Ready to confirm")</small>
                             @if (!stage.IsLocked && !stage.UserConfirmed)
-                            { <button class="mark-done" data-stage="@stage.StageNumber" data-skill="@stage.SkillId">Confirm milestone</button> }
+                            { <button type="button" class="mark-done" data-stage="@stage.StageNumber" data-skill="@stage.SkillId">Confirm milestone</button> }
                             <details class="mt-2 tw:mt-2">
                                 <summary>Milestone notes (@stage.Notes.Count)</summary>
                                 @foreach (var note in stage.Notes)
@@ -278,7 +278,7 @@
     <!-- End Interaction Button -->
     @if (Model.SkillBlocks.All(s => s.Status == "Green"))
     {
-        <button id="end-interaction-btn" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-5 tw:py-2.5 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-success tw:bg-sb-sage-deep tw:text-white">Complete exchange</button>
+        <button id="end-interaction-btn" type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-5 tw:py-2.5 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-success tw:bg-sb-sage-deep tw:text-white">Complete exchange</button>
     }
     <details class="mt-4 tw:mt-6">
         <summary class="tw:cursor-pointer tw:font-bold tw:py-2">Need to end this exchange early?</summary>
@@ -371,7 +371,7 @@
                             button.remove();
 
                             if ($(".stage").length === $(".stage.Green").length && $("#end-interaction-btn").length === 0) {
-                                $(".exchange-tracks").after('<button id="end-interaction-btn" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-5 tw:py-2.5 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-success tw:bg-sb-sage-deep tw:text-white">Complete exchange</button>');
+                                $(".exchange-tracks").after('<button id="end-interaction-btn" type="button" class="btn tw:inline-flex tw:min-h-11 tw:items-center tw:justify-center tw:gap-2 tw:rounded-xl tw:border-2 tw:border-sb-border-control tw:px-5 tw:py-2.5 tw:font-extrabold tw:shadow-sb-small tw:transition-transform tw:hover:translate-x-[2px] tw:hover:translate-y-[2px] btn-success tw:bg-sb-sage-deep tw:text-white">Complete exchange</button>');
                                 attachEndInteractionClick();
                             }
                         }
